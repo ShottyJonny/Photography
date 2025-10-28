@@ -15,6 +15,7 @@ import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { ConsentProvider, useConsent } from './context/ConsentContext'
 import LinkButton from './components/LinkButton'
 import Header from './components/Header'
+import CartDrawer from './components/CartDrawer'
 import CookieBanner from './components/CookieBanner'
 import CartNotification from './components/CartNotification'
 import cloudFullLight from './assets/logos/CloudLogoFull LightMode2.png'
@@ -27,6 +28,8 @@ function CartBadge() {
 }
 
 export function App() {
+  const [cartOpen, setCartOpen] = React.useState(false)
+
   return (
     <ThemeProvider>
       <ConsentProvider>
@@ -34,13 +37,14 @@ export function App() {
           <PricingProvider>
             <div className="container">
               <WordmarkBar />
-              <Header />
+              <Header onCartOpen={() => setCartOpen(true)} />
               <main>
                 <HashRouter />
               </main>
             </div>
             <CookieBanner />
             <CartNotification />
+            <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
           </PricingProvider>
         </CartProvider>
       </ConsentProvider>
