@@ -2,7 +2,6 @@ import React from 'react'
 import Home from './pages/Home'
 import Shop from './pages/Shop'
 import Product from './pages/Product'
-import CartPage from './pages/CartPage'
 import Checkout from './pages/Checkout'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -29,6 +28,13 @@ function CartBadge() {
 
 export function App() {
   const [cartOpen, setCartOpen] = React.useState(false)
+
+  // Listen for cart open events from other components
+  React.useEffect(() => {
+    const handleCartOpen = () => setCartOpen(true)
+    window.addEventListener('cart:open', handleCartOpen)
+    return () => window.removeEventListener('cart:open', handleCartOpen)
+  }, [])
 
   return (
     <ThemeProvider>
@@ -79,7 +85,6 @@ function HashRouter() {
     view = <Product id={id} />
   }
   else if (route === '/shop') view = <Shop />
-  else if (route === '/cart') view = <CartPage />
   else if (route === '/checkout') view = <Checkout />
   else if (route.startsWith('/order/')) { const id = route.slice('/order/'.length); view = <Order id={id} /> }
   else if (route === '/orders') view = <Orders />
