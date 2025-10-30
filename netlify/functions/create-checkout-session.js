@@ -58,7 +58,7 @@ exports.handler = async (event) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.URL || 'http://localhost:5181'}/#/order/${orderId}`,
+      success_url: `${process.env.URL || 'http://localhost:5181'}/#/order/${orderId}?payment=success`,
       cancel_url: `${process.env.URL || 'http://localhost:5181'}/#/checkout`,
       customer_email: customerEmail,
       metadata: {

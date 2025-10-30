@@ -26,6 +26,42 @@ function CartBadge() {
   return <span aria-label="cart-count">{count > 0 ? `(${count})` : null}</span>
 }
 
+function CartClearer() {
+  const { clear } = useCart()
+  
+  React.useEffect(() => {
+    // Check if user returned from successful Stripe payment
+    const fullUrl = window.location.href
+    const hash = window.location.hash
+    
+    // Clear cart if:
+    // 1. URL contains payment=success parameter, OR
+    // 2. User is on an order page (indicating successful payment), OR
+    // 3. URL has Stripe session parameters
+    const hasPaymentSuccess = fullUrl.includes('payment=success')
+    const hasStripeSession = fullUrl.includes('session_id') || fullUrl.includes('checkout_session')
+    const isOrderPage = hash.startsWith('#/order/')
+    
+    if (hasPaymentSuccess || hasStripeSession || isOrderPage) {
+      // Small delay to ensure the page loads properly
+      const timer = setTimeout(() => {
+        clear()
+        console.log('Cart cleared after successful payment detection')
+        
+        // Clean up URL by removing payment parameter
+        if (hasPaymentSuccess) {
+          const cleanUrl = fullUrl.replace(/[?&]payment=success/, '')
+          window.history.replaceState({}, document.title, cleanUrl)
+        }
+      }, 1000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [clear])
+  
+  return null
+}
+
 export function App() {
   const [cartOpen, setCartOpen] = React.useState(false)
 
@@ -50,6 +86,7 @@ export function App() {
             </div>
             <CookieBanner />
             <CartNotification />
+            <CartClearer />
             <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
           </PricingProvider>
         </CartProvider>
