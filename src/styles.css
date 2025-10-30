@@ -215,10 +215,13 @@ main{margin-top:16px}
 }
 @media (max-width: 720px){
 	.floating-cart-btn{
-		bottom:20px;
-		right:20px;
+		/* Position above mobile browser UI and safe areas */
+		bottom: max(20px, env(safe-area-inset-bottom, 20px));
+		right: max(20px, env(safe-area-inset-right, 20px));
 		width:48px;
 		height:48px;
+		/* Ensure it's always visible */
+		z-index: 1002;
 	}
 	.floating-cart-btn svg{
 		width:20px;
@@ -277,6 +280,10 @@ main{margin-top:16px}
 		transition:transform .25s ease;
 		/* Full width on mobile */
 		width:100vw;
+		/* Account for safe areas */
+		top: env(safe-area-inset-top, 0px);
+		bottom: env(safe-area-inset-bottom, 0px);
+		right: env(safe-area-inset-right, 0px);
 	}
 }
 .cart-drawer-header{
@@ -836,6 +843,8 @@ code{background:#0001;padding:0 4px;border-radius:4px}
 	backdrop-filter: saturate(1.1) blur(8px);
 	animation: slideInFromBottom 0.3s ease-out;
 	transition: transform 0.3s ease-out, opacity 0.3s ease-out;
+	/* Account for safe areas on mobile */
+	padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .cart-notification.closing {
@@ -934,6 +943,17 @@ code{background:#0001;padding:0 4px;border-radius:4px}
 }
 
 @media (max-width: 480px) {
+	.cart-notification {
+		/* Ensure proper positioning above browser UI */
+		bottom: env(safe-area-inset-bottom, 0px);
+		/* Add margin to avoid overlap with floating button */
+		margin-right: 80px; /* Space for floating cart button */
+		/* Ensure it stays at bottom */
+		left: 0;
+		right: 80px; /* Leave space for cart button */
+		width: auto;
+	}
+	
 	.cart-notification-content {
 		flex-direction: column;
 		align-items: stretch;
@@ -947,6 +967,39 @@ code{background:#0001;padding:0 4px;border-radius:4px}
 	
 	.cart-notification-actions {
 		justify-content: center;
+	}
+}
+
+/* Tablet-specific adjustments */
+@media (max-width: 720px) and (min-width: 481px) {
+	.cart-notification {
+		/* Less margin needed on tablet */
+		margin-right: 90px; /* Space for floating cart button */
+		bottom: env(safe-area-inset-bottom, 0px);
+	}
+}
+
+/* Mobile viewport and stacking fixes */
+@media (max-width: 768px) {
+	/* Ensure proper stacking on mobile */
+	.cart-notification {
+		position: fixed !important;
+		z-index: 1000 !important;
+	}
+	
+	.floating-cart-btn {
+		position: fixed !important;
+		z-index: 1002 !important;
+	}
+	
+	.cart-drawer {
+		position: fixed !important;
+		z-index: 1001 !important;
+	}
+	
+	.cart-drawer-overlay {
+		position: fixed !important;
+		z-index: 1000 !important;
 	}
 }
 
