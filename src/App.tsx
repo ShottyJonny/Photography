@@ -12,11 +12,14 @@ import { CartProvider, useCart } from './context/CartContext'
 import { PricingProvider } from './context/PricingContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { ConsentProvider, useConsent } from './context/ConsentContext'
+import { ToastProvider } from './context/ToastContext'
 import LinkButton from './components/LinkButton'
 import Header from './components/Header'
 import CartDrawer from './components/CartDrawer'
 import CookieBanner from './components/CookieBanner'
 import CartNotification from './components/CartNotification'
+import FloatingCartButton from './components/FloatingCartButton'
+import Toasts from './components/Toasts'
 import cloudFullLight from './assets/logos/CloudLogoFull LightMode2.png'
 import cloudFullDark from './assets/logos/CloudLogoFull DarkMode2.png'
 
@@ -75,21 +78,27 @@ export function App() {
   return (
     <ThemeProvider>
       <ConsentProvider>
-        <CartProvider>
-          <PricingProvider>
-            <div className="container">
-              <WordmarkBar />
-              <Header onCartOpen={() => setCartOpen(true)} />
-              <main>
-                <HashRouter />
-              </main>
-            </div>
-            <CookieBanner />
-            <CartNotification />
-            <CartClearer />
-            <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
-          </PricingProvider>
-        </CartProvider>
+        <ToastProvider>
+          <CartProvider>
+            <PricingProvider>
+              <div className="container">
+                <WordmarkBar />
+                <Header onCartOpen={() => setCartOpen(true)} />
+                <main>
+                  <HashRouter />
+                </main>
+              </div>
+              <CookieBanner />
+              <CartNotification />
+              <CartClearer />
+              <CartDrawer isOpen={cartOpen} onClose={() => setCartOpen(false)} />
+              {/* Completely separate sticky cart button */}
+              <FloatingCartButton onCartOpen={() => setCartOpen(true)} />
+              {/* Toast notifications with simple slide animations */}
+              <Toasts />
+            </PricingProvider>
+          </CartProvider>
+        </ToastProvider>
       </ConsentProvider>
     </ThemeProvider>
   )

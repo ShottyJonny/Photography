@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useCart } from '../context/CartContext'
 import { products } from '../data/products'
 import { getRecommendedSize } from '../utils/recommendedSize'
@@ -93,7 +94,7 @@ export default function CartNotification() {
 
   if (!notification.visible) return null
 
-  return (
+  const content = (
     <div className={`cart-notification ${isClosing ? 'closing' : ''}`}>
       <div className="cart-notification-content">
         <div className="cart-notification-details">
@@ -124,4 +125,7 @@ export default function CartNotification() {
       </div>
     </div>
   )
+
+  // Render to document.body using portal to bypass #root transform
+  return createPortal(content, document.body)
 }
