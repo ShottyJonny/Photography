@@ -1,19 +1,28 @@
 import React from 'react'
 import LinkButton from '../components/LinkButton'
+import { useCart } from '../context/CartContext'
 
 export default function Order({ id }: { id: string }) {
   const [order, setOrder] = React.useState<any | null>(null)
   const [shipped, setShipped] = React.useState(false)
   const [tracking, setTracking] = React.useState<string | null>(null)
+  const { clear } = useCart()
+  
   React.useEffect(() => {
     try {
       const raw = localStorage.getItem('orders:v1')
       const list = raw ? (JSON.parse(raw) as any[]) : []
-      setOrder(list.find(o => o.id === id) || null)
+      const foundOrder = list.find(o => o.id === id) || null
+      setOrder(foundOrder)
+      
+      // Clear cart when viewing a successful order (user returned from Stripe)
+      if (foundOrder) {
+        clear()
+      }
     } catch {
       setOrder(null)
     }
-  }, [id])
+  }, [id, clear])
   React.useEffect(() => {
     // small delay to simulate fulfillment system update
     const t = window.setTimeout(() => {
@@ -23,9 +32,19 @@ export default function Order({ id }: { id: string }) {
     return () => window.clearTimeout(t)
   }, [id])
   if (!order) return (
-    <div>
-      <h2>Order not found</h2>
-      <LinkButton className="button" to="/">Go Home</LinkButton>
+    <div className="order">
+      <h2>Thank you for your order!</h2>
+      <p>Your payment has been processed successfully.</p>
+      <div className="about" style={{marginTop: 16, marginBottom: 16}}>
+        <section>
+          <p><strong>Order ID:</strong> {id}</p>
+          <p>We've sent a confirmation email with your order details and will notify you when your prints are ready to ship.</p>
+          <p style={{fontSize:'.85rem', opacity: 0.7, marginTop: 12}}>
+            If you need to reference this order later, please save this Order ID: <strong>{id}</strong>
+          </p>
+        </section>
+      </div>
+      <LinkButton className="button" to="/shop">Continue Shopping</LinkButton>
     </div>
   )
 

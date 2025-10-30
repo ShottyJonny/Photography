@@ -57,7 +57,6 @@ export default function Header({ onCartOpen }: HeaderProps) {
           <LinkButton to="/shop">Shop</LinkButton>
           <LinkButton to="/about">About</LinkButton>
           <LinkButton to="/contact">Contact</LinkButton>
-          <LinkButton to="/orders">Orders</LinkButton>
         </nav>
       <div className="header-actions" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <button
