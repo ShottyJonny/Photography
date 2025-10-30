@@ -2,6 +2,7 @@ import React from 'react'
 import { useCart } from '../context/CartContext'
 import { products } from '../data/products'
 import { ALL_SIZES, priceForSize, usePricing } from '../context/PricingContext'
+import { estimateShipping } from '../utils/taxShipping'
 import Dropdown from './Dropdown'
 
 interface CartDrawerProps {
@@ -19,6 +20,10 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
   }).filter((x) => x.p)
 
   const subtotal = lines.reduce((sum, { ci }) => sum + priceForSize((ci.size as any) || '4x6') * ci.qty, 0)
+  
+  // Estimate shipping cost (using US as default for cart display)
+  const shippingEst = estimateShipping(subtotal, 'United States')
+  const estimatedTotal = subtotal + shippingEst.cost
 
   // Close drawer when clicking overlay
   const handleOverlayClick = (e: React.MouseEvent) => {
@@ -140,11 +145,28 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
               </div>
 
               <div className="cart-drawer-footer">
-                <div className="cart-subtotal">
-                  <span>Subtotal</span>
-                  <span className="cart-subtotal-amount">
-                    {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(subtotal / 100)}
-                  </span>
+                <div className="cart-totals">
+                  <div className="cart-line">
+                    <span>Subtotal</span>
+                    <span>
+                      {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(subtotal / 100)}
+                    </span>
+                  </div>
+                  <div className="cart-line">
+                    <span>Shipping</span>
+                    <span>
+                      {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(shippingEst.cost / 100)}
+                    </span>
+                  </div>
+                  <div className="cart-line cart-total">
+                    <span>Estimated Total</span>
+                    <span>
+                      {new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(estimatedTotal / 100)}
+                    </span>
+                  </div>
+                  <div className="cart-tax-note">
+                    <small>Tax will be calculated at checkout</small>
+                  </div>
                 </div>
                 <div className="cart-drawer-actions">
                   <button 

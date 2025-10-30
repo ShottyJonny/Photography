@@ -318,15 +318,31 @@ main{margin-top:16px}
 	flex-direction:column;
 	gap:16px;
 }
-.cart-subtotal{
+.cart-totals{
+	display:flex;
+	flex-direction:column;
+	gap:8px;
+}
+.cart-line{
 	display:flex;
 	align-items:center;
 	justify-content:space-between;
-	font-size:1.2rem;
+	font-size:1rem;
 }
-.cart-subtotal-amount{
+.cart-total{
 	font-weight:700;
-	font-size:1.4rem;
+	font-size:1.2rem;
+	padding-top:8px;
+	border-top:1px solid var(--border);
+	margin-top:4px;
+}
+.cart-tax-note{
+	text-align:center;
+	margin-top:8px;
+	opacity:0.7;
+}
+.cart-tax-note small{
+	font-size:0.85rem;
 }
 .cart-drawer-actions{
 	display:flex;
