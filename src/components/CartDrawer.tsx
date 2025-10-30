@@ -1,4 +1,5 @@
 import React from 'react'
+import { createPortal } from 'react-dom'
 import { useCart } from '../context/CartContext'
 import { products } from '../data/products'
 import { ALL_SIZES, priceForSize, usePricing } from '../context/PricingContext'
@@ -42,7 +43,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     return () => window.removeEventListener('keydown', handleEsc)
   }, [isOpen, onClose])
 
-  return (
+  const content = (
     <>
       <div 
         className={`cart-drawer-overlay ${isOpen ? 'open' : ''}`}
@@ -200,4 +201,7 @@ export default function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
       </div>
     </>
   )
+
+  // Render to document.body using portal to bypass #root transform
+  return createPortal(content, document.body)
 }

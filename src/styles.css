@@ -44,6 +44,8 @@ body{
 	-webkit-font-smoothing: antialiased;
 	-moz-osx-font-smoothing: grayscale;
 	text-rendering: optimizeSpeed;
+	/* Prevent horizontal scrolling issues from drawer */
+	overflow-x: hidden;
 }
 #root{
 	min-height:100dvh;
@@ -129,6 +131,8 @@ main{margin-top:16px}
 	/* Optimize for mobile performance */
 	will-change: transform;
 	transform: translateZ(0);
+	/* Enable absolute positioning for cart button */
+	position: relative;
 }
 .brand-button{display:flex;align-items:center;gap:10px;appearance:none;background:none;border:none;padding:6px 8px;border-radius:8px;cursor:pointer;position:relative}
 /* corner logo aura removed */
@@ -169,24 +173,38 @@ main{margin-top:16px}
 	.menu-toggle{display:grid}
 }
 
-/* Floating Cart Button */
+/* Floating Cart Button - Completely Independent Sticky Entity */
 .floating-cart-btn{
-	position:fixed;
-	bottom:24px;
-	right:24px;
-	z-index:999;
-	width:56px;
-	height:56px;
-	border-radius:50%;
-	background:var(--bg-elev);
-	border:2px solid var(--border);
-	color:var(--text);
-	cursor:pointer;
-	display:grid;
-	place-items:center;
-	transition:transform .2s ease, box-shadow .2s ease, background-color .2s ease;
-	box-shadow:0 4px 12px rgba(0,0,0,.15);
-	-webkit-tap-highlight-color:transparent;
+	/* Sticky positioning - sticks to bottom-right of viewport */
+	position: sticky;
+	bottom: 24px;
+	/* Use margin to push to right edge of viewport */
+	margin: 0 24px 0 auto;
+	/* Make it a block element that takes up space */
+	display: block;
+	/* Positioning and appearance */
+	width: 56px;
+	height: 56px;
+	border-radius: 50%;
+	background: var(--bg-elev);
+	border: 2px solid var(--border);
+	color: var(--text);
+	cursor: pointer;
+	/* Center the icon */
+	display: grid;
+	place-items: center;
+	/* Animations and effects */
+	transition: transform .2s ease, box-shadow .2s ease, background-color .2s ease;
+	box-shadow: 0 4px 12px rgba(0,0,0,.15);
+	-webkit-tap-highlight-color: transparent;
+	/* Performance optimizations */
+	will-change: transform;
+	backface-visibility: hidden;
+	/* Ensure it's above other content */
+	z-index: 1000;
+	/* Remove any inherited positioning */
+	float: none;
+	clear: none;
 }
 .floating-cart-btn:hover{
 	transform:translateY(-2px);
@@ -215,17 +233,16 @@ main{margin-top:16px}
 }
 @media (max-width: 720px){
 	.floating-cart-btn{
-		/* Position above mobile browser UI and safe areas */
+		/* Keep sticky on mobile but adjust sizing and safe areas */
 		bottom: max(20px, env(safe-area-inset-bottom, 20px));
-		right: max(20px, env(safe-area-inset-right, 20px));
-		width:48px;
-		height:48px;
-		/* Ensure it's always visible */
-		z-index: 1002;
+		margin: 0 max(20px, env(safe-area-inset-right, 20px)) 0 auto;
+		width: 48px;
+		height: 48px;
+		z-index: 1001; /* Slightly higher on mobile */
 	}
 	.floating-cart-btn svg{
-		width:20px;
-		height:20px;
+		width: 20px;
+		height: 20px;
 	}
 }
 
@@ -233,8 +250,8 @@ main{margin-top:16px}
 .cart-drawer-overlay{
 	position:fixed;
 	inset:0;
-	background:rgba(0,0,0,.5);
-	backdrop-filter:var(--backdrop-blur, blur(4px));
+	background:rgba(0,0,0,.35); /* Less aggressive opacity */
+	backdrop-filter:var(--backdrop-blur, blur(3px)); /* Reduced blur */
 	z-index:1000;
 	opacity:0;
 	pointer-events:none;
@@ -249,22 +266,29 @@ main{margin-top:16px}
 .cart-drawer{
 	position:fixed;
 	top:0;
-	right:0;
+	right:-100%; /* Start completely off-screen */
 	bottom:0;
-	width:min(440px, 100vw);
+	height:100vh; /* Constrain to viewport height */
+	width:min(380px, 85vw);
 	background:var(--bg);
-	box-shadow:-4px 0 24px rgba(0,0,0,.2);
+	box-shadow:-4px 0 24px rgba(0,0,0,.15);
 	z-index:1001;
 	display:flex;
 	flex-direction:column;
-	transform:translateX(100%);
-	transition:transform .3s ease;
-	/* Mobile optimization */
-	will-change:transform;
-	transform:translateX(100%) translateZ(0);
+	/* Simple slide transition */
+	transition: right 0.3s ease;
+	will-change: right;
+	/* Rounded corners */
+	border-top-left-radius: 12px;
+	border-bottom-left-radius: 12px;
+	/* Prevent page widening when hidden */
+	overflow:hidden;
+	max-width:100vw;
+	/* Ensure proper height calculation */
+	max-height:100vh;
 }
 .cart-drawer.open{
-	transform:translateX(0) translateZ(0);
+	right:0; /* Simple slide in from right */
 }
 
 /* Mobile-specific optimizations */
@@ -272,31 +296,177 @@ main{margin-top:16px}
 	.cart-drawer-overlay{
 		/* Faster transition on mobile */
 		transition:opacity .2s ease;
-		/* Reduce backdrop blur on mobile */
-		backdrop-filter:var(--backdrop-blur, blur(2px));
+		/* Less intrusive backdrop */
+		backdrop-filter:var(--backdrop-blur, blur(1px));
+		background:rgba(0,0,0,.3); /* Less opaque overlay */
 	}
 	.cart-drawer{
-		/* Faster drawer animation on mobile */
-		transition:transform .25s ease;
-		/* Full width on mobile */
-		width:100vw;
+		/* Simple, fast slide animation on mobile */
+		transition: right 0.25s ease;
+		width: min(320px, 90vw);
 		/* Account for safe areas */
 		top: env(safe-area-inset-top, 0px);
 		bottom: env(safe-area-inset-bottom, 0px);
-		right: env(safe-area-inset-right, 0px);
+		/* More pronounced rounded corners on mobile */
+		border-top-left-radius: 16px;
+		border-bottom-left-radius: 16px;
+	}
+	
+	.cart-drawer.open{
+		right: env(safe-area-inset-right, 0px); /* Account for safe areas when open */
+	}
+}
+
+/* Extra small mobile devices */
+@media (max-width: 480px) {
+	.cart-drawer{
+		/* Even more conservative on very small screens */
+		width: min(280px, 85vw);
+	}
+}
+
+/* Toast Notifications - Bottom Viewport Position */
+.toasts-container {
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	right: 0;
+	z-index: 1500;
+	display: flex;
+	flex-direction: column;
+	gap: 0;
+	pointer-events: none;
+	padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.toast {
+	background: var(--bg-elev);
+	border-top: 1px solid var(--border);
+	padding: 16px 20px;
+	box-shadow: 0 -2px 12px rgba(0,0,0,.1);
+	color: var(--text);
+	font-size: 0.9rem;
+	line-height: 1.4;
+	cursor: pointer;
+	pointer-events: auto; /* Individual toasts are clickable */
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 16px;
+	/* Simple slide-up from bottom */
+	transform: translateY(100%);
+	opacity: 0;
+	transition: all 0.3s ease;
+	will-change: transform, opacity;
+	backdrop-filter: saturate(1.1) blur(8px);
+}
+
+/* Toast enters with slide-up animation */
+.toast {
+	animation: slideUpToast 0.3s ease forwards;
+}
+
+@keyframes slideUpToast {
+	from {
+		transform: translateY(100%);
+		opacity: 0;
+	}
+	to {
+		transform: translateY(0);
+		opacity: 1;
+	}
+}
+
+/* Toast closing animation */
+.toast.closing {
+	animation: slideDownToast 0.3s ease forwards;
+}
+
+@keyframes slideDownToast {
+	from {
+		transform: translateY(0);
+		opacity: 1;
+	}
+	to {
+		transform: translateY(100%);
+		opacity: 0;
+	}
+}
+
+.toast-message {
+	flex: 1;
+}
+
+.toast-dismiss {
+	background: none;
+	border: none;
+	color: var(--text);
+	font-size: 1.5rem;
+	line-height: 1;
+	cursor: pointer;
+	padding: 0;
+	width: 24px;
+	height: 24px;
+	display: grid;
+	place-items: center;
+	border-radius: 4px;
+	transition: background-color 0.2s ease;
+	flex-shrink: 0;
+}
+
+.toast-dismiss:hover {
+	background: rgba(0, 0, 0, 0.1);
+}
+
+/* Toast types */
+.toast.success {
+	border-left: 4px solid #22c55e;
+	background: color-mix(in srgb, #22c55e 8%, var(--bg-elev));
+}
+
+.toast.error {
+	border-left: 4px solid #ef4444;
+	background: color-mix(in srgb, #ef4444 8%, var(--bg-elev));
+}
+
+.toast.warning {
+	border-left: 4px solid #f59e0b;
+	background: color-mix(in srgb, #f59e0b 8%, var(--bg-elev));
+}
+
+.toast.info {
+	border-left: 4px solid #3b82f6;
+	background: color-mix(in srgb, #3b82f6 8%, var(--bg-elev));
+}
+
+/* Mobile toast adjustments */
+@media (max-width: 720px) {
+	.toast {
+		padding: 14px 16px;
+		font-size: 0.85rem;
+		/* Faster animation on mobile */
+		animation-duration: 0.25s;
+	}
+	
+	.toast.closing {
+		animation-duration: 0.25s;
 	}
 }
 .cart-drawer-header{
 	display:flex;
 	align-items:center;
 	justify-content:space-between;
-	padding:20px 24px;
-	border-bottom:1px solid var(--border);
-	background:var(--bg-elev);
+	padding:16px 20px; /* Slightly more compact */
+	border-bottom:1px solid var(--border-soft); /* Softer border */
+	background:var(--bg-subtle); /* Less prominent background */
+	/* Rounded top corners to match drawer */
+	border-top-left-radius: 12px;
 }
 .cart-drawer-header h2{
 	margin:0;
-	font-size:1.5rem;
+	font-size:1.3rem; /* Slightly smaller, less aggressive */
+	font-weight:600; /* Medium weight instead of bold */
+	opacity:0.9; /* Subtle opacity */
 }
 .cart-drawer-header .close-btn{
 	width:40px;
@@ -318,8 +488,14 @@ main{margin-top:16px}
 .cart-drawer-content{
 	flex:1;
 	overflow-y:auto;
+	overflow-x:hidden;
 	display:flex;
 	flex-direction:column;
+	/* Smooth scrolling */
+	-webkit-overflow-scrolling:touch;
+	/* Ensure scrolling works properly */
+	min-height:0;
+	padding-bottom:8px;
 }
 .cart-empty{
 	flex:1;
@@ -439,6 +615,8 @@ main{margin-top:16px}
 	display:flex;
 	flex-direction:column;
 	gap:16px;
+	/* Keep footer at bottom, fixed position within drawer */
+	flex-shrink:0;
 }
 .cart-totals{
 	display:flex;
@@ -989,7 +1167,10 @@ code{background:#0001;padding:0 4px;border-radius:4px}
 	
 	.floating-cart-btn {
 		position: fixed !important;
-		z-index: 1002 !important;
+		z-index: 9999 !important;
+		/* Ensure maximum visibility and persistence */
+		visibility: visible !important;
+		opacity: 1 !important;
 	}
 	
 	.cart-drawer {

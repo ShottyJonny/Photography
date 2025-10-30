@@ -10,8 +10,8 @@ interface HeaderProps {
 
 export default function Header({ onCartOpen }: HeaderProps) {
   const { items } = useCart()
-  const [open, setOpen] = React.useState(false)
   const count = items.reduce((acc, i) => acc + i.qty, 0)
+  const [open, setOpen] = React.useState(false)
   const { theme, toggleTheme } = useTheme()
   const [swapping, setSwapping] = React.useState(false)
   const [prevTheme, setPrevTheme] = React.useState<ReturnType<typeof useTheme>['theme'] | null>(null)
@@ -29,24 +29,7 @@ export default function Header({ onCartOpen }: HeaderProps) {
   }, [])
 
   return (
-    <>
-      {/* Floating cart icon - fixed to viewport bottom-right */}
-      <button 
-        type="button" 
-        className="floating-cart-btn" 
-        onClick={onCartOpen}
-        aria-label={`Open cart with ${count} items`}
-        title="View cart"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <circle cx="9" cy="21" r="1"></circle>
-          <circle cx="20" cy="21" r="1"></circle>
-          <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-        </svg>
-        {count > 0 && <span className="cart-badge">{count}</span>}
-      </button>
-
-      <header className={open ? 'app-header open' : 'app-header'}>
+    <header className={open ? 'app-header open' : 'app-header'}>
         <div className="brand">
           <button type="button" className="brand-button" onClick={() => (window.location.hash = '/')} aria-label="Go to home">
             <img src={cloudFullLighter} alt="Jon Hoffman Photography logo" className="brand-logo" />
@@ -87,7 +70,6 @@ export default function Header({ onCartOpen }: HeaderProps) {
         </button>
       </div>
     </header>
-    </>
   )
 }
 
