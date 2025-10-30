@@ -24,7 +24,10 @@ export default function Orders() {
     <div className="about">
       <section>
         <h2>My Orders</h2>
-        <p>No orders yet.</p>
+        <p>No orders found. Orders are stored locally in your browser and may not be available if you've cleared your browser data or are using a different device.</p>
+        <p style={{fontSize: '.85rem', opacity: 0.7, marginTop: 12}}>
+          For order inquiries, please contact us with your Order ID from your email confirmation.
+        </p>
         <LinkButton className="button" to="/shop">Go to Shop</LinkButton>
       </section>
     </div>
