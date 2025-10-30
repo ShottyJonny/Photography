@@ -86,7 +86,8 @@ export default function CartNotification() {
   }
 
   const goToCart = () => {
-    window.location.hash = '/cart'
+    // Dispatch custom event to open cart drawer
+    window.dispatchEvent(new CustomEvent('cart:open'))
     handleDismiss()
   }
 
