@@ -119,6 +119,11 @@ export default function Checkout() {
           orderId: order.id,
           customerEmail: ship.email,
           customerName: ship.name,
+          totals: {
+            shipping: shippingEst.cost,
+            tax: tax,
+            total: total
+          }
         }),
       })
       
