@@ -8,9 +8,9 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { items, orderId, customerEmail, customerName } = JSON.parse(event.body)
+    const { items, orderId, customerEmail, customerName, totals } = JSON.parse(event.body)
 
-    // Calculate line items for Stripe
+    // Calculate line items for Stripe - start with products
     const lineItems = items.map(item => ({
       price_data: {
         currency: 'usd',
@@ -22,6 +22,36 @@ exports.handler = async (event) => {
       },
       quantity: item.qty,
     }))
+
+    // Add shipping as a line item if there's a shipping cost
+    if (totals && totals.shipping > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Shipping',
+            description: 'Standard shipping',
+          },
+          unit_amount: totals.shipping,
+        },
+        quantity: 1,
+      })
+    }
+
+    // Add tax as a line item if there's tax
+    if (totals && totals.tax > 0) {
+      lineItems.push({
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: 'Tax',
+            description: 'Sales tax',
+          },
+          unit_amount: totals.tax,
+        },
+        quantity: 1,
+      })
+    }
 
     // Create Checkout Session
     const session = await stripe.checkout.sessions.create({
