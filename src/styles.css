@@ -19,6 +19,16 @@
 		/* Reduce backdrop filter blur on mobile for better performance */
 		--backdrop-blur: blur(2px);
 	}
+	
+	/* Softer background on mobile dark mode */
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--bg: #1a1a1e; /* Charcoal instead of pure black */
+			--bg-subtle: #1e1e23;
+			--bg-elev: #25252b;
+			--bg-elev-2: #2a2a30;
+		}
+	}
 }
 
 @media (min-width: 769px) {
@@ -234,8 +244,12 @@ main{margin-top:16px}
 @media (max-width: 720px){
 	.floating-cart-btn{
 		/* Keep sticky on mobile but adjust sizing and safe areas */
+		/* Use fixed positioning on mobile for more reliable placement */
+		position: fixed;
 		bottom: max(20px, env(safe-area-inset-bottom, 20px));
-		margin: 0 max(20px, env(safe-area-inset-right, 20px)) 0 auto;
+		right: max(20px, env(safe-area-inset-right, 20px));
+		left: auto;
+		margin: 0;
 		width: 48px;
 		height: 48px;
 		z-index: 1001; /* Slightly higher on mobile */
@@ -250,8 +264,8 @@ main{margin-top:16px}
 .cart-drawer-overlay{
 	position:fixed;
 	inset:0;
-	background:rgba(0,0,0,.35); /* Less aggressive opacity */
-	backdrop-filter:var(--backdrop-blur, blur(3px)); /* Reduced blur */
+	background:rgba(30,30,35,.40); /* Softer charcoal instead of pure black */
+	backdrop-filter:var(--backdrop-blur, blur(3px));
 	z-index:1000;
 	opacity:0;
 	pointer-events:none;
@@ -298,7 +312,7 @@ main{margin-top:16px}
 		transition:opacity .2s ease;
 		/* Less intrusive backdrop */
 		backdrop-filter:var(--backdrop-blur, blur(1px));
-		background:rgba(0,0,0,.3); /* Less opaque overlay */
+		background:rgba(30,30,35,.35); /* Softer charcoal for mobile */
 	}
 	.cart-drawer{
 		/* Simple, fast slide animation on mobile */
