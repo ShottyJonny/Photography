@@ -31,6 +31,18 @@
 	}
 }
 
+/* Also apply mobile colors in landscape orientation on smaller screens */
+@media (max-height: 768px) and (orientation: landscape) {
+	@media (prefers-color-scheme: dark) {
+		:root {
+			--bg: #1a1a1e;
+			--bg-subtle: #1e1e23;
+			--bg-elev: #25252b;
+			--bg-elev-2: #2a2a30;
+		}
+	}
+}
+
 @media (min-width: 769px) {
 	:root {
 		--backdrop-blur: blur(4px);
@@ -318,12 +330,17 @@ main{margin-top:16px}
 		/* Simple, fast slide animation on mobile */
 		transition: right 0.25s ease;
 		width: min(320px, 90vw);
+		/* Use dynamic viewport height for mobile browsers */
+		height: 100dvh;
+		max-height: 100dvh;
 		/* Account for safe areas */
-		top: env(safe-area-inset-top, 0px);
-		bottom: env(safe-area-inset-bottom, 0px);
+		top: 0;
+		bottom: 0;
 		/* More pronounced rounded corners on mobile */
 		border-top-left-radius: 16px;
 		border-bottom-left-radius: 16px;
+		/* Ensure content is fully accessible */
+		overflow: hidden;
 	}
 	
 	.cart-drawer.open{
@@ -336,6 +353,17 @@ main{margin-top:16px}
 	.cart-drawer{
 		/* Even more conservative on very small screens */
 		width: min(280px, 85vw);
+	}
+	
+	.cart-drawer-footer{
+		/* Reduce padding on small screens to ensure buttons are visible */
+		padding: 16px 20px;
+		padding-bottom: max(16px, env(safe-area-inset-bottom, 16px));
+	}
+	
+	.cart-drawer-content{
+		/* Ensure scrollable area accounts for smaller screens */
+		padding-bottom: 12px;
 	}
 }
 
