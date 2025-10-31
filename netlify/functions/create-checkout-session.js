@@ -58,13 +58,20 @@ exports.handler = async (event) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.URL || 'http://localhost:5181'}/#/order/${orderId}?payment=success`,
-      cancel_url: `${process.env.URL || 'http://localhost:5181'}/#/checkout`,
+      success_url: `${process.env.URL || 'http://localhost:5181'}/#/order/${orderId}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.URL || 'http://localhost:5181'}/#/checkout?canceled=true`,
       customer_email: customerEmail,
       metadata: {
         orderId,
         customerName,
+        customerEmail,
       },
+      // Allow Stripe to send payment intent ID in webhook
+      payment_intent_data: {
+        metadata: {
+          orderId,
+        }
+      }
     })
 
     return {

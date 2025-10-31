@@ -4,7 +4,7 @@ import { usePricing, priceForSize } from '../context/PricingContext'
 import { products } from '../data/products'
 import LinkButton from '../components/LinkButton'
 import { estimateShipping, estimateTaxRate } from '../utils/taxShipping'
-import { saveOrder } from '../services/supabase'
+import { saveOrder, supabase } from '../services/supabase'
 
 type ShippingForm = {
   name: string
@@ -62,9 +62,9 @@ export default function Checkout() {
     if (!validateShip()) return
     
     setPlacing(true)
+    const orderId = genId()
+    
     try {
-      const orderId = genId()
-      
       const order = {
         id: orderId,
         created_at: new Date().toISOString(),
@@ -128,16 +128,44 @@ export default function Checkout() {
       })
       
       if (!response.ok) {
-        throw new Error('Failed to create checkout session')
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Failed to create checkout session')
       }
       
-      const { url } = await response.json()
+      const { url, sessionId } = await response.json()
+      
+      if (!url) {
+        throw new Error('No checkout URL returned from server')
+      }
+      
+      // Store session ID for potential error tracking
+      sessionStorage.setItem('stripe_session_id', sessionId)
+      sessionStorage.setItem('pending_order_id', order.id)
+      
       window.location.href = url
       
     } catch (error) {
       console.error('Checkout error:', error)
-      alert('There was an error processing your order. Please try again.')
+      
+      // More specific error messages
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      
+      alert(`Payment processing error: ${errorMessage}\n\nYour order has been saved and you can try again. If the problem persists, please contact support with order ID: ${orderId}`)
+      
       setPlacing(false)
+      
+      // Update order status to 'payment_failed' in Supabase
+      try {
+        await supabase
+          .from('orders')
+          .update({ 
+            status: 'payment_failed',
+            metadata: { error: errorMessage }
+          })
+          .eq('id', orderId)
+      } catch (dbError) {
+        console.error('Failed to update order status:', dbError)
+      }
     }
   }
 
