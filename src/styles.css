@@ -871,6 +871,10 @@ code{background:#0001;padding:0 4px;border-radius:4px}
 @keyframes progress{from{width:0%}to{width:100%}}
 @media (max-width: 720px){
 	.hero,.featured{grid-template-columns:1fr}
+	.carousel-controls{inset:auto 4px 4px 4px;gap:4px}
+	.carousel-controls > button[aria-label]{padding:.2rem .4rem;font-size:0.9rem}
+	.carousel-controls .story-progress{gap:3px}
+	.carousel-controls .segment{height:3px;max-width:60px}
 }
 
 /* Product page hero aura */
