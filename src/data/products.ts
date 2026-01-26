@@ -7,6 +7,7 @@ export type Product = {
   imageBW?: string // optional B&W version under /images/prints/bw
   thumbnailBW?: string // optional B&W thumbnail under /images/thumbs/bw
   description?: string
+  unlisted?: boolean // if true, hidden from shop/collections but accessible via direct link
 }
 
 // AUTO-GENERATED from public/images folders. Update via scripts/generate-products.mjs or adjust manually.
@@ -176,6 +177,7 @@ export const products: Product[] = [
     thumbnail: '/images/thumbs/Fade Away.jpg',
     imageBW: '/images/prints/bw/Fade Away.jpg',
     thumbnailBW: '/images/thumbs/bw/Fade Away.jpg',
+    unlisted: true,
   },
   {
     id: 'print-gathering',
@@ -185,6 +187,7 @@ export const products: Product[] = [
     thumbnail: '/images/thumbs/Gathering.jpg',
     imageBW: '/images/prints/bw/Gathering.jpg',
     thumbnailBW: '/images/thumbs/bw/Gathering.jpg',
+    unlisted: true,
   },
   {
     id: 'print-goalless',
@@ -197,12 +200,12 @@ export const products: Product[] = [
   },
   {
     id: 'print-had-to-go',
-    name: 'Had To Go',
+    name: 'Slipped Through',
     price: 15000,
-    image: '/images/prints/Had To Go.jpg',
-    thumbnail: '/images/thumbs/Had To Go.jpg',
-    imageBW: '/images/prints/bw/Had To Go.jpg',
-    thumbnailBW: '/images/thumbs/bw/Had To Go.jpg',
+    image: '/images/prints/Slipped Through.jpg',
+    thumbnail: '/images/thumbs/Slipped Through.jpg',
+    imageBW: '/images/prints/bw/Slipped Through.jpg',
+    thumbnailBW: '/images/thumbs/bw/Slipped Through.jpg',
   },
   {
     id: 'print-lost-innocence',
@@ -221,6 +224,7 @@ export const products: Product[] = [
     thumbnail: '/images/thumbs/Place To Rest.jpg',
     imageBW: '/images/prints/bw/Place To Rest.jpg',
     thumbnailBW: '/images/thumbs/bw/Place To Rest.jpg',
+    unlisted: true,
   },
   {
     id: 'print-save-a-seat',
@@ -230,6 +234,7 @@ export const products: Product[] = [
     thumbnail: '/images/thumbs/Save a Seat.jpg',
     imageBW: '/images/prints/bw/Save a Seat.jpg',
     thumbnailBW: '/images/thumbs/bw/Save a Seat.jpg',
+    unlisted: true,
   },
   {
     id: 'print-sidelines',

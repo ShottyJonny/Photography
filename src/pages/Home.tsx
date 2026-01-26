@@ -43,7 +43,7 @@ export default function Home() {
   const more = React.useMemo(() => {
     if (!priced.length) return [] as typeof priced
     const exclude = new Set(relicsProducts.map(p => p.id))
-    const pool = priced.filter(p => !exclude.has(p.id))
+    const pool = priced.filter(p => !exclude.has(p.id) && !p.unlisted)
     const shuffled = [...pool]
     for (let i = shuffled.length - 1; i > 0; i--) {
       const j = Math.floor(Math.random() * (i + 1))

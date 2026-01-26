@@ -9,11 +9,11 @@ type SortKey = 'featured' | 'price-asc' | 'price-desc' | 'name-asc' | 'name-desc
 export default function Shop() {
   const { priced } = usePricing()
   const [sort, setSort] = React.useState<SortKey>('featured')
-  const [rand, setRand] = React.useState(() => [...priced])
+  const [rand, setRand] = React.useState(() => [...priced].filter(p => !p.unlisted))
 
   // If global prices change, reset controls
   React.useEffect(() => {
-    setRand([...priced])
+    setRand([...priced].filter(p => !p.unlisted))
     setSort('featured')
   }, [priced])
 
