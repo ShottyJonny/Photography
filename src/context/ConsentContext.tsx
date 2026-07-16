@@ -18,7 +18,11 @@ function load(): ConsentState | null {
 }
 
 function save(state: ConsentState) {
-  try { localStorage.setItem('consent:v1', JSON.stringify(state)) } catch {}
+  try {
+    localStorage.setItem('consent:v1', JSON.stringify(state))
+  } catch (e) {
+    console.warn('consent persist to localStorage failed', e)
+  }
 }
 
 export const ConsentContext = React.createContext<{

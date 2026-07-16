@@ -331,7 +331,9 @@ function fmt(cents: number) {
 
 function genId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    try { return (crypto as any).randomUUID() } catch {}
+    try { return (crypto as any).randomUUID() } catch (e) {
+      console.warn('crypto.randomUUID failed, falling back to timestamp id', e)
+    }
   }
   return `o_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 }

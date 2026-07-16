@@ -13,7 +13,9 @@ window.addEventListener('keydown', (e) => {
     try {
       localStorage.clear()
       sessionStorage.clear()
-    } catch {}
+    } catch (err) {
+      console.warn('dev cache clear (localStorage/sessionStorage) failed', err)
+    }
     location.reload()
   }
 })

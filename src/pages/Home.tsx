@@ -1,7 +1,6 @@
 import React from 'react'
 import { collections } from '../data/collections'
 import { usePricing } from '../context/PricingContext'
-import { useCart } from '../context/CartContext'
 import LinkButton from '../components/LinkButton'
 import { ProductCard } from '../components/ProductCard'
 import { averageColor } from '../utils/color'
@@ -9,8 +8,7 @@ import { averageColor } from '../utils/color'
 export default function Home() {
   const AUTO_MS = 4000
   const { priced } = usePricing()
-  const { add } = useCart()
-  
+
   // Get the Relics collection
   const relicsCollection = collections.find(c => c.id === 'relics')
   const relicsProducts = React.useMemo(() => {
@@ -145,10 +143,6 @@ export default function Home() {
       )}
     </div>
   )
-}
-
-function formatPrice(cents: number) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(cents / 100)
 }
 
 // using shared averageColor util
