@@ -61,7 +61,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
           return { items }
         }
       }
-    } catch {}
+    } catch (e) {
+      console.warn('cart restore from localStorage failed', e)
+    }
     return { items: [] }
   })
   // persist
@@ -69,7 +71,9 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     const data: Persisted = { items: state.items }
     try {
       localStorage.setItem('cart:v1', JSON.stringify(data))
-    } catch {}
+    } catch (e) {
+      console.warn('cart persist to localStorage failed', e)
+    }
   }, [state.items])
   const value = useMemo(
     () => ({
@@ -94,7 +98,9 @@ export function useCart() {
 
 function genId() {
   if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    try { return (crypto as any).randomUUID() } catch {}
+    try { return (crypto as any).randomUUID() } catch (e) {
+      console.warn('crypto.randomUUID failed, falling back to timestamp id', e)
+    }
   }
   return `l_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`
 }

@@ -15,7 +15,6 @@ import { PricingProvider } from './context/PricingContext'
 import { ThemeProvider, useTheme } from './context/ThemeContext'
 import { ConsentProvider, useConsent } from './context/ConsentContext'
 import { ToastProvider } from './context/ToastContext'
-import LinkButton from './components/LinkButton'
 import Header from './components/Header'
 import CartDrawer from './components/CartDrawer'
 import CookieBanner from './components/CookieBanner'
@@ -24,12 +23,6 @@ import FloatingCartButton from './components/FloatingCartButton'
 import Toasts from './components/Toasts'
 import cloudFullLight from './assets/logos/CloudLogoFull LightMode2.png'
 import cloudFullDark from './assets/logos/CloudLogoFull DarkMode2.png'
-
-function CartBadge() {
-  const { items } = useCart()
-  const count = items.reduce((acc, i) => acc + i.qty, 0)
-  return <span aria-label="cart-count">{count > 0 ? `(${count})` : null}</span>
-}
 
 function CartClearer() {
   const { clear } = useCart()

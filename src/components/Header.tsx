@@ -1,6 +1,5 @@
 import React from 'react'
 import LinkButton from './LinkButton'
-import { useCart } from '../context/CartContext'
 import cloudFullLighter from '../assets/logos/CloudLogoFullLighter.png'
 import { useTheme } from '../context/ThemeContext'
 
@@ -8,9 +7,7 @@ interface HeaderProps {
   onCartOpen: () => void
 }
 
-export default function Header({ onCartOpen }: HeaderProps) {
-  const { items } = useCart()
-  const count = items.reduce((acc, i) => acc + i.qty, 0)
+export default function Header(_props: HeaderProps) {
   const [open, setOpen] = React.useState(false)
   const { theme, toggleTheme } = useTheme()
   const [swapping, setSwapping] = React.useState(false)

@@ -3,7 +3,6 @@ import { useCart } from '../context/CartContext'
 import LinkButton, { navigate } from './LinkButton'
 import React from 'react'
 import { averageColor } from '../utils/color'
-import { displaySize } from '../utils/sizeDisplay'
 
 export function ProductCard({ product }: { product: Product }) {
   const { add } = useCart()

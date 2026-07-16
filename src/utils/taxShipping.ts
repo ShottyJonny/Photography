@@ -32,8 +32,7 @@ export function estimateTaxRate(country: string, region: string): TaxEstimate {
 export type ShippingMethod = 'standard'
 export type ShippingEstimate = { cost: number; free: boolean; threshold: number; note?: string }
 
-export function estimateShipping(subtotalCents: number, country: string, method: ShippingMethod = 'standard'): ShippingEstimate {
-  const domestic = /^(united states|usa|us)$/i.test(country.trim())
+export function estimateShipping(subtotalCents: number, country: string, _method: ShippingMethod = 'standard'): ShippingEstimate {
   // Free shipping disabled; flat base costs.
   const threshold = Infinity
   // Base cost: standard = $9.95 everywhere.
@@ -45,8 +44,4 @@ export function estimateShipping(subtotalCents: number, country: string, method:
     threshold,
     note: undefined
   }
-}
-
-function fmtCurrency(cents: number) {
-  return new Intl.NumberFormat(undefined, { style: 'currency', currency: 'USD' }).format(cents / 100)
 }

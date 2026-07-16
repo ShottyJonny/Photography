@@ -14,7 +14,9 @@ function getInitialTheme(): Theme {
   try {
     const saved = localStorage.getItem('theme:v1') as Theme | null
     if (saved === 'light' || saved === 'dark') return saved
-  } catch {}
+  } catch (e) {
+    console.warn('theme read from localStorage failed', e)
+  }
   const prefersDark = typeof window !== 'undefined' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
   return prefersDark ? 'dark' : 'light'
 }
@@ -24,7 +26,11 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   React.useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme)
-    try { localStorage.setItem('theme:v1', theme) } catch {}
+    try {
+      localStorage.setItem('theme:v1', theme)
+    } catch (e) {
+      console.warn('theme persist to localStorage failed', e)
+    }
   }, [theme])
 
   const toggleTheme = React.useCallback(() => {
