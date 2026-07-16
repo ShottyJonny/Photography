@@ -1,0 +1,100 @@
+name: CI
+
+# Split job model (matches the pattern in the owner's Ledger repo,
+# .github/workflows/ci.yml). Each suite runs in its own job so a failure
+# names itself at the gate (lint vs typecheck vs build vs functions)
+# instead of collapsing into one opaque red dot, and so each is
+# independently requireable in GitHub branch protection.
+#
+# Job ids below (lint, typecheck, build, functions) ARE THE
+# REQUIRED-STATUS-CHECK CONTRACT for the branch-protection rule this repo
+# does not have yet. Renaming a job id here means re-pinning that rule.
+#
+# The `functions` job is the one that matters most and looks the smallest.
+# `npm run lint` globs only src/**/*.{ts,tsx}, and `tsc` only covers the TS
+# project rooted at src/ (tsconfig.json "include"). Neither reaches
+# netlify/functions/*.js — the Stripe checkout-session and webhook
+# handlers, i.e. the code that moves real money in LIVE mode. Before this
+# workflow, nothing mechanical ever ran against that directory. On
+# 2026-07-16, two P0 bugs shipped through exactly that hole: one in a
+# netlify function, one in a URL round-trip, both behind a "green" gate
+# that was telling the truth about the parts of the repo it actually
+# looked at. `node --check` is a syntax check, not a test suite — it will
+# not catch the class of bug that shipped — but it is strictly more
+# coverage than the zero these files had, and it is cheap enough that
+# there's no excuse not to run it on every push and PR.
+#
+# `develop` does not exist as a branch yet at the time this workflow is
+# added; it's created immediately after. Triggers reference it now so
+# there's no follow-up edit required once it exists — an inert trigger for
+# a branch that doesn't exist yet is harmless, unlike an inert job.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Cancel a stale run on the same ref when a newer push/PR update
+# supersedes it, so a quick sequence of pushes doesn't queue redundant runs.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Baseline on main is non-zero (37 errors as of 2026-07-16 — see
+      # CLAUDE.md). This job gates on whatever the real count is today,
+      # not a softened version of it: plain `npm run lint`, no
+      # continue-on-error, no `|| true`. If that baseline is zero by the
+      # time this lands, this step needs no change to reflect that.
+      - run: npm run lint
+
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      - run: npx tsc --noEmit
+
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # `tsc -b && vite build`. Overlaps with `typecheck` (tsc runs twice)
+      # but that duplication is what buys build its own independently
+      # requireable, independently named status check — a build failure
+      # that isn't a type error (e.g. a bad import Vite can't resolve)
+      # should not have to hide behind a job called "typecheck" to be seen.
+      - run: npm run build
+
+  functions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: .nvmrc
+      # No `npm ci` / npm cache here on purpose: node --check only parses
+      # syntax, it never executes a require(), so netlify/functions'
+      # dependency tree (stripe, @supabase/supabase-js) is irrelevant to
+      # what this job checks. Installing it would only slow the job down.
+      - name: Syntax-check every Netlify function, including lib/
+        run: find netlify/functions -type f -name '*.js' -print0 | xargs -0 -n1 node --check
