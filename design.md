@@ -1,6 +1,6 @@
 # design.md
 
-> **STATUS: Groundwork.** The aesthetic direction for this site is **not yet decided** — see [§1](#1-aesthetic-direction--undecided). Everything below §1 is an honest inventory of what `src/styles.css` contains *today*, recorded so a redesign starts from a known baseline instead of a blank page. **The current state is documented, not endorsed.** Do not treat this file as a build commitment until §1 is filled in; most of what's inventoried here is expected to be replaced.
+> **STATUS: Groundwork.** [§1](#1-aesthetic-direction) records the site's **posture** — decided 2026-07-16. **Colour, typography, and the portfolio-vs-store question are still open** and are listed in §1 "Still open" and §10. Everything below §1 is an honest inventory of what `src/styles.css` contains *today*, recorded so a redesign starts from a known baseline instead of a blank page. **The current state is documented, not endorsed** — most of it is expected to be replaced.
 
 Companion to `CLAUDE.md`. `design.md` = how it looks and moves. `CLAUDE.md` = how to work in the repo. Questions about *appearance* land here; questions about *commands, constraints, or the money path* land there.
 
@@ -8,32 +8,63 @@ Measured against `src/styles.css` (1,688 lines, single stylesheet) on 2026-07-16
 
 ---
 
-## 1. Aesthetic direction — UNDECIDED
+## 1. Aesthetic direction
 
-**This is the load-bearing hole. Every section below is downstream of it.** Color, type, spacing, and motion can't be resolved until this is, and filling them in first would just be inventing constraints to work around later.
+Posture decided 2026-07-16. Colour, type, and IA still open — see "Still open" below.
 
-### Raw material that already exists
+### The organizing logic: duality, held privately
 
-The identity does not need to be invented from nothing. It is already present in the writing and the titles, and absent only from the interface:
+The cloud mark is not a cloud. It is a cloud **interrupted** — a soft, billowing form severed by a hard vertical cut at its widest point. It is a metaphor for bipolar disorder and for the other dualities the work occupies.
 
-- **The Relics literature** (`src/data/collections.ts:24-36`) is the strongest artistic statement in the repo — reflective, self-deprecating, literary, landing on sentiment as equal in weight to historical significance. It is a real voice.
-- **The print titles** run a consistent theme: *Deterioration*, *Fade Away*, *If Gold Could Rust*, *Lost Innocence*, *Slipped Through*, *We Can Rest Now*, *Urban Sisyphus*, *Forever Dancing*. Decay, memory, endurance, what survives.
-- **The collection concept** — "objects surviving from an earlier time, of historical or sentimental interest."
+**This is the site's organizing logic, and it is never announced.**
 
-### The contradiction to resolve
+Announced metaphors stop working the moment they are announced. The Relics literature is the proof: it is the most personal thing on the site — it opens on a dictionary definition, wanders through lost media, and only then puts a hand on your chest — and it works *because* it never explains itself. The design follows the same rule the prose already follows.
 
-The interface currently contradicts that voice in two directions at once, and the direction chosen in this section must settle which one wins:
+**Rule:** the duality may inform every decision. It may never be captioned. It is a dial that can be turned up later once there is a real substrate to judge against; it cannot be turned back down once it is loud.
 
-- `src/pages/Contact.tsx` opens with `📬 Jon Hoffman Photography – Contact Us` and uses emoji section headers (`🏢`, `📞`, `📧`, `📣`) — generic corporate-template register.
-- `src/components/ProductCard.tsx` + `.product-card` render a 180×220 cropped thumbnail beside a title, a three-line description, a price, and two buttons — an e-commerce parts-catalog shape, where the photograph is subordinate to UI chrome.
+### A stranger owes the site no feeling on arrival
 
-The same site contains the Relics essay. One of these registers is the artist and the other is scaffolding.
+Someone landing here needs to feel nothing in particular. The work is seen clearly; the writing is there if they want it. Do not engineer a mood at the door.
 
-### Open questions blocking this section
+### Not a museum
 
-1. **What should it feel like?** (elegiac/dark-gallery, archival/museum-record, editorial/essay-forward, or something else)
-2. **Is this a portfolio that sells, or a store that showcases?** The code answers "store"; the writing answers "gallery." This determines whether price and add-to-cart survive on the grid.
-3. **Does the light/dark toggle survive?** It constrains any palette to work twice (see §2).
+Rejected explicitly. A museum asks the viewer to revere the work, and that posture is unearned by definition — reaching for it is exactly what reads as self-important. **Restraint is welcome; reverence is the failure mode.**
+
+The antidote is already in the voice. "How utterly asinine" and "Hell, I hope they find my baby teeth" are not the sentences of a pretentious person. **If the site's voice stops sounding like the Relics essay, the site is wrong.** That is the falsifiable test for this section.
+
+### The feeling lives in the writing, not the chrome
+
+`Collection.literature` (`src/data/collections.ts:7`) is where emotional register belongs. The chrome stays quiet because the essay carries it better than any colour could. This is not suppression — it is putting the feeling where it is strongest, and the data model already says so.
+
+The per-print colour/B&W toggle (`imageBW`) is the same principle at the image level: the viewer is handed both registers and picks one. The site never says which mood is correct.
+
+### Duality is already in the code — it is just unintentional
+
+These are currently generic features. They are the thesis. Treat them as such:
+
+- The light/dark theme (`ThemeContext`) — currently a bare `color-scheme` flip (§2).
+- The colour/B&W toggle on every print (`imageBW`, `thumbnailBW`) — currently a checkbox.
+- The mark itself — `Cloud Logo Black Half.png` / `Cloud Logo White Half.png` are the same silhouette in two values (a pair for placing on dark vs light grounds, not two interlocking halves).
+
+Neither theme state should be the "real" one with the other as a preference. Both are fully intended.
+
+### Home must be grander
+
+The landing page is currently the weakest expression of the work on the site. `.hero` splits the 960px shell 1fr/1fr (`src/styles.css:848`, §4), so the photograph lands at roughly 440px — *narrower than the interior collection pages*, which were widened to 1200px. The most important "sell the work" moment is the smallest. This needs the most ambition of any surface.
+
+### Still open
+
+- **Colour.** The identity has always been black and white; the concern is that it leaves little room. **Not resolved.** Options raised, in rough order of preference:
+  1. **Borrowed colour** — chrome stays achromatic; every surface takes its hue from the photograph on it. `src/utils/color.ts` `averageColor()` already does this and `Product.tsx` already computes an "aura." The site owns no palette; it wears the work's. Deferential rather than reverent, which is a direct answer to the museum problem, and it invents no arbitrary brand hue.
+  2. **Temperature, not hue** — warm paper vs cold slate. Reads black-and-white, still carries duality.
+  3. **Colour as an event** — achromatic at rest; colour exists only *during* transitions. The interesting part of a duality was never the poles.
+  4. **A rust accent** from *If Gold Could Rust* — oxidation as something precious decaying is the Relics thesis in one word. Flagged: the Concierge project already owns gold; this risks self-repetition across the portfolio.
+
+  **Counterpoint worth keeping:** black and white is probably not the real constraint. This site reads flat because it has no typography and no spacing rhythm (§3, §4), not because it lacks hue. Fix those first, then re-ask — otherwise the likely outcome is a coloured site that still feels flat.
+
+- **Portfolio-that-sells vs store-that-showcases.** Unanswered. The code answers "store" (price + two buttons on every card); the writing answers "gallery." "Grander home" means different things depending on this.
+
+- **Typography.** Nothing decided. See §3. Likely the highest-leverage open question, per the counterpoint above.
 
 ---
 
