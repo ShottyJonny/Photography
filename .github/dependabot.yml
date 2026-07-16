@@ -10,21 +10,21 @@
 #   -> Security & analysis -> Dependabot security updates) and fire
 #   independently of this schedule, on new advisory disclosure.
 #
-# target-branch is intentionally left unset (defaults to the repo's
-# default branch, currently main). Ledger's own dependabot.yml pins
-# target-branch: develop, to keep automated PRs off the branch that
-# deploys straight to production — the right long-term posture here too,
-# since pushing to main on this repo triggers a live Stripe deploy (see
-# CLAUDE.md). But `develop` does not exist yet as a branch as of this
-# file landing, and pointing target-branch at a branch that doesn't exist
-# yet surfaces as a broken config in the repo's Insights tab rather than
-# failing silently. Add `target-branch: develop` to both entries below
-# once that branch exists and is the working branch.
+# target-branch: develop on both entries. Automated PRs must never target
+# main, because merging main triggers a live Stripe deploy (see CLAUDE.md).
+# The first Dependabot run after this config landed opened 12 PRs against
+# main — including a stripe 19 -> 22 major on the payment path — which is
+# exactly the outcome this pins shut.
+#
+# Those 12 PRs were opened before `develop` existed. Dependabot closes and
+# re-opens against the new target on its next run; the originals do not
+# retarget themselves.
 
 version: 2
 updates:
   - package-ecosystem: "npm"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
@@ -47,6 +47,7 @@ updates:
 
   - package-ecosystem: "github-actions"
     directory: "/"
+    target-branch: "develop"
     schedule:
       interval: "weekly"
       day: "monday"
