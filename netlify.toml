@@ -5,4 +5,13 @@
 [build.environment]
   NODE_VERSION = "18"
 
+# SPA catch-all: serve index.html for any path instead of returning a hard 404.
+# Netlify matches /.netlify/functions/* before redirect rules, so this does not
+# shadow the Stripe functions. Must stay last — redirect rules are evaluated top
+# to bottom and this one matches everything.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
 # Stripe live mode integration
