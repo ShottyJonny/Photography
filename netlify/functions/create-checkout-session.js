@@ -1,5 +1,6 @@
 // Netlify Function to create Stripe Checkout Session
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
+const { computeOrderAmounts } = require('./_pricing')
 
 exports.handler = async (event) => {
   // Only allow POST
@@ -7,24 +8,48 @@ exports.handler = async (event) => {
     return { statusCode: 405, body: 'Method Not Allowed' }
   }
 
+  let body
   try {
-    const { items, orderId, customerEmail, customerName, totals } = JSON.parse(event.body)
+    body = JSON.parse(event.body)
+  } catch (error) {
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'Invalid request body' }),
+    }
+  }
 
-    // Calculate line items for Stripe - start with products
-    const lineItems = items.map(item => ({
+  const { items, orderId, customerEmail, customerName, shippingAddress } = body
+
+  // The server is the sole authority on price. item.unit and totals from the
+  // client are never trusted — computeOrderAmounts derives everything from
+  // item.size and the shipping address. See netlify/functions/_pricing.js.
+  let amounts
+  try {
+    amounts = computeOrderAmounts(items, shippingAddress)
+  } catch (error) {
+    console.error('Order validation failed:', error.message)
+    return {
+      statusCode: 400,
+      body: JSON.stringify({ error: 'We could not validate your order. Please refresh and try again.' }),
+    }
+  }
+
+  try {
+    // Calculate line items for Stripe from server-computed, trusted amounts
+    const lineItems = amounts.lineItems.map(li => ({
       price_data: {
         currency: 'usd',
         product_data: {
-          name: item.name,
-          description: `Size: ${item.size}`,
+          name: li.name,
+          description: `Size: ${li.size}`,
         },
-        unit_amount: item.unit, // price in cents
+        unit_amount: li.unit, // price in cents, computed server-side
       },
-      quantity: item.qty,
+      quantity: li.qty,
     }))
 
     // Add shipping as a line item if there's a shipping cost
-    if (totals && totals.shipping > 0) {
+    if (amounts.shipping > 0) {
       lineItems.push({
         price_data: {
           currency: 'usd',
@@ -32,14 +57,14 @@ exports.handler = async (event) => {
             name: 'Shipping',
             description: 'Standard shipping',
           },
-          unit_amount: totals.shipping,
+          unit_amount: amounts.shipping,
         },
         quantity: 1,
       })
     }
 
     // Add tax as a line item if there's tax
-    if (totals && totals.tax > 0) {
+    if (amounts.tax > 0) {
       lineItems.push({
         price_data: {
           currency: 'usd',
@@ -47,7 +72,7 @@ exports.handler = async (event) => {
             name: 'Tax',
             description: 'Sales tax',
           },
-          unit_amount: totals.tax,
+          unit_amount: amounts.tax,
         },
         quantity: 1,
       })
@@ -58,16 +83,20 @@ exports.handler = async (event) => {
       payment_method_types: ['card'],
       line_items: lineItems,
       mode: 'payment',
-      success_url: `${process.env.URL || 'http://localhost:5181'}/#/order/${orderId}?payment=success&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.URL || 'http://localhost:5181'}/#/checkout?canceled=true`,
+      // This is a hash router: a query string placed AFTER the # becomes part
+      // of the route and corrupts the order ID. Query must come BEFORE the #.
+      success_url: `${process.env.URL || 'http://localhost:5181'}/?payment=success&session_id={CHECKOUT_SESSION_ID}#/order/${orderId}`,
+      cancel_url: `${process.env.URL || 'http://localhost:5181'}/?canceled=true#/checkout`,
       customer_email: customerEmail,
       metadata: {
         orderId,
         customerName,
         customerEmail,
       },
-      // Allow Stripe to send payment intent ID in webhook
+      // Allow Stripe to send payment intent ID in webhook, and have Stripe
+      // send its own receipt email to the customer.
       payment_intent_data: {
+        receipt_email: customerEmail,
         metadata: {
           orderId,
         }
@@ -85,7 +114,7 @@ exports.handler = async (event) => {
     console.error('Error creating checkout session:', error)
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message }),
+      body: JSON.stringify({ error: 'Unable to create checkout session' }),
     }
   }
 }
