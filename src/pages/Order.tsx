@@ -1,6 +1,5 @@
 import React from 'react'
 import LinkButton from '../components/LinkButton'
-import { useCart } from '../context/CartContext'
 import { getOrder } from '../services/supabase'
 
 type LoadState = 'loading' | 'found' | 'not-found'
@@ -18,8 +17,10 @@ function loadFromLocalStorage(id: string): any | null {
 export default function Order({ id }: { id: string }) {
   const [order, setOrder] = React.useState<any | null>(null)
   const [state, setState] = React.useState<LoadState>('loading')
-  const { clear } = useCart()
 
+  // Note: this page deliberately does NOT clear the cart. Viewing an order is a
+  // lookup, not a payment return — Orders.tsx links here for past orders while a
+  // live cart is held. CartClearer owns clearing, gated on Stripe's return params.
   React.useEffect(() => {
     let cancelled = false
     setState('loading')
@@ -43,9 +44,6 @@ export default function Order({ id }: { id: string }) {
       if (cancelled) return
       setOrder(found)
       setState(found ? 'found' : 'not-found')
-
-      // Clear cart once we know a real order exists for this id (user returned from Stripe)
-      if (found) clear()
     }
 
     load()
@@ -53,7 +51,7 @@ export default function Order({ id }: { id: string }) {
     return () => {
       cancelled = true
     }
-  }, [id, clear])
+  }, [id])
 
   if (state === 'loading') {
     return (
@@ -65,20 +63,22 @@ export default function Order({ id }: { id: string }) {
   }
 
   if (state === 'not-found' || !order) {
+    // A lookup miss says nothing about whether any payment happened — `id` is
+    // client-controlled and unauthenticated. Never imply a successful purchase here.
     return (
       <div className="order">
-        <h2>Thank you for your order!</h2>
-        <p>Your payment has been processed successfully.</p>
+        <h2>We couldn't find that order</h2>
+        <p>No order matches the ID <strong>{id}</strong>.</p>
         <div className="about" style={{marginTop: 16, marginBottom: 16}}>
           <section>
-            <p><strong>Order ID:</strong> {id}</p>
-            <p>Stripe will email you a payment receipt. We'll notify you when your prints are ready to ship.</p>
-            <p style={{fontSize:'.85rem', opacity: 0.7, marginTop: 12}}>
-              If you need to reference this order later, please save this Order ID: <strong>{id}</strong>
-            </p>
+            <p>If you just completed a payment, it may take a moment to appear — please refresh this page.</p>
+            <p>If you were charged and the order still doesn't appear, contact us with this Order ID and we'll sort it out. Stripe emails a payment receipt for every successful payment; that receipt is your proof of purchase.</p>
           </section>
         </div>
-        <LinkButton className="button" to="/shop">Continue Shopping</LinkButton>
+        <div style={{display:'flex', gap:8}}>
+          <LinkButton className="button" to="/contact">Contact Us</LinkButton>
+          <LinkButton className="button" to="/shop">Continue Shopping</LinkButton>
+        </div>
       </div>
     )
   }

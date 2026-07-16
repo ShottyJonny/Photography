@@ -33,37 +33,38 @@ function CartBadge() {
 
 function CartClearer() {
   const { clear } = useCart()
-  
+
   React.useEffect(() => {
-    // Check if user returned from successful Stripe payment
-    const fullUrl = window.location.href
-    const hash = window.location.hash
-    
-    // Clear cart if:
-    // 1. URL contains payment=success parameter, OR
-    // 2. User is on an order page (indicating successful payment), OR
-    // 3. URL has Stripe session parameters
-    const hasPaymentSuccess = fullUrl.includes('payment=success')
-    const hasStripeSession = fullUrl.includes('session_id') || fullUrl.includes('checkout_session')
-    const isOrderPage = hash.startsWith('#/order/')
-    
-    if (hasPaymentSuccess || hasStripeSession || isOrderPage) {
-      // Small delay to ensure the page loads properly
-      const timer = setTimeout(() => {
-        clear()
-        console.log('Cart cleared after successful payment detection')
-        
-        // Clean up URL by removing payment parameter
-        if (hasPaymentSuccess) {
-          const cleanUrl = fullUrl.replace(/[?&]payment=success/, '')
-          window.history.replaceState({}, document.title, cleanUrl)
-        }
-      }, 1000)
-      
-      return () => clearTimeout(timer)
-    }
+    // Only an actual return from Stripe counts as a payment return. Being on an
+    // order page is NOT sufficient: customers open past orders from Orders.tsx
+    // (which links to /order/:id with no params) while holding a live cart, and
+    // the old `hash.startsWith('#/order/')` check silently wiped it.
+    const { path, search } = parseHashLocation()
+    const params = new URLSearchParams(search)
+    const isPaymentReturn =
+      params.get('payment') === 'success' ||
+      params.has('session_id') ||
+      params.has('checkout_session')
+
+    if (!isPaymentReturn) return
+
+    // Small delay to ensure the page loads properly
+    const timer = setTimeout(() => {
+      clear()
+
+      // Rebuild the URL rather than regex-splicing href. The old
+      // `href.replace(/[?&]payment=success/, '')` ate the leading "?" too, so
+      // "/?payment=success&session_id=cs_x#/order/abc" became
+      // "/&session_id=cs_x#/order/abc" — a corrupted *pathname* that 404s on
+      // refresh/bookmark. Rebuilding from pathname + the query-stripped route
+      // drops the whole query (session_id included) for both URL shapes.
+      const cleanUrl = window.location.pathname + (path ? '#' + path : '')
+      window.history.replaceState({}, document.title, cleanUrl)
+    }, 1000)
+
+    return () => clearTimeout(timer)
   }, [clear])
-  
+
   return null
 }
 
