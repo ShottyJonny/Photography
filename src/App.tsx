@@ -106,18 +106,44 @@ export function App() {
   )
 }
 
+// Parses the current location into a clean hash-route path plus its query string.
+//
+// Two URL shapes must both work when returning from Stripe:
+//  - new-style redirects put the query ahead of the hash, e.g.
+//    "/?canceled=true#/checkout" or "/?payment=success&session_id=cs_x#/order/abc123"
+//    (window.location.search already holds the query; the hash stays clean)
+//  - old-style / in-flight sessions may still have the query embedded inside the
+//    hash fragment itself, e.g. "#/checkout?canceled=true" or
+//    "#/order/abc123?payment=success&session_id=cs_x"
+// In both cases the route must match its base path ("/checkout", "/order/abc123")
+// and any query params must still be readable.
+function parseHashLocation() {
+  const hash = window.location.hash || '#/'
+  const rawPath = hash.replace(/^#/, '') || '/'
+  const qIdx = rawPath.indexOf('?')
+  const path = qIdx === -1 ? rawPath : rawPath.slice(0, qIdx)
+  const hashQuery = qIdx === -1 ? '' : rawPath.slice(qIdx + 1)
+  // Prefer the real query string (new-style); fall back to one embedded in the hash.
+  const search = window.location.search ? window.location.search.slice(1) : hashQuery
+  return { path, search }
+}
+
 function useHashRoute() {
-  const [hash, setHash] = React.useState(() => window.location.hash || '#/')
+  const [loc, setLoc] = React.useState(() => parseHashLocation())
   React.useEffect(() => {
-    const onHash = () => setHash(window.location.hash || '#/')
-    window.addEventListener('hashchange', onHash)
-    return () => window.removeEventListener('hashchange', onHash)
+    const onChange = () => setLoc(parseHashLocation())
+    window.addEventListener('hashchange', onChange)
+    window.addEventListener('popstate', onChange)
+    return () => {
+      window.removeEventListener('hashchange', onChange)
+      window.removeEventListener('popstate', onChange)
+    }
   }, [])
-  return hash.replace(/^#/, '') || '/'
+  return loc
 }
 
 function HashRouter() {
-  const route = useHashRoute()
+  const { path: route, search } = useHashRoute()
   // analytics stub
   const { consent } = useConsent()
   React.useEffect(() => {
@@ -138,7 +164,19 @@ function HashRouter() {
     const id = route.slice('/collection/'.length)
     view = <CollectionDetail collectionId={id} />
   }
-  else if (route === '/checkout') view = <Checkout />
+  else if (route === '/checkout') {
+    const canceled = new URLSearchParams(search).get('canceled') === 'true'
+    view = (
+      <>
+        {canceled && (
+          <div className="about" style={{ marginBottom: 16 }}>
+            <section>Payment cancelled. Your cart is still saved — you can try again whenever you're ready.</section>
+          </div>
+        )}
+        <Checkout />
+      </>
+    )
+  }
   else if (route.startsWith('/order/')) { const id = route.slice('/order/'.length); view = <Order id={id} /> }
   else if (route === '/orders') view = <Orders />
   else if (route === '/about') view = <About />
