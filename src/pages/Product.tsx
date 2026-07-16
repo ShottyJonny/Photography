@@ -109,9 +109,6 @@ export default function Product({ id }: { id: string }) {
                 <span className="crop-line horizontal" style={{ top: `${cropGuides.inset2Pct}%` }} />
                 <div className="crop-shade top" style={{ height: `${cropGuides.inset1Pct}%` }} />
                 <div className="crop-shade bottom" style={{ top: `${cropGuides.inset2Pct}%`, height: `${100 - cropGuides.inset2Pct}%` }} />
-                <div style={{position:'absolute',left:4,bottom:4,fontSize:10,opacity:.7,background:'rgba(0,0,0,.35)',padding:'2px 4px',borderRadius:4}}>
-                  orig:{originalAspect?.toFixed(3)} target:{targetAspect?.toFixed(3)}
-                </div>
               </>
             ) : (
               <>
@@ -119,9 +116,6 @@ export default function Product({ id }: { id: string }) {
                 <span className="crop-line vertical" style={{ left: `${cropGuides.inset2Pct}%` }} />
                 <div className="crop-shade left" style={{ width: `${cropGuides.inset1Pct}%` }} />
                 <div className="crop-shade right" style={{ left: `${cropGuides.inset2Pct}%`, width: `${100 - cropGuides.inset2Pct}%` }} />
-                <div style={{position:'absolute',left:4,bottom:4,fontSize:10,opacity:.7,background:'rgba(0,0,0,.35)',padding:'2px 4px',borderRadius:4}}>
-                  orig:{originalAspect?.toFixed(3)} target:{targetAspect?.toFixed(3)}
-                </div>
               </>
             )}
           </div>
