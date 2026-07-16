@@ -1,0 +1,66 @@
+name: CodeQL
+
+# CodeQL semantic static analysis. Free on public repos — this repo is
+# public, so there's no cost tradeoff to weigh; the only question is
+# whether it's worth the runtime, and on a small TS/JS codebase it is.
+#
+# Query suite: default, not `security-extended`. Ledger runs
+# security-extended because it handles politically-sensitive PII and raw
+# LLM input, a documented risk that justifies the extra latency and query
+# surface. This repo's asset is Stripe payment data behind server-side
+# validation (see netlify/functions/lib/pricing.js) — real, but there's no
+# equivalent audit finding here driving an elevated posture. Default suite
+# for now; bumping to security-extended later is a one-line change if
+# alert volume from the default suite turns out low.
+#
+# Trigger surface mirrors Ledger's: push AND pull_request, not just PR.
+# pull_request analyzes the PR's test-merge commit; push is what actually
+# populates the Security tab for the commit that ends up on main/develop
+# after merge, and is what gives CodeQL a baseline to diff future PRs
+# against. PR-only would leave the Security tab silent for anything that
+# lands outside a PR's own merge-preview SHA.
+#
+# No paths-ignore: unlike Ledger, this repo has no docs/ or tests/
+# directory to exclude from analysis. Add one if either shows up.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  schedule:
+    # Catches newly-disclosed JS/TS CVEs and updated CodeQL queries even
+    # in weeks with no application code changes.
+    - cron: '30 2 * * 1'
+
+permissions:
+  contents: read
+  security-events: write
+  actions: read
+
+concurrency:
+  group: codeql-${{ github.workflow }}-${{ github.ref }}
+  # Don't cancel a push-triggered scan on main/develop just because a PR
+  # touching the same ref opens moments later — only dedupe rapid PR
+  # updates against themselves.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  analyze:
+    name: Analyze JS/TS
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v4
+        with:
+          languages: javascript-typescript
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v4
+        with:
+          category: '/language:javascript-typescript'

@@ -1,0 +1,66 @@
+# Dependabot configuration for Jon Hoffman Photography.
+#
+# Posture: lightweight dependency monitoring for a solo-dev public repo.
+# - Weekly cadence for routine version updates — daily would be noise with
+#   one person reviewing.
+# - Group minor + patch npm updates into a single PR per week. Majors stay
+#   individual so a breaking-change review isn't smuggled into a group.
+# - GitHub Actions updates tracked on the same weekly cadence.
+# - Dependabot *security* updates are a separate GitHub setting (Settings
+#   -> Security & analysis -> Dependabot security updates) and fire
+#   independently of this schedule, on new advisory disclosure.
+#
+# target-branch is intentionally left unset (defaults to the repo's
+# default branch, currently main). Ledger's own dependabot.yml pins
+# target-branch: develop, to keep automated PRs off the branch that
+# deploys straight to production — the right long-term posture here too,
+# since pushing to main on this repo triggers a live Stripe deploy (see
+# CLAUDE.md). But `develop` does not exist yet as a branch as of this
+# file landing, and pointing target-branch at a branch that doesn't exist
+# yet surfaces as a broken config in the repo's Insights tab rather than
+# failing silently. Add `target-branch: develop` to both entries below
+# once that branch exists and is the working branch.
+
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 10
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "deps"
+      include: "scope"
+    groups:
+      # All non-breaking npm bumps (runtime + dev) land in one weekly PR.
+      # Majors stay individual so each gets its own review.
+      npm-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "08:00"
+      timezone: "America/New_York"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "github-actions"
+    commit-message:
+      prefix: "ci"
+      include: "scope"
+    groups:
+      gha-minor-and-patch:
+        update-types:
+          - "minor"
+          - "patch"
