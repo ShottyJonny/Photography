@@ -1,6 +1,6 @@
 // Netlify Function to create Stripe Checkout Session
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY)
-const { computeOrderAmounts } = require('./_pricing')
+const { computeOrderAmounts } = require('./lib/pricing')
 
 exports.handler = async (event) => {
   // Only allow POST
@@ -22,7 +22,8 @@ exports.handler = async (event) => {
 
   // The server is the sole authority on price. item.unit and totals from the
   // client are never trusted — computeOrderAmounts derives everything from
-  // item.size and the shipping address. See netlify/functions/_pricing.js.
+  // item.size and the shipping address, and rejects a missing destination
+  // rather than letting it zero out tax. See netlify/functions/lib/pricing.js.
   let amounts
   try {
     amounts = computeOrderAmounts(items, shippingAddress)

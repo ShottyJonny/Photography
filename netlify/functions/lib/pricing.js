@@ -38,7 +38,21 @@ const US_STATE_RATES = {
   MA: 0.0625,
 }
 
+// Mirrors the country test inside estimateTaxRate() below. Kept as a separate
+// helper so computeOrderAmounts() can require a region for US destinations
+// WITHOUT modifying the canonical mirror itself. MUST stay in sync with the
+// country check in estimateTaxRate().
+function isUnitedStates(country) {
+  const c = String(country).trim().toLowerCase()
+  return c === 'united states' || c === 'usa' || c === 'us'
+}
+
 // Mirrors src/utils/taxShipping.ts estimateTaxRate() exactly.
+// NOTE: this returns { rate: 0 } for absent country/region. That is correct
+// for the live-updating client UI, but on the server an absent field must
+// never be allowed to zero out tax — computeOrderAmounts() rejects missing
+// destination fields BEFORE calling this. Do not add validation here; this
+// function's job is to stay a faithful mirror of the canonical client logic.
 function estimateTaxRate(country, region) {
   if (!country) return { rate: 0, source: 'none' }
   const c = String(country).trim().toLowerCase()
@@ -80,7 +94,8 @@ const MAX_NAME_LEN = 200
  *   fallback to a default size/price, unlike the client's priceForSize()).
  * - `item.qty` MUST be a positive integer, capped at MAX_QTY.
  * - `item.name` is used only as a cosmetic Stripe line-item label.
- * - shipping/tax are computed server-side from `shippingAddress`.
+ * - shipping/tax are computed server-side from `shippingAddress`, which is
+ *   REQUIRED — an absent destination must never silently yield 0% tax.
  *
  * Throws Error on any invalid input; callers should treat thrown errors
  * as a 400-worthy validation failure and must not echo raw input back
@@ -91,9 +106,26 @@ function computeOrderAmounts(items, shippingAddress) {
     throw new Error('Order must include at least one item')
   }
 
-  const addr = shippingAddress && typeof shippingAddress === 'object' ? shippingAddress : {}
-  const country = typeof addr.country === 'string' ? addr.country : ''
-  const region = typeof addr.region === 'string' ? addr.region : ''
+  // Required-destination validation. estimateTaxRate() returns rate 0 for an
+  // absent country, and also for a US order with an absent region — correct
+  // for the client UI, but on the server that lets a caller evade tax by
+  // simply omitting a key from the request body. A 0% rate is only acceptable
+  // when it comes from a real jurisdiction lookup, never from a missing field.
+  // Validated here rather than inside estimateTaxRate() so that function stays
+  // a faithful mirror of the canonical client logic.
+  // Safe to enforce: validateShip() in src/pages/Checkout.tsx already requires
+  // both country and region before an order can reach this endpoint.
+  if (!shippingAddress || typeof shippingAddress !== 'object' || Array.isArray(shippingAddress)) {
+    throw new Error('Shipping address is required')
+  }
+  if (typeof shippingAddress.country !== 'string' || shippingAddress.country.trim() === '') {
+    throw new Error('Shipping country is required')
+  }
+  const country = shippingAddress.country
+  const region = typeof shippingAddress.region === 'string' ? shippingAddress.region : ''
+  if (isUnitedStates(country) && region.trim() === '') {
+    throw new Error('Shipping region is required for US destinations')
+  }
 
   const lineItems = items.map((item) => {
     const size = item && item.size
