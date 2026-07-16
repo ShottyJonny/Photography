@@ -1,5 +1,4 @@
 import React from 'react'
-import { products } from '../data/products'
 import { usePricing } from '../context/PricingContext'
 import { ProductCard } from '../components/ProductCard'
 import Dropdown from '../components/Dropdown'
