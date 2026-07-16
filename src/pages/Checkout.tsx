@@ -120,6 +120,10 @@ export default function Checkout() {
           orderId: order.id,
           customerEmail: ship.email,
           customerName: ship.name,
+          shippingAddress: {
+            country: ship.country,
+            region: ship.region,
+          },
           totals: {
             shipping: shippingEst.cost,
             tax: tax,
