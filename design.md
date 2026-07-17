@@ -456,7 +456,22 @@ Light and dark are **both intended** (§1): neither is the "real" one. The **clo
 
 The primary button always inverts against the paper (ink ground, paper text) in both themes.
 
-**The mark is the toggle, and nothing is the home link — see §10 q1.** That is the one navigational hole in this spec.
+**The mark is the toggle. The name is home.** Decided 2026-07-16, closing §10 q1.
+
+The header is already a **lockup**: the cloud mark, then "Jon Hoffman" in Playfair over a mono "PHOTOGRAPHS & PRINTS" kicker — the same shape the admin uses (§11.3). **The wordmark is there and does nothing.** Rendering the prototype and reading its accessibility tree returns exactly seven interactive elements — `Work`, `Collections`, `Prints`, `About`, `Cart (0)`, and the two hero CTAs. The name is not one of them. It is inert text.
+
+So this is not a new element. It is **wiring the one that was already sitting there**: the wordmark becomes the link to `/`.
+
+The split is the point, and neither half is captioned:
+
+- **The name → home.** It is the identity, so it goes to the identity's page. Conventional, discoverable, and it satisfies the thing every visitor's hand does on arrival.
+- **The mark → the theme.** It is the metaphor — a cloud interrupted (§1) — so clicking it flips the duality. That is §1's rule honoured: the duality informs the interaction and is never announced.
+
+> **This restores something the redesign removed.** §10 q1 was written as though the site had never had a way home. It has one, and it has two: `src/components/Header.tsx:31` wraps the logo in a button that sets `hash = '/'` with `aria-label="Go to home"`, and the nav carries an explicit `<LinkButton to="/">Home</LinkButton>`. **The handoff dropped both** — its nav is `Work · Collections · Prints · About · Cart`, and its only live brand element is the mark, bound to the theme. A regression the redesign introduced, not a gap it inherited. Worth stating plainly, because "the current site does this right" is not a sentence this document gets to write often.
+
+**Still loose:** the nav carries both **Work** and **Prints**, and it is not obvious which is which — §12.5-B names the shop "Prints," leaving "Work" undefined. It may have been standing in as the home link. With the name doing that job it matters less, but two nav items competing for "the photographs" wants resolving before the nav gets built.
+
+> **Method note, recorded because it cost something.** Everything above about this header was first asserted from `grep` over the prototype's HTML — and it was **wrong**. The wordmark was reported absent because a regex needed 120 characters on one line and the markup wrapped. `design/*.dc.html` are renderable documents; **render them and read the accessibility tree.** §8's "verify a surface against the code before assuming it's built" applies to this document's own claims about the prototype, not only to the code.
 
 ### 12.3 Type roles
 
