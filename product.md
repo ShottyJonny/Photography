@@ -102,6 +102,46 @@ Two tiers, and the split is load-bearing:
 
 **Derivatives are generated at ingest, not at build time.** A build-time `sharp` script is a workaround for not having an upload path. Once photos arrive through the admin, the thing that has the file in hand makes the sizes. The thumbnail problem stops existing rather than being papered over.
 
+### 3.2 The derivative ladder ✓
+
+Derived 2026-07-16 by measuring every place a photograph is rendered in `design/*.dc.html`, rather than picking a generic ladder. This is what `design.md §11–§12` cost, in pixels.
+
+| Surface | CSS px | @2× | Source |
+|---|---|---|---|
+| Home plate | **820**×900 | 1640 | `design.md §12.5-A` |
+| Home bleed | 1440×900, **blurred 90px** | — | `design.md §12.1` |
+| Product plate | **600**×750 | 1200 | `§12.5-D` |
+| Shop card | **452** (3 × 452 + 2 × 44 gap ≈ 1440) | 904 | `§12.5-B` |
+| Mobile full-bleed | **376** | 752 / 1128 @3× | `§12.5-E` |
+| Film-strip | **300** | 600 | `§12.5-C` |
+| Admin work card | ~**280** (4-col in 1440 − 242 sidebar) | 560 | `design.md §11.4-B` |
+| Cart thumb | **76** | 152 | `§12.5-F` |
+
+**The finding that sets the ceiling: nothing on this site ever shows a photograph wider than 820 CSS px.** The "full-bleed 1440 hero" is a *blurred bleed*; the actual plate is 820 (see the correction at `design.md §12.4`). So the top of the ladder is **~1640**, not the 3000+ a full-bleed hero would demand. The most expensive surface is a third the size it looked.
+
+**The ladder — six widths:**
+
+```
+160, 400, 600, 960, 1200, 1800
+```
+
+- `160` — cart thumb @2× (152), admin row thumbs, **and the home bleed**.
+- `400` — mobile cards, admin ingest preview.
+- `600` — film-strip @2× (600), admin work card @2× (560).
+- `960` — shop card @2× (904).
+- `1200` — product plate @2× (1200), mobile @3× (1128).
+- `1800` — home plate @2× (1640), with headroom.
+
+**Serve the bleed the 160.** It is blurred by 90px and scaled 1.12; at that radius a 160px file and a 1800px file are indistinguishable, and one of them is ~100× smaller. It is the single cheapest win on the site — the largest element on the most important page needs the smallest file. Do not let it default to the plate's source.
+
+**Format:** AVIF with a WebP fallback. Keep no JPEG derivatives — every browser this site targets (`README` § Browser Support: current Chrome/Firefox/Safari/Edge) has supported WebP since 2020 and AVIF since 2024. The **original** stays whatever it arrived as, untouched, in the private bucket.
+
+**Keys:** `derivatives/<photo-slug>/<register>/<width>.avif` (and `.webp`), where `register` is `colour` | `silver` — matching the `print_register` enum in `supabase/schema.sql`. Originals: `originals/<photo-slug>/<register>.<ext>`. These are the `original_key` / `original_bw_key` columns.
+
+**Cost:** 6 widths × 2 formats × 2 registers = 24 files per photo. At 24 photos that is ~576 objects, and — being ~1800px AVIFs rather than 12–32MB JPEGs — the whole public tier lands in the low tens of MB against Supabase's 1GB free bucket. **The 369MB is originals**, and originals go private and are never served to a browser.
+
+> **Open — who resizes?** §3 above says derivatives are generated at ingest, arguing against a *build-time* `sharp` script. That argument stands, but it predates the Next.js decision and never considered the third option: **`next/image` generating widths on demand** from one public master. That is a real fork. Pre-generating is portable, free, and works on any host; on-demand is less ingest code but meters through Vercel's image optimizer and cannot read the **private** originals bucket, so it would need a public master anyway. At 24 photos, pre-generating the six widths is cheap and owes nobody. **Recommended: pre-generate.** Recorded because §3's reasoning does not cover the case, not because it was wrong.
+
 `averageColor()` (`src/utils/color.ts`) becomes a **stored column**, computed once on upload. Today it fetches full-resolution images in a `useEffect`, which is why `loading="lazy"` is a no-op site-wide — killing that runtime fetch is worth doing on its own terms.
 
 > **Superseded 2026-07-16 — the aura is speculative now, not a feature.** This paragraph used to justify the column with *"design.md §1 names borrowed colour as the preferred direction; this is what makes it free instead of a liability."* **`design.md §12.1` rejected borrowed colour.** Nothing on the storefront reads an aura — the hero's colour bleed is a blur of the *actual plate*, not a computed average, so it does not rescue the justification. The column is retained because it is cheap with the file in hand at ingest and expensive to backfill later — **not** because anything consumes it. Do not build UI implying otherwise (`design.md §11.4-C`). Decide its fate before it becomes another `sendOrderNotification()`: written, never called, permanent. Tracked at `design.md §10 q3`.

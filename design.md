@@ -471,7 +471,11 @@ Minimum: labels ~10–11px mono; body prose 15px+ Newsreader with a real reading
 
 ### 12.4 Layout & rhythm
 
-- **Full-bleed hero** — the "grander home" fix (§1): the plate fills the viewport (1440×900 reference), uncropped, with a left-side paper gradient carrying the index + pull-quote. This directly answers the legacy site's ~440px boxed hero.
+- **Full-bleed hero** — the "grander home" fix (§1). Answers the legacy site's ~440px boxed hero directly.
+
+> **Corrected against the prototype.** The handoff said "the plate fills the viewport (1440×900 reference), uncropped." **Neither half is true**, and the difference decides the image pipeline. The hero is **two images**: a **bleed** (`1440×900`, `object-fit:cover`, `blur(90px) scale(1.12)`, `aria-hidden`) that does fill the viewport, and the **plate** itself (`820×900`, `position:absolute; top:0; right:0`, masked into the paper by `linear-gradient(90deg,transparent 0,#000 150px)`). So the plate is 820 wide, not 1440 — and `object-fit:cover` on an 820×900 box crops a 4:5 plate by roughly 12%, biased upward by `object-position:center 40%`. Grander, yes; uncropped, no.
+>
+> **Consequence: 820 CSS px is the largest a photograph is ever displayed on this site**, which sets the top of the derivative ladder at ~1640 (`product.md §3.2`) rather than the 3000+ that "full-bleed 1440" implies.
 - **Catalog grids** — Shop is a 3-col 4:5 grid; collection "works" is a horizontal film-strip. Generous `36–44px` gaps.
 - **Reading column** — the Relics essay is centered at ~640px with a Playfair drop-cap, an italic centered turn ("Oh. Right. Sentiment."), and a signature.
 - **Chrome is quiet** — thin mono nav, hairline rules, price stated once and never shouted (§8: give the photograph the dominant share).
@@ -479,7 +483,7 @@ Minimum: labels ~10–11px mono; body prose 15px+ Newsreader with a real reading
 ### 12.5 Surfaces
 
 #### A · Home (desktop)
-Full-height 4:5 plate, uncropped. Left rail: mono "Featured work · 01/24" over an **index list** of works (Playfair, active = ink, rest = dim, hover nudges right). Bottom-left: mono collection kicker → Newsreader pull-quote → primary "View this print →" + ghost "Enter the collection". Blurred colour bleed behind the chrome. The **cloud mark toggles light/dark**.
+Full-height plate, **820×900, right-aligned**, `object-fit:cover` at `object-position:center 40%` (so it crops ~12% of a 4:5 plate — see the correction in 12.4), its left edge dissolved into the paper by a 150px gradient mask. Left rail: mono "Featured work · 01/24" over an **index list** of works (Playfair, active = ink, rest = dim, hover nudges right). Bottom-left: mono collection kicker → Newsreader pull-quote → primary "View this print →" + ghost "Enter the collection". Behind everything, the **blurred colour bleed** — the same plate at `1440×900`, `blur(90px)`, `scale(1.12)`, `aria-hidden`. The **cloud mark toggles light/dark**.
 
 #### B · Prints (shop)
 Header + Playfair "Prints" + mono count. A filter/sort rule (All / Landscape / Urban / Relics · Sort). 3-col grid of 4:5 plates; each: image (hover brightens), Playfair title + quiet price, mono index + size-range meta. **Title leads, price recedes** — this is the portfolio-that-sells decision (§1) made visible.
