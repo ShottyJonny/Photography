@@ -456,7 +456,22 @@ Light and dark are **both intended** (§1): neither is the "real" one. The **clo
 
 The primary button always inverts against the paper (ink ground, paper text) in both themes.
 
-**The mark is the toggle, and nothing is the home link — see §10 q1.** That is the one navigational hole in this spec.
+**The mark is the toggle. The name is home.** Decided 2026-07-16, closing §10 q1.
+
+The header is already a **lockup**: the cloud mark, then "Jon Hoffman" in Playfair over a mono "PHOTOGRAPHS & PRINTS" kicker — the same shape the admin uses (§11.3). **The wordmark is there and does nothing.** Rendering the prototype and reading its accessibility tree returns exactly seven interactive elements — `Work`, `Collections`, `Prints`, `About`, `Cart (0)`, and the two hero CTAs. The name is not one of them. It is inert text.
+
+So this is not a new element. It is **wiring the one that was already sitting there**: the wordmark becomes the link to `/`.
+
+The split is the point, and neither half is captioned:
+
+- **The name → home.** It is the identity, so it goes to the identity's page. Conventional, discoverable, and it satisfies the thing every visitor's hand does on arrival.
+- **The mark → the theme.** It is the metaphor — a cloud interrupted (§1) — so clicking it flips the duality. That is §1's rule honoured: the duality informs the interaction and is never announced.
+
+> **This restores something the redesign removed.** §10 q1 was written as though the site had never had a way home. It has one, and it has two: `src/components/Header.tsx:31` wraps the logo in a button that sets `hash = '/'` with `aria-label="Go to home"`, and the nav carries an explicit `<LinkButton to="/">Home</LinkButton>`. **The handoff dropped both** — its nav is `Work · Collections · Prints · About · Cart`, and its only live brand element is the mark, bound to the theme. A regression the redesign introduced, not a gap it inherited. Worth stating plainly, because "the current site does this right" is not a sentence this document gets to write often.
+
+**Still loose:** the nav carries both **Work** and **Prints**, and it is not obvious which is which — §12.5-B names the shop "Prints," leaving "Work" undefined. It may have been standing in as the home link. With the name doing that job it matters less, but two nav items competing for "the photographs" wants resolving before the nav gets built.
+
+> **Method note, recorded because it cost something.** Everything above about this header was first asserted from `grep` over the prototype's HTML — and it was **wrong**. The wordmark was reported absent because a regex needed 120 characters on one line and the markup wrapped. `design/*.dc.html` are renderable documents; **render them and read the accessibility tree.** §8's "verify a surface against the code before assuming it's built" applies to this document's own claims about the prototype, not only to the code.
 
 ### 12.3 Type roles
 
@@ -471,7 +486,11 @@ Minimum: labels ~10–11px mono; body prose 15px+ Newsreader with a real reading
 
 ### 12.4 Layout & rhythm
 
-- **Full-bleed hero** — the "grander home" fix (§1): the plate fills the viewport (1440×900 reference), uncropped, with a left-side paper gradient carrying the index + pull-quote. This directly answers the legacy site's ~440px boxed hero.
+- **Full-bleed hero** — the "grander home" fix (§1). Answers the legacy site's ~440px boxed hero directly.
+
+> **Corrected against the prototype.** The handoff said "the plate fills the viewport (1440×900 reference), uncropped." **Neither half is true**, and the difference decides the image pipeline. The hero is **two images**: a **bleed** (`1440×900`, `object-fit:cover`, `blur(90px) scale(1.12)`, `aria-hidden`) that does fill the viewport, and the **plate** itself (`820×900`, `position:absolute; top:0; right:0`, masked into the paper by `linear-gradient(90deg,transparent 0,#000 150px)`). So the plate is 820 wide, not 1440 — and `object-fit:cover` on an 820×900 box crops a 4:5 plate by roughly 12%, biased upward by `object-position:center 40%`. Grander, yes; uncropped, no.
+>
+> **Consequence: 820 CSS px is the largest a photograph is ever displayed on this site**, which sets the top of the derivative ladder at ~1640 (`product.md §3.2`) rather than the 3000+ that "full-bleed 1440" implies.
 - **Catalog grids** — Shop is a 3-col 4:5 grid; collection "works" is a horizontal film-strip. Generous `36–44px` gaps.
 - **Reading column** — the Relics essay is centered at ~640px with a Playfair drop-cap, an italic centered turn ("Oh. Right. Sentiment."), and a signature.
 - **Chrome is quiet** — thin mono nav, hairline rules, price stated once and never shouted (§8: give the photograph the dominant share).
@@ -479,7 +498,7 @@ Minimum: labels ~10–11px mono; body prose 15px+ Newsreader with a real reading
 ### 12.5 Surfaces
 
 #### A · Home (desktop)
-Full-height 4:5 plate, uncropped. Left rail: mono "Featured work · 01/24" over an **index list** of works (Playfair, active = ink, rest = dim, hover nudges right). Bottom-left: mono collection kicker → Newsreader pull-quote → primary "View this print →" + ghost "Enter the collection". Blurred colour bleed behind the chrome. The **cloud mark toggles light/dark**.
+Full-height plate, **820×900, right-aligned**, `object-fit:cover` at `object-position:center 40%` (so it crops ~12% of a 4:5 plate — see the correction in 12.4), its left edge dissolved into the paper by a 150px gradient mask. Left rail: mono "Featured work · 01/24" over an **index list** of works (Playfair, active = ink, rest = dim, hover nudges right). Bottom-left: mono collection kicker → Newsreader pull-quote → primary "View this print →" + ghost "Enter the collection". Behind everything, the **blurred colour bleed** — the same plate at `1440×900`, `blur(90px)`, `scale(1.12)`, `aria-hidden`. The **cloud mark toggles light/dark**.
 
 #### B · Prints (shop)
 Header + Playfair "Prints" + mono count. A filter/sort rule (All / Landscape / Urban / Relics · Sort). 3-col grid of 4:5 plates; each: image (hover brightens), Playfair title + quiet price, mono index + size-range meta. **Title leads, price recedes** — this is the portfolio-that-sells decision (§1) made visible.
