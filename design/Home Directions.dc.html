@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Hanken+Grotesk:wght@400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@600;700;800&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#e7e5e0;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:#1a1a1a;text-decoration:none}
+  a:hover{color:#000}
+  .dv-turn{padding:52px 56px 40px;border-bottom:1px solid rgba(0,0,0,.08);scroll-margin-top:16px}
+  .dv-thd{display:flex;align-items:baseline;gap:10px;margin:0 0 8px}
+  .dv-tid{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#1a1a1a;color:#fff;border-radius:4px;text-decoration:none}
+  .dv-tname{font:600 13px/1.2 system-ui,sans-serif;color:#1a1a1a}
+  .dv-intro{max-width:760px;margin:0 0 30px;font:400 14px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:rgba(0,0,0,.6)}
+  .dv-opts{display:flex;flex-wrap:wrap;gap:44px;align-items:flex-start}
+  .dv-opt{flex:none;display:flex;flex-direction:column;gap:12px;scroll-margin-top:16px}
+  .dv-oid{font:600 10.5px ui-monospace,Menlo,monospace;padding:3px 7px;background:rgba(0,0,0,.08);color:#1a1a1a;border-radius:5px;text-decoration:none}
+  .dv-olabel{display:flex;align-items:baseline;gap:10px;font:500 12px/1.4 'Hanken Grotesk',system-ui,sans-serif;color:rgba(0,0,0,.55);max-width:1360px}
+  .dv-olabel b{color:#1a1a1a;font-weight:600}
+  .dv-card{background:#000;border-radius:6px;box-shadow:0 30px 70px -30px rgba(0,0,0,.5);overflow:hidden}
+  .dv-opt:target .dv-oid{background:#c2410c;color:#fff}
+  .dv-next{margin:30px 0 0;font:14px/1.6 'Hanken Grotesk',system-ui,sans-serif;color:rgba(0,0,0,.5)}
+  .nav-a{color:rgba(255,255,255,.82)!important;transition:color .2s}
+  .nav-a:hover{color:#fff!important}
+</style>
+</helmet>
+
+<section class="dv-turn" id="t1">
+  <div class="dv-thd"><a class="dv-tid" href="#t1">1</a><span class="dv-tname">Three full-bleed Home directions</span></div>
+  <p class="dv-intro">Each takes a different stance on the three open questions in your <b>design.md</b> — colour, type, and how loudly the work's duality gets to speak. All three open on a single photograph filling the screen, keep the chrome quiet, and put the sell second. Pick one to carry into Shop / Collection / Product — or mix parts across them.</p>
+  <div class="dv-opts">
+
+    <!-- ============ 1a — BORROWED LIGHT ============ -->
+    <div class="dv-opt" id="1a">
+      <div class="dv-olabel"><a class="dv-oid" href="#1a">1a</a><span><b>Borrowed Light.</b> Chrome stays achromatic; the page wears the photograph's own hue. Newsreader serif for the work, quiet grotesk for the chrome. Warm, editorial, unmistakably portfolio-first.</span></div>
+      <div class="dv-card" style="width:1360px;height:850px;position:relative;overflow:hidden;background:#0c0a08;color:#fff;font-family:'Hanken Grotesk',sans-serif">
+        <img src="assets/photos/Can%20You%20Blame%20Me%20For%20Going.jpg" alt="Can You Blame Me For Going" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 42%">
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(8,6,4,.42) 0%,rgba(8,6,4,.05) 22%,transparent 42%,rgba(24,11,3,.55) 78%,rgba(28,12,2,.9) 100%)"></div>
+        <div style="position:absolute;inset:0;background:radial-gradient(120% 90% at 15% 100%, rgba(196,86,24,.28), transparent 55%)"></div>
+        <!-- header -->
+        <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:30px 44px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:30px;width:auto;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4))">
+            <span style="font-size:12px;letter-spacing:.22em;text-transform:uppercase;font-weight:600;opacity:.92">Jon Hoffman</span>
+          </div>
+          <nav style="display:flex;gap:34px;font-size:12px;letter-spacing:.16em;text-transform:uppercase;font-weight:500">
+            <a class="nav-a" href="#1a">Work</a><a class="nav-a" href="#1a">Collections</a><a class="nav-a" href="#1a">Prints</a><a class="nav-a" href="#1a">About</a><a class="nav-a" href="#1a">Contact</a>
+          </nav>
+        </div>
+        <!-- title block -->
+        <div style="position:absolute;left:44px;bottom:52px;max-width:660px">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:rgba(255,255,255,.72);margin-bottom:18px">Featured · from the Relics collection</div>
+          <div style="width:52px;height:3px;background:#e8863f;margin-bottom:20px;border-radius:2px"></div>
+          <h1 style="font-family:'Newsreader',serif;font-style:italic;font-weight:300;font-size:66px;line-height:1.0;margin:0 0 18px;letter-spacing:-.01em">Can You Blame Me<br>For Going?</h1>
+          <p style="font-family:'Newsreader',serif;font-size:18px;line-height:1.5;color:rgba(255,255,255,.82);margin:0 0 26px;max-width:440px">The sun always sets and good things always come to an end — but can you blame a man for chasing it just a little further?</p>
+          <div style="display:flex;align-items:center;gap:26px">
+            <a href="#1a" style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:600;color:#fff;border-bottom:1px solid rgba(255,255,255,.5);padding-bottom:4px">View this print — from $150</a>
+            <a class="nav-a" href="#1a" style="font-size:13px;letter-spacing:.12em;text-transform:uppercase;font-weight:500">The full collection →</a>
+          </div>
+        </div>
+        <!-- right index rail -->
+        <div style="position:absolute;right:44px;bottom:52px;display:flex;flex-direction:column;gap:11px;align-items:flex-end">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.2em;color:rgba(255,255,255,.7);margin-bottom:4px">01 / 06</div>
+          <div style="display:flex;flex-direction:column;gap:10px">
+            <img src="assets/photos/Can%20You%20Blame%20Me%20For%20Going.jpg" alt="" style="width:58px;height:76px;object-fit:cover;border-radius:3px;outline:2px solid #fff;outline-offset:2px">
+            <img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:58px;height:76px;object-fit:cover;border-radius:3px;opacity:.6">
+            <img src="assets/photos/If%20Gold%20Could%20Rust.jpg" alt="" style="width:58px;height:76px;object-fit:cover;border-radius:3px;opacity:.6">
+            <img src="assets/photos/Deterioration.jpg" alt="" style="width:58px;height:76px;object-fit:cover;border-radius:3px;opacity:.6">
+            <img src="assets/photos/Forever%20Dancing.jpg" alt="" style="width:58px;height:76px;object-fit:cover;border-radius:3px;opacity:.6">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 1b — THE INDEX ============ -->
+    <div class="dv-opt" id="1b">
+      <div class="dv-olabel"><a class="dv-oid" href="#1b">1b</a><span><b>The Index.</b> Strictly black &amp; white, warm-paper ink. A gallery-catalog rail of works over a full-bleed monochrome plate. Playfair display + mono metadata. Restraint, print rigor — never a museum.</span></div>
+      <div class="dv-card" style="width:1360px;height:850px;position:relative;overflow:hidden;background:#0b0b0b;color:#efeae0;font-family:'IBM Plex Mono',monospace">
+        <img src="assets/photos/Path%20of%20Most%20Enchantment.jpg" alt="Path of Most Enchantment" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:60% center;filter:grayscale(1) contrast(1.05)">
+        <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(8,8,8,.92) 0%,rgba(8,8,8,.72) 34%,rgba(8,8,8,.15) 58%,transparent 78%)"></div>
+        <!-- inset hairline frame -->
+        <div style="position:absolute;inset:22px;border:1px solid rgba(239,234,224,.22);pointer-events:none"></div>
+        <!-- header -->
+        <div style="position:absolute;top:22px;left:22px;right:22px;display:flex;align-items:flex-start;justify-content:space-between;padding:26px 32px">
+          <div style="display:flex;align-items:center;gap:14px">
+            <img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:30px;width:auto;display:block">
+            <div>
+              <div style="font-family:'Playfair Display',serif;font-size:26px;line-height:1;letter-spacing:.01em">Jon Hoffman</div>
+              <div style="font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:rgba(239,234,224,.6);margin-top:5px">Photographs &amp; Prints</div>
+            </div>
+          </div>
+          <nav style="display:flex;gap:26px;font-size:11px;letter-spacing:.18em;text-transform:uppercase">
+            <a class="nav-a" href="#1b" style="color:rgba(239,234,224,.85)!important">Work</a><a class="nav-a" href="#1b" style="color:rgba(239,234,224,.85)!important">Collections</a><a class="nav-a" href="#1b" style="color:rgba(239,234,224,.85)!important">Prints</a><a class="nav-a" href="#1b" style="color:rgba(239,234,224,.85)!important">About</a>
+          </nav>
+        </div>
+        <!-- index list -->
+        <div style="position:absolute;left:54px;top:172px;width:420px">
+          <div style="font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:rgba(239,234,224,.55);margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid rgba(239,234,224,.18)">Index — 24 works</div>
+          <div style="display:flex;flex-direction:column">
+            <div style="display:flex;align-items:baseline;gap:16px;padding:13px 0;border-bottom:1px solid rgba(239,234,224,.1)"><span style="font-size:11px;color:#efeae0;width:26px">01</span><span style="font-family:'Playfair Display',serif;font-size:23px;color:#fff">Path of Most Enchantment</span></div>
+            <div style="display:flex;align-items:baseline;gap:16px;padding:13px 0;border-bottom:1px solid rgba(239,234,224,.1)"><span style="font-size:11px;color:rgba(239,234,224,.5);width:26px">02</span><span style="font-family:'Playfair Display',serif;font-size:23px;color:rgba(239,234,224,.62)">Omniprominence</span></div>
+            <div style="display:flex;align-items:baseline;gap:16px;padding:13px 0;border-bottom:1px solid rgba(239,234,224,.1)"><span style="font-size:11px;color:rgba(239,234,224,.5);width:26px">03</span><span style="font-family:'Playfair Display',serif;font-size:23px;color:rgba(239,234,224,.62)">If Gold Could Rust</span></div>
+            <div style="display:flex;align-items:baseline;gap:16px;padding:13px 0;border-bottom:1px solid rgba(239,234,224,.1)"><span style="font-size:11px;color:rgba(239,234,224,.5);width:26px">04</span><span style="font-family:'Playfair Display',serif;font-size:23px;color:rgba(239,234,224,.62)">Among Giants</span></div>
+            <div style="display:flex;align-items:baseline;gap:16px;padding:13px 0;border-bottom:1px solid rgba(239,234,224,.1)"><span style="font-size:11px;color:rgba(239,234,224,.5);width:26px">05</span><span style="font-family:'Playfair Display',serif;font-size:23px;color:rgba(239,234,224,.62)">Urban Sisyphus</span></div>
+            <div style="display:flex;align-items:baseline;gap:16px;padding:13px 0"><span style="font-size:11px;color:rgba(239,234,224,.5);width:26px">06</span><span style="font-family:'Playfair Display',serif;font-size:23px;color:rgba(239,234,224,.62)">Overlooked Overlook</span></div>
+          </div>
+        </div>
+        <!-- metadata plate -->
+        <div style="position:absolute;left:54px;bottom:56px;max-width:430px">
+          <div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:rgba(239,234,224,.55);margin-bottom:10px">Now viewing</div>
+          <div style="font-family:'Playfair Display',serif;font-size:15px;line-height:1.7;color:rgba(239,234,224,.85)">Silver gelatin &nbsp;·&nbsp; Edition of 25<br>16 × 20 in &nbsp;·&nbsp; from $150</div>
+        </div>
+        <div style="position:absolute;right:54px;bottom:56px;text-align:right">
+          <a href="#1b" style="display:inline-block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:#efeae0;border:1px solid rgba(239,234,224,.4);padding:13px 22px">Acquire a print →</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- ============ 1c — INTERRUPTION ============ -->
+    <div class="dv-opt" id="1c">
+      <div class="dv-olabel"><a class="dv-oid" href="#1c">1c</a><span><b>Interruption.</b> The mark's hard vertical cut becomes the page. One photograph, split — colour on one side, silver on the other, handed to you without a caption. Syne display + mono. The bold swing.</span></div>
+      <div class="dv-card" style="width:1360px;height:850px;position:relative;overflow:hidden;background:#070708;color:#fff;font-family:'IBM Plex Mono',monospace">
+        <!-- colour base -->
+        <img src="assets/photos/Never%20Sleeps.jpg" alt="Never Sleeps" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover">
+        <!-- mono half, clipped right of seam -->
+        <img src="assets/photos/Never%20Sleeps.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;filter:grayscale(1) brightness(.86) contrast(1.08);clip-path:inset(0 0 0 57%)">
+        <!-- seam -->
+        <div style="position:absolute;top:0;bottom:0;left:57%;width:2px;background:linear-gradient(180deg,transparent,rgba(255,255,255,.85) 20%,rgba(255,255,255,.85) 80%,transparent);box-shadow:0 0 22px 3px rgba(255,255,255,.35)"></div>
+        <!-- seam handle -->
+        <div style="position:absolute;top:50%;left:57%;transform:translate(-50%,-50%);width:34px;height:34px;border-radius:50%;background:rgba(10,10,12,.55);border:1.5px solid rgba(255,255,255,.85);backdrop-filter:blur(4px);display:grid;place-items:center">
+          <span style="font-size:15px;color:#fff;letter-spacing:-1px">‹›</span>
+        </div>
+        <div style="position:absolute;inset:0;background:linear-gradient(180deg,rgba(6,6,8,.5) 0%,transparent 26%,transparent 60%,rgba(6,6,8,.86) 100%)"></div>
+        <!-- header -->
+        <div style="position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:30px 44px">
+          <div style="display:flex;align-items:center;gap:13px">
+            <img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:30px;width:auto;display:block">
+            <span style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;letter-spacing:.02em">Jon Hoffman</span>
+          </div>
+          <nav style="display:flex;gap:30px;font-size:11px;letter-spacing:.18em;text-transform:uppercase">
+            <a class="nav-a" href="#1c">Work</a><a class="nav-a" href="#1c">Collections</a><a class="nav-a" href="#1c">Prints</a><a class="nav-a" href="#1c">About</a>
+          </nav>
+        </div>
+        <!-- title -->
+        <div style="position:absolute;left:44px;bottom:54px;max-width:600px">
+          <div style="font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.7);margin-bottom:16px">No. 07 — Never Sleeps</div>
+          <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:82px;line-height:.92;margin:0 0 20px;letter-spacing:-.02em">Never<br>Sleeps</h1>
+          <p style="font-size:13px;line-height:1.7;color:rgba(255,255,255,.72);margin:0 0 24px;max-width:400px;font-family:'Hanken Grotesk',sans-serif">Algorithms built for agitation, forces at play within the dark castles. There is always a light left on.</p>
+          <a href="#1c" style="display:inline-block;font-family:'Syne',sans-serif;font-weight:700;font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#070708;background:#fff;padding:14px 26px;border-radius:2px">View the print</a>
+        </div>
+        <!-- metadata -->
+        <div style="position:absolute;right:44px;bottom:54px;text-align:right;font-size:11px;letter-spacing:.14em;line-height:2;color:rgba(255,255,255,.72);text-transform:uppercase">
+          <div>Cleveland, OH · 2023</div>
+          <div>Archival pigment</div>
+          <div>Edition of 25 · $150</div>
+          <div style="margin-top:14px;color:rgba(255,255,255,.5)">07 / 24 &nbsp;→</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+  <p class="dv-next">Try next: "build the full site in <a class="dv-oid" href="#1a">1a</a>" · "give <a class="dv-oid" href="#1c">1c</a> the warm paper type from <a class="dv-oid" href="#1b">1b</a>" · "show me the Product page for <a class="dv-oid" href="#1b">1b</a>" · "a fourth, quieter direction"</p>
+</section>
+</x-dc>
+</body>
+</html>

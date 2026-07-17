@@ -100,4 +100,12 @@ Branch off `main`; never commit directly to it. Never use `--no-verify`, `--forc
 
 `design.md` is the source of truth for how this site looks and moves. This section is a pointer, not a summary — do not restate tokens here.
 
-Be aware the current code largely predates that document: the only `font-family` in `src/styles.css` is the system stack, and `index.html` preconnects to Google Fonts without ever loading one. Where design.md and the code disagree, design.md states the target and the code is the gap. Verify against the code before assuming a surface is already built.
+**As of 2026-07-16 it describes a real target.** `design.md §12` is the storefront and `§11` is the admin, both specified as settled fact from a design handoff, with the prototypes in `design/*.dc.html`. `§1` records the posture and the decisions (colour → black-and-white with warm-paper ink; type → Playfair / Newsreader / IBM Plex Mono / Hanken Grotesk; portfolio-that-sells; both themes first-class).
+
+**The gap between the code and that target is total, and that is by design** — `src/styles.css` is deleted by the rebuild, not migrated toward. `design.md §2–§7` is a legacy inventory of that stylesheet and expires at cutover; **do not read those sections as targets**, and do not "close the gap" against them. `§8` (cross-cutting rules) and `§9` (regressions not to inherit) are live and do apply to the new stack.
+
+Nothing in `§11`/`§12` is built. Verify against the code before assuming a surface exists — the sections are written as settled fact, which reads exactly like a description of something that already works. It isn't one.
+
+Two things the design did **not** settle, both recorded rather than papered over: there is **no home link** in the storefront nav (the cloud mark is the theme toggle instead — `design.md §10 q1`), and **About, Contact, and every legal page are undesigned** while the nav links to two of them (`product.md §4`). Stripe expects a refund policy and there is still no footer to hang one on.
+
+Every price in both prototypes is mock data, including a "$150 base" that does not exist. **Money comes from the ported pure functions, never from the mock** (`product.md §1.5`).
