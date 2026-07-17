@@ -4,7 +4,9 @@
 >
 > **Both halves are now designed** (`design.md §11` admin, `design.md §12` storefront), which answered §8 q1 (the lab), q2 (caption/description/alt), and q6 (portfolio-vs-store). What the design did **not** cover is recorded honestly: About, Contact, and every legal page are still undesigned (§4), and the storefront has no home link (`design.md §10 q1`).
 >
-> **The data model exists as of 2026-07-16** — `supabase/schema.sql`, derived from §3, §5, §6.1 and `design.md §11`. §3 below says what it must become; the SQL is what it became. Where they differ, the SQL wins and §3 is the stale one.
+> **The data model exists as of 2026-07-16, and it is applied** — `supabase/schema.sql`, derived from §3, §5, §6.1 and `design.md §11`. §3 below says what it must become; the SQL is what it became. Where they differ, the SQL wins and §3 is the stale one.
+>
+> It runs on a **new Supabase project** (the old one is deleted — see `CLAUDE.md` §Architecture). Verified in place: five tables, RLS enabled on all five, `orders` and `order_items` carrying exactly one policy each — the admin's — so `anon` has no path to customer data in either direction. Buckets confirmed `originals` private / `derivatives` public. Both honest-function constraints were tested by trying to violate them: publishing a photo with no alt text and storing a tracking number on an unshipped order are **both rejected by Postgres**. Public signups are **disabled**, which is what makes the `authenticated` policies mean anything.
 >
 > **And the premise of §3 changed.** This document was written believing orders were being saved to Supabase and simply never read. They were not being saved at all — the project had been paused since June 2024, sixteen months before the repo existed. Nothing was lost (zero orders) but several sections were describing a system that does not exist; each is corrected in place rather than quietly rewritten. See `CLAUDE.md` §Architecture.
 
