@@ -1,0 +1,192 @@
+# product.md
+
+> **STATUS: Groundwork for the rebuild.** Records what each surface **is** and **does**, and what the data model must become for any of it to work. Decided items are marked ✓; stubs and open questions are marked ▢ and are **not** build commitments. Written 2026-07-16, before the rebuild starts.
+
+Companion to `design.md`. **`design.md` = how it looks and moves. `product.md` = what each surface is and does** — information architecture, per-surface behaviour, and the honest-function rules. Questions about *appearance* → design.md. Questions about *behaviour or IA* → here. Questions about *commands, constraints, or the money path* → CLAUDE.md.
+
+---
+
+## 1. Honest function — the governing rule ✓
+
+**A control's label must match what it actually does. A status must reflect reality. Copy must not claim an action the system never performed.**
+
+This is not an abstract principle here — it is a correction. As of 2026-07-16 the live site did all three of these things wrong:
+
+- `Order.tsx` set `shipped = true` on a 900ms `setTimeout` and generated a fake UPS-style tracking number, telling **every** customer their print had shipped before it existed.
+- The same page said "We've sent a confirmation email with your order details." No email was ever sent — `sendOrderNotification()` was written and never called.
+- `/#/order/<anything>` told any stranger "Your payment has been processed successfully."
+
+All three are removed. They were removed rather than fixed because there was no truth to point them at. **The admin is what makes them true**: a real fulfillment state, a real tracking number, entered by a human who actually did the thing.
+
+**Rule:** if a surface cannot tell the truth about a state, it does not display that state. It says less instead of guessing.
+
+---
+
+## 1.5. The rebuild — stack and hosting ✓
+
+Decided 2026-07-16. **This repo is being rebuilt. The current stack is legacy.**
+
+| | Now (legacy) | Target |
+|---|---|---|
+| Framework | Vite + React 18, hand-rolled hash router | **Next.js** (App Router) |
+| Hosting | Netlify + `netlify/functions/*` | **Vercel** |
+| Data | `products.ts` / `collections.ts` as TS files | Supabase tables (§3) |
+| Images | 369MB committed to git | Object storage, derivatives at ingest (§3) |
+
+**Why:** three of the biggest outstanding items — image pipeline, routing/SEO, per-page metadata — are hand-rolled work on Vite and native features in Next.js. The presentation layer was being rewritten anyway for the redesign, so the marginal cost of the stack move is negative: it removes work. Vercel follows from Next.js (first-party support), and it's already in use on the owner's other projects. Astro was seriously considered and rejected: it's the better fit for a content site, but an authenticated CRUD admin (§5, §6) breaks that premise, and Astro's MPA model would force a rewrite of all five React Contexts.
+
+### Rules for the rebuild
+
+- **Do not invest in the legacy stack.** No build-time image pipeline, no hash-router migration, no Netlify config work beyond keeping the live site alive. That work is throwaway.
+- **The current site stays live** until the new one is real. It takes real money today. Build beside it; cut over when it works.
+- **Port the money logic verbatim.** `computeOrderAmounts()`, `PRICE_BY_SIZE`, `estimateTaxRate`, `estimateShipping` are pure functions with no framework in them. They are the most dangerous code in the repo and the easiest to move. Do not "improve" them in transit.
+
+### Migration hazards — read before porting the functions
+
+- **`process.env.URL` is Netlify-only.** `create-checkout-session.js:89-90` builds Stripe's `success_url` and `cancel_url` from `${process.env.URL || 'http://localhost:5181'}`. Netlify sets `URL`; **Vercel does not.** On Vercel the fallback fires and every paying customer is redirected to `http://localhost:5181`. The session creates fine, the card charges, the webhook still marks the order paid, and nothing logs an error — you get the money, they get a dead link. Vercel's equivalents are `VERCEL_URL` (no protocol) and `VERCEL_PROJECT_PRODUCTION_URL`. `node --check` and every CI job pass this. Nothing catches it.
+- **The Stripe webhook endpoint must be re-registered** at the new URL in Stripe's dashboard. Miss it and payments silently stop being confirmed; orders sit at `pending` forever.
+- **`VITE_SUPABASE_URL` is read server-side** in `stripe-webhook.js:5` despite the `VITE_` prefix, which only means anything to Vite. Rename on the way over.
+- `netlify.toml` (SPA catch-all, `NODE_VERSION`) and `netlify/functions/package.json` are Netlify-specific and do not travel.
+
+---
+
+## 2. The two halves ✓
+
+| | Storefront | Admin |
+|---|---|---|
+| Audience | Strangers, unauthenticated | Jon, authenticated |
+| Job | Show the work clearly; sell a print without pressure | Get photos in; get orders out |
+| Shape | Mostly static, image-heavy, fast | Stateful CRUD, file handling, workflow |
+| Failure mode | Feels like a catalog instead of a gallery | Slower than doing it by hand |
+
+That last one is the admin's real test. **If it is slower than editing `products.ts` and checking Stripe by hand, it has failed**, regardless of how it looks. It is replacing a workflow that currently works, badly, but works.
+
+---
+
+## 3. What the data model has to become ✓
+
+The admin is impossible against the current model. These are prerequisites, not nice-to-haves:
+
+| Today | Must become | Why |
+|---|---|---|
+| `src/data/products.ts` — hand-edited TS, compiled into the bundle. Its own header claims it is auto-generated by `scripts/generate-products.mjs`, which does not exist. | A `products` table | You cannot upload a photo into a TypeScript file. The file also currently lies about its own provenance. |
+| `src/data/collections.ts` — same, including the Relics `literature` essay | A `collections` table + join to products, with ordering | §1 of design.md puts the emotional register in `literature`. The admin owns the writing. |
+| `public/images/` — **369MB committed to git**. `thumbs/` are byte-identical copies of `prints/`. | Object storage, two tiers (below) | 369MB leaves the repo. The clone stops being a download. Thumbnails stop being a lie. |
+| Orders in Supabase that **nothing ever reads** | Same table, richer status, read by the admin | `getOrder()` exists with 0 callers. `Orders.tsx` reads `o.createdAt` while every order saves `created_at`, so every order renders "Invalid Date". |
+
+### Storage tiers ✓
+
+Two tiers, and the split is load-bearing:
+
+- **Originals — private.** The full-resolution print file. Only ever touched by fulfillment. Never served to a browser. Today `prints/bw/Omniprominence.jpg` is 32MB and is sent to phones; that stops.
+- **Derivatives — public.** Generated **once, on upload**: thumbnail, display, and `srcset` widths, in a modern format.
+
+**Derivatives are generated at ingest, not at build time.** A build-time `sharp` script is a workaround for not having an upload path. Once photos arrive through the admin, the thing that has the file in hand makes the sizes. The thumbnail problem stops existing rather than being papered over.
+
+`averageColor()` (`src/utils/color.ts`) becomes a **stored column**, computed once on upload. Today it fetches full-resolution images in a `useEffect`, which is why `loading="lazy"` is a no-op site-wide. design.md §1 names borrowed colour as the preferred direction; this is what makes it free instead of a liability.
+
+---
+
+## 4. Storefront surfaces
+
+Carried over from the current site. Status reflects the **rebuild**, not the live site.
+
+| Surface | Status | Notes |
+|---|---|---|
+| Home | ▢ | design.md §1: "must be grander." Currently the weakest surface — the hero photo renders at ~440px, narrower than interior pages. |
+| Shop | ▢ | Currently 20 products, unpaginated, catalog-shaped. |
+| Product | ▢ | Keep the crop-guide overlay — it is genuinely novel and shows what a size actually cuts. Keep the colour/B&W toggle: per §1 it hands the viewer both registers and names neither as correct. |
+| Collections / Collection detail | ▢ | Currently one collection. `.shop-grid` on the detail page has no CSS rule anywhere in the repo — it silently degrades to stacked blocks. |
+| Cart / Checkout | ▢ | Money path works and is hardened. **Port `netlify/functions/lib/pricing.js` verbatim.** |
+| Order confirmation | ▢ | Now able to show a real status (§6). |
+| About | ▢ stub | Currently `<p>Coming soon.</p>`. |
+| Contact | ▢ | Currently emoji-corporate register, and the social links point at `#/`. Rewrite to sound like the Relics essay (§1's falsifiable test). |
+| Privacy / Terms / Refund / Shipping | ▢ **missing entirely** | No footer either. Stripe expects a refund policy. |
+
+---
+
+## 5. Admin — content
+
+### 5.1 Auth ✓
+Single admin (Jon). Supabase Auth. Not a role system — there is one user and no plan for a second.
+
+**This forces the RLS question**, which has been open and unverified since the audit: the anon key ships in the bundle, and if RLS is not set on `orders`, every customer's name, email, and address is public. The admin cannot be built without answering it. Originals bucket private, derivatives public, `orders` readable only by the authenticated admin.
+
+### 5.2 Photo library ▢
+Drag-and-drop upload. On ingest, in one pass: store the original privately, generate derivatives, measure aspect ratio, compute the aura colour, create the row.
+
+Per photo: title, description, aspect, price/size availability, published/unlisted, optional B&W variant.
+
+**Open:** "caption" needs pinning down. The current model has `description` (a short blurb on the card) and `Collection.literature` (the essay). Which does an uploaded photo get, and is there a third thing — a real descriptive `alt` for accessibility? The a11y audit found every image uses the product's *title* as alt text, so a blind customer cannot learn what a print depicts. A photography store arguably needs all three, and they are different jobs.
+
+### 5.3 Collections + literature ▢
+Create a collection, add photos, **order them** (sequence is editorial — it is how a collection reads), set a cover, write the literature.
+
+The literature editor is not a nice-to-have. It is where the site's voice lives. Whatever it is, it has to be pleasant enough to write a real essay in, because a bad editor means the essays stop getting written and §1's whole thesis quietly dies.
+
+---
+
+## 6. Admin — fulfillment ▢
+
+**Model: a lab, ordered manually.** Jon places the order on the lab's site himself. The admin does not talk to a lab; it tracks state and hands him what he needs to place the order without retyping anything.
+
+### 6.1 The state machine
+
+| State | Set by | Means |
+|---|---|---|
+| `pending` | Checkout, before payment | Order saved; payment not confirmed. |
+| `paid` | Stripe webhook | Payment confirmed. Replaces today's `completed`, which is misleading — nothing is complete. |
+| `amount_mismatch` | Stripe webhook | **`session.amount_total` ≠ the stored order total.** See §6.3. |
+| `submitted_to_lab` | Jon, manually | He placed the order at the lab. |
+| `shipped` | Jon, manually + tracking | The only state that may ever display a tracking number. |
+| `cancelled` / `refunded` | Jon, manually | |
+
+Forward-only except for cancel/refund. No state is ever set by a timer (§1).
+
+### 6.2 The lab export — the core feature ▢
+
+The reason this beats the current workflow. For an order, produce everything needed to place it at the lab without retyping:
+
+- Per line: a link to the **original** (not a derivative), the size, quantity, and colour vs B&W.
+- The shipping address, copyable.
+- The order id, for reconciling later.
+
+**Open:** which lab? The export format is downstream of that. WHCC, Bay Photo, and Mpix all want different things. Until a lab is named this stays a spec-shaped hole — do not build a generic exporter for an unknown consumer.
+
+### 6.3 Amount reconciliation ✓ (known gap, still open)
+
+`create-checkout-session` prices whatever `items` the request claims and never checks them against the order already saved under that `orderId`. Someone can save a $65 order, submit the same id with a 4x6, pay ~$5.50, and the webhook still marks the $65 row complete.
+
+The webhook must compare `session.amount_total` to the stored total and set `amount_mismatch` instead of `paid`. **The admin is what makes that fix meaningful** — a flag nothing surfaces is not a fix. A mismatched order must be visibly quarantined out of the fulfillment queue, because the failure mode is shipping $65 of prints for $5.50.
+
+This is the top of the money list and it is unchanged by the rebuild.
+
+### 6.4 Orders list ▢
+Default view is the work queue: `paid`, oldest first. Mismatches surfaced, never silently queued. Search by order id or email — the customer's only receipt is Stripe's, so the id is what they will quote.
+
+---
+
+## 7. What the admin fixes as a byproduct
+
+Not chores — consequences of building it right:
+
+- `products.ts` stops lying about being generated, because it becomes data.
+- 369MB leaves git.
+- Thumbnails become real, at ingest.
+- `averageColor()` becomes a column instead of a full-resolution fetch.
+- Full-resolution originals get a legitimate home: fulfillment, not `<img>`.
+- RLS gets answered because auth forces it.
+- `Orders.tsx`'s "Invalid Date" (`createdAt` vs `created_at`) dies with the page.
+- Orders that fell back to localStorage and sit at `pending` forever stop existing — there is no localStorage fallback in an admin-backed model.
+- "Shipped" and its tracking number become true.
+
+---
+
+## 8. Open questions
+
+1. **Which lab?** Blocks §6.2. The single highest-value unknown here.
+2. **Caption vs description vs alt text** (§5.2) — three different jobs, currently one field.
+3. **Do prices stay size-only?** `PRICE_BY_SIZE` is keyed *only* by size today; product identity does not affect price. An admin invites per-photo pricing. If that changes, `netlify/functions/lib/pricing.js` must change with it — it is a hand-maintained mirror with no test enforcing it.
+4. **What happens to `unlisted`?** Currently a products.ts boolean for direct-link-only prints. Real feature or leftover?
+5. **Does the storefront read the DB at request time, or build-time static?** Decides whether publishing a photo needs a redeploy. Now a Next.js question specifically (§1.5): static generation with on-demand revalidation, or server components reading Supabase per request. Leaning revalidation — publishing a photo should not require a deploy, but a gallery does not need per-request freshness either.
+6. **Portfolio-vs-store** (design.md §1, still open) — decides whether Shop and Home are the same idea.
