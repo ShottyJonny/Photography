@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Hanken+Grotesk:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  body{margin:0;background:#d7d5d0;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{text-decoration:none}
+  .wrap{display:flex;flex-direction:column;gap:14px;padding:54px 56px 90px}
+  .scr-cap{display:flex;align-items:center;gap:10px;margin:36px 0 4px}
+  .scr-cap:first-child{margin-top:0}
+  .scr-cap .n{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#111;color:#fff;border-radius:4px}
+  .scr-cap .t{font:600 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#1a1a1a}
+  .scr-cap .d{font:400 12px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:rgba(0,0,0,.5)}
+  .card{border-radius:5px;box-shadow:0 30px 70px -34px rgba(0,0,0,.55);overflow:hidden}
+  .mrow{display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start}
+  .cloud{cursor:pointer;transition:transform .2s ease}
+  .cloud:hover{transform:scale(1.06)}
+  .navlink{color:var(--dim,rgba(239,234,224,.62));transition:color .18s}
+  .navlink:hover{color:var(--ink,#efeae0)}
+  .ix-row{display:flex;align-items:baseline;gap:16px;padding:13px 0;border-bottom:1px solid var(--hairsoft,rgba(239,234,224,.1));cursor:pointer;transition:padding-left .2s}
+  .ix-row:hover{padding-left:8px}
+  .shopcard{cursor:pointer}
+  .shopcard .sc-img{transition:filter .3s}
+  .shopcard:hover .sc-img{filter:brightness(1.08)}
+  .sizebtn{cursor:pointer;transition:all .18s}
+  .phone{background:#0b0b0b;border-radius:44px;padding:12px;box-shadow:0 30px 70px -30px rgba(0,0,0,.6);border:1px solid #222}
+  .phone-screen{width:376px;height:812px;border-radius:33px;overflow:hidden;position:relative;background:var(--paper,#0b0b0b)}
+</style>
+</helmet>
+
+<div class="wrap">
+
+  <!-- ============================== DESKTOP HOME ============================== -->
+  <div class="scr-cap"><span class="n">A</span><span class="t">Home — desktop</span><span class="d">Full-height 4:5 plate, uncropped · click the cloud to switch light / dark</span></div>
+  <div class="card" style="width:1440px;height:900px;position:relative;background:var(--paper,#0b0b0b);color:var(--ink,#efeae0);font-family:'IBM Plex Mono',monospace">
+    <img src="assets/photos/Grand%20Ring.jpg" alt="" aria-hidden="true" style="position:absolute;left:0;top:0;width:1440px;height:900px;object-fit:cover;object-position:center 40%;filter:blur(90px) saturate(1.05) brightness(var(--bleedbright,.72));transform:scale(1.12);opacity:var(--bleedop,.5)"></img>
+    <img src="assets/photos/Grand%20Ring.jpg" alt="Grand Ring" style="position:absolute;top:0;right:0;width:820px;height:900px;object-fit:cover;object-position:center 40%;-webkit-mask-image:linear-gradient(90deg,transparent 0,#000 150px);mask-image:linear-gradient(90deg,transparent 0,#000 150px)">
+    <div style="position:absolute;left:0;top:0;width:1440px;height:900px;background:linear-gradient(90deg,var(--paper,#0b0b0b) 0%,var(--paper,#0b0b0b) 22%,color-mix(in srgb, var(--paper,#0b0b0b) 64%, transparent) 36%,transparent 48%)"></div>
+    <div style="position:absolute;top:34px;left:56px;right:44px;display:flex;align-items:flex-start;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:15px">
+        <img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="Jon Hoffman — switch theme" style="height:34px;width:auto;display:block">
+        <div><div style="font-family:'Playfair Display',serif;font-size:28px;line-height:1;color:var(--ink,#efeae0)">Jon Hoffman</div>
+        <div style="font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:6px">Photographs &amp; Prints</div></div>
+      </div>
+      <nav style="display:flex;gap:26px;font-size:11px;letter-spacing:.18em;text-transform:uppercase;padding-top:8px">
+        <a class="navlink" href="#" style="color:var(--ink,#efeae0)">Work</a><a class="navlink" href="#">Collections</a><a class="navlink" href="#">Prints</a><a class="navlink" href="#">About</a><a class="navlink" href="#" style="color:var(--faint,rgba(239,234,224,.45))">Cart (0)</a>
+      </nav>
+    </div>
+    <div style="position:absolute;left:56px;top:200px;width:452px">
+      <div style="font-size:10px;letter-spacing:.32em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:20px;display:flex;justify-content:space-between"><span>Featured work</span><span>01 / 24</span></div>
+      <div class="ix-row" style="border-top:1px solid var(--hairsoft,rgba(239,234,224,.1))"><span style="font-size:11px;color:var(--ink,#efeae0);width:26px">01</span><span style="font-family:'Playfair Display',serif;font-size:25px;color:var(--ink,#efeae0)">Grand Ring</span></div>
+      <div class="ix-row"><span style="font-size:11px;color:var(--faint,rgba(239,234,224,.45));width:26px">02</span><span style="font-family:'Playfair Display',serif;font-size:25px;color:var(--dim,rgba(239,234,224,.6))">Omniprominence</span></div>
+      <div class="ix-row"><span style="font-size:11px;color:var(--faint,rgba(239,234,224,.45));width:26px">03</span><span style="font-family:'Playfair Display',serif;font-size:25px;color:var(--dim,rgba(239,234,224,.6))">If Gold Could Rust</span></div>
+      <div class="ix-row"><span style="font-size:11px;color:var(--faint,rgba(239,234,224,.45));width:26px">04</span><span style="font-family:'Playfair Display',serif;font-size:25px;color:var(--dim,rgba(239,234,224,.6))">Path of Most Enchantment</span></div>
+      <div class="ix-row"><span style="font-size:11px;color:var(--faint,rgba(239,234,224,.45));width:26px">05</span><span style="font-family:'Playfair Display',serif;font-size:25px;color:var(--dim,rgba(239,234,224,.6))">Never Sleeps</span></div>
+    </div>
+    <div style="position:absolute;left:56px;bottom:56px;width:452px">
+      <div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:14px">From the Relics collection</div>
+      <p style="font-family:'Newsreader',serif;font-size:19px;line-height:1.55;color:var(--ink,rgba(239,234,224,.9));margin:0 0 26px">Whatever you see up there, you'll only get to see it for a moment.</p>
+      <div style="display:flex;align-items:center;gap:24px">
+        <a href="#" style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0);padding:14px 24px">View this print →</a>
+        <a class="navlink" href="#" style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink,#efeae0)">Enter the collection</a>
+      </div>
+    </div>
+    <div style="position:absolute;right:34px;bottom:30px;text-align:right;font-size:10px;letter-spacing:.16em;line-height:2;color:var(--ink,#fff);text-transform:uppercase;text-shadow:0 1px 10px var(--shadow,rgba(0,0,0,.6))">
+      <div>Seattle, WA · 2022</div>
+    </div>
+  </div>
+
+  <!-- ============================== SHOP ============================== -->
+  <div class="scr-cap"><span class="n">B</span><span class="t">Prints — the shop</span><span class="d">Portrait 4:5 plates in a catalog grid · quiet price, title leads</span></div>
+  <div class="card" style="width:1440px;padding-bottom:64px;background:var(--paper,#0b0b0b);color:var(--ink,#efeae0);font-family:'IBM Plex Mono',monospace">
+    <div style="padding:40px 56px 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:15px">
+        <img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:30px;width:auto;display:block">
+        <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--ink,#efeae0)">Jon Hoffman</div>
+      </div>
+      <nav style="display:flex;gap:26px;font-size:11px;letter-spacing:.18em;text-transform:uppercase"><a class="navlink" href="#">Work</a><a class="navlink" href="#">Collections</a><a class="navlink" href="#" style="color:var(--ink,#efeae0)">Prints</a><a class="navlink" href="#">About</a><a class="navlink" href="#" style="color:var(--faint,rgba(239,234,224,.45))">Cart (0)</a></nav>
+    </div>
+    <div style="padding:44px 56px 28px">
+      <div style="font-family:'Playfair Display',serif;font-size:52px;color:var(--ink,#efeae0);line-height:1;margin-bottom:10px">Prints</div>
+      <div style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55))">24 works</div>
+    </div>
+    <div style="margin:0 56px 34px;padding:16px 0;border-top:1px solid var(--hair,rgba(239,234,224,.14));border-bottom:1px solid var(--hair,rgba(239,234,224,.14));display:flex;align-items:center;gap:26px;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.6))">
+      <span style="color:var(--ink,#efeae0);border-bottom:1px solid var(--ink,#efeae0);padding-bottom:3px">All</span><span>Landscape</span><span>Urban</span><span>Relics</span>
+      <span style="margin-left:auto">Sort — Newest ▾</span>
+    </div>
+    <div style="margin:0 56px;display:grid;grid-template-columns:repeat(3,1fr);gap:40px 36px">
+      <div class="shopcard"><img class="sc-img" src="assets/photos/Grand%20Ring.jpg" alt="Grand Ring" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--ink,#efeae0)">Grand Ring</span><span style="font-size:12px;color:var(--dim,rgba(239,234,224,.6))">$150</span></div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.4));margin-top:4px">01 · 8×10 – 32×40</div></div>
+      <div class="shopcard"><img class="sc-img" src="assets/photos/Omniprominence.jpg" alt="Omniprominence" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--ink,#efeae0)">Omniprominence</span><span style="font-size:12px;color:var(--dim,rgba(239,234,224,.6))">$150</span></div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.4));margin-top:4px">02 · 8×10 – 32×40</div></div>
+      <div class="shopcard"><img class="sc-img" src="assets/photos/Never%20Sleeps.jpg" alt="Never Sleeps" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--ink,#efeae0)">Never Sleeps</span><span style="font-size:12px;color:var(--dim,rgba(239,234,224,.6))">$150</span></div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.4));margin-top:4px">07 · 8×10 – 32×40</div></div>
+      <div class="shopcard"><img class="sc-img" src="assets/photos/If%20Gold%20Could%20Rust.jpg" alt="If Gold Could Rust" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--ink,#efeae0)">If Gold Could Rust</span><span style="font-size:12px;color:var(--dim,rgba(239,234,224,.6))">$150</span></div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.4));margin-top:4px">09 · 8×10 – 32×40</div></div>
+      <div class="shopcard"><img class="sc-img" src="assets/photos/Path%20of%20Most%20Enchantment.jpg" alt="Path of Most Enchantment" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--ink,#efeae0)">Path of Most Enchantment</span><span style="font-size:12px;color:var(--dim,rgba(239,234,224,.6))">$150</span></div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.4));margin-top:4px">03 · 8×10 – 32×40</div></div>
+      <div class="shopcard"><img class="sc-img" src="assets/photos/Urban%20Sisyphus.jpg" alt="Urban Sisyphus" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:14px"><span style="font-family:'Playfair Display',serif;font-size:20px;color:var(--ink,#efeae0)">Urban Sisyphus</span><span style="font-size:12px;color:var(--dim,rgba(239,234,224,.6))">$150</span></div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.4));margin-top:4px">12 · 8×10 – 32×40</div></div>
+    </div>
+  </div>
+
+  <!-- ============================== COLLECTION — RELICS ============================== -->
+  <div class="scr-cap"><span class="n">C</span><span class="t">Collection — Relics</span><span class="d">The essay carries the feeling · a gallery walk of the works</span></div>
+  <div class="card" style="width:1440px;padding-bottom:72px;background:var(--paper,#0b0b0b);color:var(--ink,#efeae0);font-family:'IBM Plex Mono',monospace">
+    <div style="padding:40px 56px 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:15px"><img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:30px;width:auto;display:block"><div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--ink,#efeae0)">Jon Hoffman</div></div>
+      <nav style="display:flex;gap:26px;font-size:11px;letter-spacing:.18em;text-transform:uppercase"><a class="navlink" href="#">Work</a><a class="navlink" href="#" style="color:var(--ink,#efeae0)">Collections</a><a class="navlink" href="#">Prints</a><a class="navlink" href="#">About</a><a class="navlink" href="#" style="color:var(--faint,rgba(239,234,224,.45))">Cart (0)</a></nav>
+    </div>
+    <div style="text-align:center;padding:70px 56px 8px">
+      <div style="font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:20px">Collection No. 01 · Six photographs</div>
+      <div style="font-family:'Playfair Display',serif;font-size:96px;line-height:.96;color:var(--ink,#efeae0);margin-bottom:22px">Relics</div>
+      <div style="font-family:'Newsreader',serif;font-style:italic;font-size:21px;color:var(--dim,rgba(239,234,224,.72));max-width:620px;margin:0 auto">Objects surviving from an earlier time — of historical, or sentimental, interest.</div>
+    </div>
+    <div style="max-width:640px;margin:56px auto 0;font-family:'Newsreader',serif;font-size:19px;line-height:1.72;color:var(--dim,rgba(239,234,224,.82))">
+      <p style="margin:0 0 26px"><span style="float:left;font-family:'Playfair Display',serif;font-size:74px;line-height:.72;padding:8px 14px 0 0;color:var(--ink,#efeae0)">R</span>elics, as defined by Oxford, are "an object surviving from an earlier time, especially one of historical or sentimental interest." It's that second part I find interesting — that sentimentality has similar value as historical significance. Planned obsolescence and consumerism culture have long whittled our sentimentalism; everything has its purpose, and everything will someday have a newer, better version to supplant it. How efficiently tragic.</p>
+      <p style="margin:0 0 26px">I learned recently my mother has my baby teeth. At the time of writing this I am 26 years old, and originally it puzzled me that she would keep something like that. What other purpose could they possibly serve? They were made to be disposed of. How utterly asinine.</p>
+      <p style="margin:0 0 26px;font-style:italic;color:var(--ink,#fff);text-align:center;font-size:22px">Oh. Right. Sentiment.</p>
+      <p style="margin:0 0 26px">The reality is we lose hold of or forget most things — usually on purpose, occasionally not. And occasionally we stick with things that no longer serve their purpose. A memento from a simpler time; a trophy for what we've overcome; a tribute to what we've sacrificed. Yet we cannot let go. Maybe we shouldn't.</p>
+      <p style="margin:0">I hope one day, when I've gone, those who cherished me will go through my belongings to discover what mattered to me that I forgot to mention. I hope they find evidence of all the places I've been. I hope they find the cameras that haven't functioned for decades. Hell, I hope they find my baby teeth.</p>
+      <div style="text-align:center;margin-top:34px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45))">— Jon Hoffman</div>
+    </div>
+    <div style="margin-top:72px;padding:0 56px">
+      <div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:22px;padding-bottom:14px;border-bottom:1px solid var(--hair,rgba(239,234,224,.14));display:flex;justify-content:space-between"><span>The works</span><span>Scroll →</span></div>
+      <div style="display:flex;gap:28px;overflow:hidden">
+        <div class="shopcard" style="flex:none;width:300px"><img class="sc-img" src="assets/photos/Deterioration.jpg" alt="Deterioration" style="width:300px;height:375px;object-fit:cover;display:block"><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--ink,#efeae0);margin-top:12px">Deterioration</div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45));margin-top:3px">from $150</div></div>
+        <div class="shopcard" style="flex:none;width:300px"><img class="sc-img" src="assets/photos/Forever%20Dancing.jpg" alt="Forever Dancing" style="width:300px;height:375px;object-fit:cover;display:block"><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--ink,#efeae0);margin-top:12px">Forever Dancing</div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45));margin-top:3px">from $150</div></div>
+        <div class="shopcard" style="flex:none;width:300px"><img class="sc-img" src="assets/photos/Sidelines.jpg" alt="Sidelines" style="width:300px;height:375px;object-fit:cover;display:block"><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--ink,#efeae0);margin-top:12px">Sidelines</div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45));margin-top:3px">from $150</div></div>
+        <div class="shopcard" style="flex:none;width:300px"><img class="sc-img" src="assets/photos/Lost%20Innocence.jpg" alt="Lost Innocence" style="width:300px;height:375px;object-fit:cover;display:block"><div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--ink,#efeae0);margin-top:12px">Lost Innocence</div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45));margin-top:3px">from $150</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== PRODUCT ============================== -->
+  <div class="scr-cap"><span class="n">D</span><span class="t">Product — a single print</span><span class="d">4:5 plate + crop guides · size, colour/silver toggle, acquire</span></div>
+  <div class="card" style="width:1440px;height:940px;position:relative;background:var(--paper,#0b0b0b);color:var(--ink,#efeae0);font-family:'IBM Plex Mono',monospace">
+    <div style="padding:34px 56px 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:15px"><img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:30px;width:auto;display:block"><div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--ink,#efeae0)">Jon Hoffman</div></div>
+      <nav style="display:flex;gap:26px;font-size:11px;letter-spacing:.18em;text-transform:uppercase"><a class="navlink" href="#">Work</a><a class="navlink" href="#">Collections</a><a class="navlink" href="#" style="color:var(--ink,#efeae0)">Prints</a><a class="navlink" href="#">About</a><a class="navlink" href="#" style="color:var(--faint,rgba(239,234,224,.45))">Cart (0)</a></nav>
+    </div>
+    <div style="display:grid;grid-template-columns:600px 1fr;gap:64px;padding:44px 56px 0;align-items:start">
+      <div style="position:relative;width:600px;height:750px">
+        <img src="assets/photos/Grand%20Ring.jpg" alt="Grand Ring" style="width:600px;height:750px;object-fit:cover;display:block">
+        <div style="position:absolute;top:0;left:9%;width:1px;height:100%;background:rgba(255,255,255,.6)"></div>
+        <div style="position:absolute;top:0;right:9%;width:1px;height:100%;background:rgba(255,255,255,.6)"></div>
+        <div style="position:absolute;top:0;left:0;width:9%;height:100%;background:rgba(8,8,8,.5)"></div>
+        <div style="position:absolute;top:0;right:0;width:9%;height:100%;background:rgba(8,8,8,.5)"></div>
+        <div style="position:absolute;bottom:14px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#fff;background:rgba(8,8,8,.6);padding:6px 10px">Guides show the 8×10 crop</div>
+      </div>
+      <div style="padding-top:6px">
+        <div style="font-size:11px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:16px">No. 01 · Relics</div>
+        <div style="font-family:'Playfair Display',serif;font-size:58px;line-height:1;color:var(--ink,#efeae0);margin-bottom:20px">Grand Ring</div>
+        <p style="font-family:'Newsreader',serif;font-size:20px;line-height:1.55;color:var(--dim,rgba(239,234,224,.82));margin:0 0 32px;max-width:460px">Whatever you see up there, you'll only get to see it for a moment.</p>
+        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:14px">Size — all 4:5</div>
+        <div style="display:flex;gap:10px;margin-bottom:30px;flex-wrap:wrap">
+          <span class="sizebtn" style="font-size:12px;padding:11px 16px;border:1px solid var(--btnbg,#efeae0);color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0)">8×10</span>
+          <span class="sizebtn" style="font-size:12px;padding:11px 16px;border:1px solid var(--hair,rgba(239,234,224,.28));color:var(--dim,rgba(239,234,224,.8))">16×20</span>
+          <span class="sizebtn" style="font-size:12px;padding:11px 16px;border:1px solid var(--hair,rgba(239,234,224,.28));color:var(--dim,rgba(239,234,224,.8))">24×30</span>
+          <span class="sizebtn" style="font-size:12px;padding:11px 16px;border:1px solid var(--hair,rgba(239,234,224,.28));color:var(--dim,rgba(239,234,224,.8))">32×40</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:32px">
+          <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5))">Register</div>
+          <div style="display:inline-flex;border:1px solid var(--hair,rgba(239,234,224,.28))">
+            <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:9px 15px;background:var(--btnbg,#efeae0);color:var(--btnink,#0b0b0b)">Colour</span>
+            <span style="font-size:11px;letter-spacing:.1em;text-transform:uppercase;padding:9px 15px;color:var(--dim,rgba(239,234,224,.8))">Silver</span>
+          </div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:12px;margin-bottom:26px;padding-top:24px;border-top:1px solid var(--hair,rgba(239,234,224,.14))">
+          <span style="font-family:'Playfair Display',serif;font-size:38px;color:var(--ink,#efeae0)">$150</span>
+
+        </div>
+        <div style="display:flex;gap:14px">
+          <a href="#" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0);padding:16px 34px">Add to cart</a>
+          <a class="navlink" href="#" style="font-size:12px;letter-spacing:.16em;text-transform:uppercase;border:1px solid var(--hair,rgba(239,234,224,.3));padding:16px 26px;color:var(--ink,#efeae0)">Save to collection</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== CART DRAWER ============================== -->
+  <div class="scr-cap"><span class="n">F</span><span class="t">Cart — slide-in drawer</span><span class="d">Quiet review of the works chosen · size + register carried through</span></div>
+  <div class="card" style="width:1440px;height:900px;position:relative;background:var(--paper,#0b0b0b);color:var(--ink,#efeae0);font-family:'IBM Plex Mono',monospace;overflow:hidden">
+    <!-- dimmed page behind -->
+    <img src="assets/photos/Grand%20Ring.jpg" alt="" aria-hidden="true" style="position:absolute;right:0;top:0;width:820px;height:900px;object-fit:cover;object-position:center 40%;filter:blur(3px) brightness(.5)">
+    <div style="position:absolute;inset:0;background:color-mix(in srgb, var(--paper,#0b0b0b) 62%, transparent)"></div>
+    <div style="position:absolute;top:34px;left:56px;display:flex;align-items:center;gap:15px">
+      <img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:30px;width:auto;display:block">
+      <div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--ink,#efeae0)">Jon Hoffman</div>
+    </div>
+    <!-- drawer -->
+    <div style="position:absolute;top:0;right:0;bottom:0;width:456px;background:var(--paper,#0b0b0b);border-left:1px solid var(--hair,rgba(239,234,224,.18));box-shadow:-30px 0 60px -20px rgba(0,0,0,.5);display:flex;flex-direction:column">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;padding:34px 34px 22px;border-bottom:1px solid var(--hair,rgba(239,234,224,.14))">
+        <div style="font-family:'Playfair Display',serif;font-size:26px;color:var(--ink,#efeae0)">Your selection</div>
+        <div style="font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55))">2 works · Close ✕</div>
+      </div>
+      <div style="flex:1;padding:24px 34px;display:flex;flex-direction:column;gap:24px">
+        <!-- item 1 -->
+        <div style="display:grid;grid-template-columns:76px 1fr;gap:16px">
+          <img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:76px;height:95px;object-fit:cover;display:block">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Playfair Display',serif;font-size:19px;color:var(--ink,#efeae0)">Grand Ring</span><span style="font-size:13px;color:var(--ink,#efeae0)">$260</span></div>
+            <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:6px;line-height:1.7">16 × 20 in · Colour</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+              <div style="display:inline-flex;align-items:center;border:1px solid var(--hair,rgba(239,234,224,.24))"><span style="padding:5px 11px;color:var(--dim,rgba(239,234,224,.7))">–</span><span style="padding:5px 13px;color:var(--ink,#efeae0);border-left:1px solid var(--hair,rgba(239,234,224,.24));border-right:1px solid var(--hair,rgba(239,234,224,.24))">1</span><span style="padding:5px 11px;color:var(--dim,rgba(239,234,224,.7))">+</span></div>
+              <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45))">Remove</span>
+            </div>
+          </div>
+        </div>
+        <div style="height:1px;background:var(--hairsoft,rgba(239,234,224,.1))"></div>
+        <!-- item 2 -->
+        <div style="display:grid;grid-template-columns:76px 1fr;gap:16px">
+          <img src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:76px;height:95px;object-fit:cover;display:block">
+          <div>
+            <div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Playfair Display',serif;font-size:19px;color:var(--ink,#efeae0)">Never Sleeps</span><span style="font-size:13px;color:var(--ink,#efeae0)">$150</span></div>
+            <div style="font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:6px;line-height:1.7">8 × 10 in · Silver</div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-top:12px">
+              <div style="display:inline-flex;align-items:center;border:1px solid var(--hair,rgba(239,234,224,.24))"><span style="padding:5px 11px;color:var(--dim,rgba(239,234,224,.7))">–</span><span style="padding:5px 13px;color:var(--ink,#efeae0);border-left:1px solid var(--hair,rgba(239,234,224,.24));border-right:1px solid var(--hair,rgba(239,234,224,.24))">1</span><span style="padding:5px 11px;color:var(--dim,rgba(239,234,224,.7))">+</span></div>
+              <span style="font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45))">Remove</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="padding:24px 34px 30px;border-top:1px solid var(--hair,rgba(239,234,224,.14))">
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:9px"><span>Subtotal</span><span>$410</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:16px"><span>Shipping</span><span>$18</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:14px;border-top:1px solid var(--hair,rgba(239,234,224,.14));margin-bottom:20px"><span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink,#efeae0)">Total</span><span style="font-family:'Playfair Display',serif;font-size:26px;color:var(--ink,#efeae0)">$428</span></div>
+        <a href="#" style="display:block;text-align:center;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0);padding:16px;margin-bottom:10px">Review &amp; checkout →</a>
+        <div style="text-align:center;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45))">Tax calculated at payment</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== CHECKOUT — REVIEW ============================== -->
+  <div class="scr-cap"><span class="n">G</span><span class="t">Checkout — review &amp; details</span><span class="d">We collect where it's going · Stripe takes the card on its secure page</span></div>
+  <div class="card" style="width:1440px;padding-bottom:64px;background:var(--paper,#0b0b0b);color:var(--ink,#efeae0);font-family:'IBM Plex Mono',monospace">
+    <div style="padding:40px 56px 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:15px"><img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:30px;width:auto;display:block"><div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--ink,#efeae0)">Jon Hoffman</div></div>
+      <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.6))">Checkout · Step 1 of 2</div>
+    </div>
+    <div style="padding:48px 56px 30px"><div style="font-family:'Playfair Display',serif;font-size:52px;color:var(--ink,#efeae0);line-height:1">Review your order</div></div>
+    <div style="display:grid;grid-template-columns:1fr 456px;gap:56px;padding:0 56px;align-items:start">
+      <!-- details form -->
+      <div>
+        <div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-bottom:20px;padding-bottom:12px;border-bottom:1px solid var(--hair,rgba(239,234,224,.14))">Contact</div>
+        <div style="margin-bottom:18px"><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:7px">Email</div><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:13px 15px;font-size:14px;color:var(--ink,#efeae0)">jon.buyer@email.com</div></div>
+        <div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin:34px 0 20px;padding-bottom:12px;border-bottom:1px solid var(--hair,rgba(239,234,224,.14))">Ship to</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:7px">First name</div><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:13px 15px;font-size:14px;color:var(--ink,#efeae0)">Alex</div></div>
+          <div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:7px">Last name</div><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:13px 15px;font-size:14px;color:var(--ink,#efeae0)">Rivera</div></div>
+          <div style="grid-column:1 / -1"><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:7px">Address</div><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:13px 15px;font-size:14px;color:var(--ink,#efeae0)">418 Waverly Place</div></div>
+          <div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:7px">City</div><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:13px 15px;font-size:14px;color:var(--ink,#efeae0)">Seattle</div></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px"><div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:7px">State</div><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:13px 15px;font-size:14px;color:var(--ink,#efeae0)">WA</div></div><div><div style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:7px">ZIP</div><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:13px 15px;font-size:14px;color:var(--ink,#efeae0)">98101</div></div></div>
+        </div>
+      </div>
+      <!-- summary -->
+      <div style="border:1px solid var(--hair,rgba(239,234,224,.16));padding:28px 28px 30px">
+        <div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-bottom:22px">Order summary</div>
+        <div style="display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;margin-bottom:18px"><img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:56px;height:70px;object-fit:cover"><div><div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--ink,#efeae0)">Grand Ring</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-top:4px">16×20 · Colour</div></div><span style="font-size:13px;color:var(--ink,#efeae0)">$260</span></div>
+        <div style="display:grid;grid-template-columns:56px 1fr auto;gap:14px;align-items:center;margin-bottom:22px"><img src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:56px;height:70px;object-fit:cover"><div><div style="font-family:'Playfair Display',serif;font-size:16px;color:var(--ink,#efeae0)">Never Sleeps</div><div style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-top:4px">8×10 · Silver</div></div><span style="font-size:13px;color:var(--ink,#efeae0)">$150</span></div>
+        <div style="border-top:1px solid var(--hair,rgba(239,234,224,.14));padding-top:16px">
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:9px"><span>Subtotal</span><span>$410</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:9px"><span>Shipping</span><span>$18</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:16px"><span>Tax</span><span>Calculated at payment</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:14px;border-top:1px solid var(--hair,rgba(239,234,224,.14))"><span style="font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink,#efeae0)">Total</span><span style="font-family:'Playfair Display',serif;font-size:26px;color:var(--ink,#efeae0)">$428</span></div>
+        </div>
+        <a href="#" style="display:block;text-align:center;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0);padding:16px;margin:22px 0 12px">Pay with Stripe →</a>
+        <div style="display:flex;align-items:center;justify-content:center;gap:7px;font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.5));text-align:center;line-height:1.5">Secure payment on Stripe's page · card never touches this site</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================== ORDER CONFIRMATION ============================== -->
+  <div class="scr-cap"><span class="n">H</span><span class="t">Confirmation — the receipt</span><span class="d">Warmed with a note · returned from Stripe</span></div>
+  <div class="card" style="width:1440px;height:900px;position:relative;background:var(--paper,#0b0b0b);color:var(--ink,#efeae0);font-family:'IBM Plex Mono',monospace">
+    <div style="padding:40px 56px 0;display:flex;align-items:center;justify-content:space-between">
+      <div style="display:flex;align-items:center;gap:15px"><img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:30px;width:auto;display:block"><div style="font-family:'Playfair Display',serif;font-size:24px;color:var(--ink,#efeae0)">Jon Hoffman</div></div>
+      <div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.6))">Order confirmed</div>
+    </div>
+    <div style="max-width:680px;margin:64px auto 0;text-align:center">
+      <div style="font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-bottom:22px">Order JH-20260716-0042</div>
+      <div style="font-family:'Playfair Display',serif;font-size:76px;line-height:1;color:var(--ink,#efeae0);margin-bottom:28px">Thank you.</div>
+      <p style="font-family:'Newsreader',serif;font-size:19px;line-height:1.7;color:var(--dim,rgba(239,234,224,.82));margin:0 auto 14px;max-width:520px">Your prints are being made by hand and will ship within five to seven days. A receipt is on its way to your inbox from Stripe. When it arrives, give it a good wall and some light — these were made to be lived with.</p>
+      <div style="font-family:'Newsreader',serif;font-style:italic;font-size:16px;color:var(--faint,rgba(239,234,224,.55));margin-bottom:44px">— Jon</div>
+    </div>
+    <div style="max-width:680px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:0;border-top:1px solid var(--hair,rgba(239,234,224,.14))">
+      <div style="padding:26px 30px 26px 0;border-right:1px solid var(--hair,rgba(239,234,224,.12))">
+        <div style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:16px">Shipping to</div>
+        <div style="font-size:13px;line-height:1.9;color:var(--ink,#efeae0)">Alex Rivera<br>418 Waverly Place<br>Seattle, WA 98101</div>
+      </div>
+      <div style="padding:26px 0 26px 30px">
+        <div style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:16px">Two works · $428</div>
+        <div style="display:flex;gap:14px">
+          <div><img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:58px;height:72px;object-fit:cover;display:block"><div style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:6px">Grand Ring · 16×20</div></div>
+          <div><img src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:58px;height:72px;object-fit:cover;display:block"><div style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:6px">Never Sleeps · 8×10</div></div>
+        </div>
+      </div>
+    </div>
+    <div style="position:absolute;left:0;right:0;bottom:52px;text-align:center"><a href="#" style="font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink,#efeae0);border-bottom:1px solid var(--hair,rgba(239,234,224,.4));padding-bottom:5px">Back to the work →</a></div>
+  </div>
+
+  <!-- ============================== MOBILE ============================== -->
+  <div class="scr-cap"><span class="n">E</span><span class="t">Mobile — Home &amp; Product</span><span class="d">4:5 sits naturally in a phone · same catalog voice, same toggle</span></div>
+  <div class="mrow">
+    <div class="phone"><div class="phone-screen" style="font-family:'IBM Plex Mono',monospace">
+      <img src="assets/photos/Grand%20Ring.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%">
+      <div style="position:absolute;inset:0;background:linear-gradient(180deg,color-mix(in srgb, var(--paper,#060608) 55%, transparent) 0%,transparent 20%,transparent 42%,color-mix(in srgb, var(--paper,#060608) 90%, transparent) 80%,var(--paper,#060608) 100%)"></div>
+      <div style="position:absolute;top:14px;left:0;right:0;display:flex;justify-content:center"><div style="width:120px;height:26px;background:#000;border-radius:0 0 16px 16px"></div></div>
+      <div style="position:absolute;top:52px;left:22px;right:22px;display:flex;align-items:center;justify-content:space-between">
+        <div style="display:flex;align-items:center;gap:9px"><img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:24px"><span style="font-family:'Playfair Display',serif;font-size:18px;color:var(--ink,#fff)">Jon Hoffman</span></div>
+        <div style="display:grid;gap:4px"><span style="width:22px;height:1.5px;background:var(--ink,#fff)"></span><span style="width:22px;height:1.5px;background:var(--ink,#fff)"></span></div>
+      </div>
+      <div style="position:absolute;left:22px;right:22px;bottom:40px">
+        <div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim,rgba(255,255,255,.7));margin-bottom:12px">Featured · 01 / 24</div>
+        <div style="font-family:'Playfair Display',serif;font-size:38px;line-height:1.02;color:var(--ink,#fff);margin-bottom:14px">Grand Ring</div>
+        <p style="font-family:'Newsreader',serif;font-size:15px;line-height:1.5;color:var(--dim,rgba(255,255,255,.82));margin:0 0 22px">Whatever you see up there, you'll only get to see it for a moment.</p>
+        <a href="#" style="display:block;text-align:center;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0);padding:15px">View this print →</a>
+        <div style="display:flex;justify-content:center;gap:7px;margin-top:20px"><span style="width:22px;height:2px;background:var(--ink,#fff)"></span><span style="width:7px;height:2px;background:var(--faint,rgba(255,255,255,.4))"></span><span style="width:7px;height:2px;background:var(--faint,rgba(255,255,255,.4))"></span><span style="width:7px;height:2px;background:var(--faint,rgba(255,255,255,.4))"></span></div>
+      </div>
+    </div></div>
+    <div class="phone"><div class="phone-screen" style="font-family:'IBM Plex Mono',monospace;overflow-y:auto;background:var(--paper,#0b0b0b)">
+      <div style="position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:52px 22px 14px;background:linear-gradient(180deg,var(--paper,#0b0b0b) 70%,transparent)">
+        <div style="display:flex;align-items:center;gap:9px"><img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:22px"><span style="font-family:'Playfair Display',serif;font-size:17px;color:var(--ink,#efeae0)">Jon Hoffman</span></div>
+        <span style="font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.6))">Cart</span>
+      </div>
+      <img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block">
+      <div style="padding:24px 22px 40px">
+        <div style="font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:10px">No. 01 · Relics</div>
+        <div style="font-family:'Playfair Display',serif;font-size:36px;line-height:1;color:var(--ink,#efeae0);margin-bottom:14px">Grand Ring</div>
+        <p style="font-family:'Newsreader',serif;font-size:16px;line-height:1.5;color:var(--dim,rgba(239,234,224,.82));margin:0 0 24px">Whatever you see up there, you'll only get to see it for a moment.</p>
+        <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:11px">Size — all 4:5</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px">
+          <span style="font-size:11px;padding:10px 14px;border:1px solid var(--btnbg,#efeae0);background:var(--btnbg,#efeae0);color:var(--btnink,#0b0b0b)">8×10</span>
+          <span style="font-size:11px;padding:10px 14px;border:1px solid var(--hair,rgba(239,234,224,.28));color:var(--dim,rgba(239,234,224,.8))">16×20</span>
+          <span style="font-size:11px;padding:10px 14px;border:1px solid var(--hair,rgba(239,234,224,.28));color:var(--dim,rgba(239,234,224,.8))">24×30</span>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:10px;padding-top:20px;border-top:1px solid var(--hair,rgba(239,234,224,.14));margin-bottom:20px">
+          <span style="font-family:'Playfair Display',serif;font-size:30px;color:var(--ink,#efeae0)">$150</span>
+        </div>
+        <a href="#" style="display:block;text-align:center;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0);padding:16px">Add to cart</a>
+      </div>
+    </div></div>
+  </div>
+
+  <!-- ============================== MOBILE COMMERCE ============================== -->
+  <div class="scr-cap"><span class="n">I</span><span class="t">Mobile — cart, checkout &amp; confirmation</span><span class="d">Same catalog voice, one-thumb reach · Stripe handoff</span></div>
+  <div class="mrow">
+    <!-- mobile cart -->
+    <div class="phone"><div class="phone-screen" style="font-family:'IBM Plex Mono',monospace;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:baseline;justify-content:space-between;padding:50px 22px 18px;border-bottom:1px solid var(--hair,rgba(239,234,224,.14))">
+        <span style="font-family:'Playfair Display',serif;font-size:22px;color:var(--ink,#efeae0)">Your selection</span>
+        <span style="font-size:16px;color:var(--dim,rgba(239,234,224,.6))">✕</span>
+      </div>
+      <div style="flex:1;overflow-y:auto;padding:20px 22px;display:flex;flex-direction:column;gap:20px">
+        <div style="display:grid;grid-template-columns:64px 1fr;gap:14px">
+          <img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:64px;height:80px;object-fit:cover">
+          <div><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Playfair Display',serif;font-size:17px;color:var(--ink,#efeae0)">Grand Ring</span><span style="font-size:12px;color:var(--ink,#efeae0)">$260</span></div>
+          <div style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:5px;line-height:1.7">16×20 · Colour</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="border:1px solid var(--hair,rgba(239,234,224,.24));padding:4px 10px;color:var(--ink,#efeae0)">– 1 +</span><span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45))">Remove</span></div></div>
+        </div>
+        <div style="height:1px;background:var(--hairsoft,rgba(239,234,224,.1))"></div>
+        <div style="display:grid;grid-template-columns:64px 1fr;gap:14px">
+          <img src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:64px;height:80px;object-fit:cover">
+          <div><div style="display:flex;justify-content:space-between;align-items:baseline"><span style="font-family:'Playfair Display',serif;font-size:17px;color:var(--ink,#efeae0)">Never Sleeps</span><span style="font-size:12px;color:var(--ink,#efeae0)">$150</span></div>
+          <div style="font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:5px;line-height:1.7">8×10 · Silver</div>
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:10px"><span style="border:1px solid var(--hair,rgba(239,234,224,.24));padding:4px 10px;color:var(--ink,#efeae0)">– 1 +</span><span style="font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.45))">Remove</span></div></div>
+        </div>
+      </div>
+      <div style="padding:18px 22px 26px;border-top:1px solid var(--hair,rgba(239,234,224,.14))">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:7px"><span>Subtotal</span><span>$410</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:12px"><span>Shipping</span><span>$18</span></div>
+        <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:12px;border-top:1px solid var(--hair,rgba(239,234,224,.14));margin-bottom:16px"><span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink,#efeae0)">Total</span><span style="font-family:'Playfair Display',serif;font-size:23px;color:var(--ink,#efeae0)">$428</span></div>
+        <a href="#" style="display:block;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0);padding:15px">Review &amp; checkout →</a>
+      </div>
+    </div></div>
+    <!-- mobile checkout -->
+    <div class="phone"><div class="phone-screen" style="font-family:'IBM Plex Mono',monospace;overflow-y:auto">
+      <div style="position:sticky;top:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:50px 22px 14px;background:linear-gradient(180deg,var(--paper,#0b0b0b) 78%,transparent)">
+        <div style="display:flex;align-items:center;gap:9px"><img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:20px"><span style="font-family:'Playfair Display',serif;font-size:16px;color:var(--ink,#efeae0)">Jon Hoffman</span></div>
+        <span style="font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.6))">1 / 2</span>
+      </div>
+      <div style="padding:8px 22px 40px">
+        <div style="font-family:'Playfair Display',serif;font-size:34px;line-height:1.02;color:var(--ink,#efeae0);margin-bottom:26px">Review your order</div>
+        <div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--hair,rgba(239,234,224,.14))">Contact</div>
+        <div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:12px 14px;font-size:13px;color:var(--ink,#efeae0);margin-bottom:24px">jon.buyer@email.com</div>
+        <div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--hair,rgba(239,234,224,.14))">Ship to</div>
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:26px">
+          <div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:12px 14px;font-size:13px;color:var(--ink,#efeae0)">Alex Rivera</div>
+          <div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:12px 14px;font-size:13px;color:var(--ink,#efeae0)">418 Waverly Place</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:12px 14px;font-size:13px;color:var(--ink,#efeae0)">Seattle</div><div style="border:1px solid var(--hair,rgba(239,234,224,.22));padding:12px 14px;font-size:13px;color:var(--ink,#efeae0)">WA · 98101</div></div>
+        </div>
+        <div style="border-top:1px solid var(--hair,rgba(239,234,224,.14));padding-top:16px;margin-bottom:18px">
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:7px"><span>Subtotal · 2 works</span><span>$410</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--dim,rgba(239,234,224,.7));margin-bottom:7px"><span>Shipping</span><span>$18</span></div>
+          <div style="display:flex;justify-content:space-between;align-items:baseline;padding-top:12px;border-top:1px solid var(--hair,rgba(239,234,224,.14))"><span style="font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink,#efeae0)">Total</span><span style="font-family:'Playfair Display',serif;font-size:23px;color:var(--ink,#efeae0)">$428</span></div>
+        </div>
+        <a href="#" style="display:block;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink,#0b0b0b);background:var(--btnbg,#efeae0);padding:16px;margin-bottom:12px">Pay with Stripe →</a>
+        <div style="text-align:center;font-size:9px;letter-spacing:.08em;text-transform:uppercase;color:var(--faint,rgba(239,234,224,.5));line-height:1.6">Secure payment on Stripe · card never touches this site</div>
+      </div>
+    </div></div>
+    <!-- mobile confirmation -->
+    <div class="phone"><div class="phone-screen" style="font-family:'IBM Plex Mono',monospace;overflow-y:auto">
+      <div style="padding:56px 22px 40px;text-align:center">
+        <img class="cloud" src="assets/CloudLogoWhiteHalf.png" title="Switch light / dark" alt="" style="height:30px;margin:0 auto 30px;display:block">
+        <div style="font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-bottom:16px">Order JH-20260716-0042</div>
+        <div style="font-family:'Playfair Display',serif;font-size:52px;line-height:1;color:var(--ink,#efeae0);margin-bottom:22px">Thank you.</div>
+        <p style="font-family:'Newsreader',serif;font-size:16px;line-height:1.65;color:var(--dim,rgba(239,234,224,.82));margin:0 0 12px">Your prints are being made by hand and will ship within five to seven days. A receipt is on its way from Stripe. Give them a good wall and some light — these were made to be lived with.</p>
+        <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:var(--faint,rgba(239,234,224,.55));margin-bottom:34px">— Jon</div>
+      </div>
+      <div style="padding:0 22px 30px">
+        <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--hair,rgba(239,234,224,.14))">Two works · $428</div>
+        <div style="display:flex;gap:12px;margin-bottom:24px">
+          <div><img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:76px;height:95px;object-fit:cover;display:block"><div style="font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:6px">Grand Ring · 16×20</div></div>
+          <div><img src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:76px;height:95px;object-fit:cover;display:block"><div style="font-size:8px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.55));margin-top:6px">Never Sleeps · 8×10</div></div>
+        </div>
+        <div style="font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--dim,rgba(239,234,224,.5));margin-bottom:10px">Shipping to</div>
+        <div style="font-size:12px;line-height:1.8;color:var(--ink,#efeae0);margin-bottom:30px">Alex Rivera · 418 Waverly Place · Seattle, WA 98101</div>
+        <a href="#" style="display:block;text-align:center;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink,#efeae0);border:1px solid var(--hair,rgba(239,234,224,.3));padding:15px">Back to the work →</a>
+      </div>
+    </div></div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;theme&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;dark&quot;,&quot;light&quot;],&quot;default&quot;:&quot;dark&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Theme&quot;}}">
+class Component extends DCLogic {
+  cur = 'dark';
+  themes = {
+    dark:  { paper:'#0b0b0b', ink:'#efeae0', dim:'rgba(239,234,224,.62)', faint:'rgba(239,234,224,.45)', hair:'rgba(239,234,224,.18)', hairsoft:'rgba(239,234,224,.1)', btnbg:'#efeae0', btnink:'#0b0b0b', bleedbright:'.72', bleedop:'.5', shadow:'rgba(0,0,0,.65)' },
+    light: { paper:'#f2efe8', ink:'#1c1a17', dim:'rgba(28,26,23,.66)', faint:'rgba(28,26,23,.42)', hair:'rgba(28,26,23,.18)', hairsoft:'rgba(28,26,23,.1)', btnbg:'#1c1a17', btnink:'#f2efe8', bleedbright:'1.02', bleedop:'.5', shadow:'rgba(255,255,255,.7)' }
+  };
+  apply(name) {
+    this.cur = name;
+    const t = this.themes[name] || this.themes.dark;
+    const r = document.documentElement;
+    for (const k in t) r.style.setProperty('--' + k, t[k]);
+    const src = name === 'dark' ? 'assets/CloudLogoWhiteHalf.png' : 'assets/CloudLogoBlackHalf.png';
+    document.querySelectorAll('.cloud').forEach(img => { img.src = src; });
+  }
+  componentDidMount() {
+    this.apply(this.props.theme || 'dark');
+    this._onClick = (e) => {
+      if (e.target && e.target.closest && e.target.closest('.cloud')) {
+        this.apply(this.cur === 'dark' ? 'light' : 'dark');
+      }
+    };
+    document.addEventListener('click', this._onClick);
+  }
+  componentWillUnmount() { if (this._onClick) document.removeEventListener('click', this._onClick); }
+  componentDidUpdate(prevProps) {
+    if (prevProps.theme !== this.props.theme && this.props.theme) this.apply(this.props.theme);
+  }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>

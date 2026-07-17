@@ -56,13 +56,21 @@ The lint baseline was **37 errors** until 2026-07-16 and is now **0**. Most of i
 
 ## Architecture
 
-Vite + React 18 + TypeScript, custom CSS (no UI framework). Netlify hosting with serverless functions. Stripe Checkout for payment, Supabase for order persistence, EmailJS wired but unused.
+Vite + React 18 + TypeScript, custom CSS (no UI framework). Netlify hosting with serverless functions. Stripe Checkout for payment, EmailJS wired but unused, and **Supabase wired but dead — see below.**
+
+> **There is no order persistence, and there never has been.** Verified 2026-07-16. `.env.local` and Netlify point at Supabase project `xecesotunsxkkgxiicqb`, which was **paused on 23 June 2024 — sixteen months before this repo's first commit** (2025-10-27) and nineteen before `src/services/supabase.ts` was written (2026-01-12). `saveOrder()` has not regressed; **it has never once succeeded.** The project has since been backed up and deleted, which changes nothing behaviourally.
+>
+> Do not read the rest of this section as describing something that works.
 
 **Routing is a hand-rolled hash router** in `src/App.tsx` — `useHashRoute`/`parseHashLocation`/`HashRouter`, matching on string prefixes. `react-router-dom` is in package.json and imported nowhere. Consequences: one indexable URL for the whole site, and any query string must sit *before* the `#` or it becomes part of the route.
 
 State is Context only: `CartContext`, `ThemeContext`, `PricingContext`, `ConsentContext`, `ToastContext`. No store, no server state library.
 
-Money flows: `Checkout.tsx` saves the order to Supabase → POSTs to `create-checkout-session` → Stripe → redirect to `/?payment=success&session_id=...#/order/:id` → `Order.tsx` reads the order back via `getOrder()` → `stripe-webhook.js` marks it `completed`.
+Money flows — **as designed**: `Checkout.tsx` saves the order to Supabase → POSTs to `create-checkout-session` → Stripe → redirect to `/?payment=success&session_id=...#/order/:id` → `Order.tsx` reads the order back via `getOrder()` → `stripe-webhook.js` marks it `completed`.
+
+Money flows — **what actually happens**: `saveOrder()` throws. `Checkout.tsx:107` swallows it, writes the order to `localStorage['orders:v1']` **in the customer's own browser**, and falls straight through to `create-checkout-session`. **Stripe charges real money.** The webhook fires, tries to update a row that was never inserted, and fails silently. `Order.tsx` calls `getOrder()`, gets `null`, and can show the customer nothing. Every step after "saves the order" is fiction.
+
+**And the shipping address is worse than lost.** `create-checkout-session.js` sets no `shipping_address_collection`, so **Stripe never receives an address** — the client POSTs only `{ country, region }`, and only to price tax and shipping. Stripe holds the email, the name (via `metadata`), the line items, and the amount. The street address exists nowhere but that customer's `localStorage`. Either gap alone is survivable; together they mean **the site can take real money for a physical print and have no way to learn where to send it.**
 
 ## Key constraints
 
@@ -83,11 +91,19 @@ Money flows: `Checkout.tsx` saves the order to Supabase → POSTs to `create-che
 
 Real, verified, deliberately unfixed. Do not silently fold these into unrelated work; do not re-diagnose them from scratch.
 
-- **The webhook does not reconcile the amount paid.** `create-checkout-session` prices whatever `items` the request claims, never checking them against the order already saved under that `orderId`. Someone can save a $65 order, submit the same id with a 4x6, pay ~$5.50, and the webhook still marks the $65 row `completed`. Fix: compare `session.amount_total` to the stored total and flag mismatches. **This is the top of the list — close it before advertising the site.**
-- **Supabase RLS on `orders` is unverified.** The anon key ships in the bundle (normal, if RLS is set). If it isn't, every customer's name, email, and address is public. Only the dashboard can answer this.
+- **The site takes orders it has no shipping address for. Accepted until cutover — decided 2026-07-16.** This replaces the two entries below, both of which described a system that does not exist. There is no order record and no address anywhere durable (see Architecture); checkout is live, in Stripe **live mode**.
+
+  **Severity, stated accurately** (an earlier draft of this entry overstated it): Stripe holds the customer's email, name, line items, and amount, and notifies on payment. A stray order is therefore **recoverable with one email asking where to send it** — awkward, not lost. It is not an unfulfillable order.
+
+  **The decision:** leave it. Fixing it properly means a `<select>` for country, a change to the price authority, an adversarial review, and a push that deploys to live Stripe — to enable a checkout that has sold nothing, on a stack being deleted. The rebuild does that work anyway, once, where the address lands in `orders.shipping_address` (`supabase/schema.sql`).
+
+  **What makes that acceptable is `product.md §6.3`'s original mitigation: the site is not advertised.** That is the entire basis of the decision, not an aside. **The day this site is linked anywhere — Instagram, a business card, a card in a package — the calculus changes that same day, and this gets closed before the link goes up.** It is a choice with a stated condition, not an oversight.
+- ~~**The webhook does not reconcile the amount paid.**~~ **Void as written.** It said someone could save a $65 order, pay ~$5.50 against the same id, and have the webhook mark "the $65 row" complete. **There is no row.** Nothing is ever saved, so there is no stored total to defraud and no record to mark. The reconciliation fix (`session.amount_total` vs the stored total) is real and still correct — it is simply *unbuildable* until a database exists, and it belongs to the rebuild, not here. Tracked at `product.md §6.3`.
+- ~~**Supabase RLS on `orders` is unverified.**~~ **Answered 2026-07-16, and moot.** The project was paused, unrecoverable, and has been backed up and deleted. RLS cannot be set on a database that isn't running, and nothing was ever exposed because nothing was ever written. It becomes a live question on the *new* project, where it is answered by construction: `supabase/schema.sql` enables RLS on every table and gives `anon` no access to `orders` in either direction.
 - **Thumbnails are byte-identical copies of the full prints.** `public/images/thumbs/Deterioration.jpg` and `public/images/prints/Deterioration.jpg` are both 12,656,287 bytes. Home pulls ~21MB, product pages average 12.7MB, worst case 34MB. ~369MB of images total. This is the single highest-leverage fix on the site.
+- **Country is a free-text `<input>` feeding an exact-string tax match, and it overcharges.** `src/pages/Checkout.tsx:228` renders country as a plain text field (default `'United States'`). `estimateTaxRate` matches only `'united states' | 'usa' | 'us'`; **everything else falls through to flat 12% international.** So a US customer whose browser autofills "United States of America" — or who types it — is charged 12% instead of their ~6–10% state rate, collected as a real Stripe line item labelled "Tax." It overcharges rather than undercharges, which makes it a liability rather than a loss. The default value is the only thing saving it today; autofill is what breaks it. Fix in the rebuild: a `<select>` of ISO-2 codes, which `isUnitedStates()` already accepts (`'us'`) and which `payment_intent_data.shipping` requires anyway.
 - `src/pages/Orders.tsx:17` reads `o.createdAt`; every order is saved as `created_at`. Every order shows "Invalid Date" and the sort is `NaN`.
-- Orders that fall back to localStorage (only written when the Supabase save throws) are never updated by the webhook, so they sit at `pending` forever.
+- Orders that fall back to localStorage are never updated by the webhook, so they sit at `pending` forever. **This is not a fallback — it is the only path, and always has been.** The comment "only written when the Supabase save throws" was written believing the throw was exceptional. The save throws every time (see Architecture).
 - `CartClearer`'s 1s timer captures the route at mount; navigating within that window desyncs the address bar.
 - `src/pages/About.tsx` is `<p>Coming soon.</p>`. There are no Privacy, Terms, Refund, or Shipping pages, and no footer.
 - `src/pages/Home.tsx.bak` and `src/pages/Checkout.tsx.bak` are tracked in git. `src/components/ToastTester.tsx` and `AddToCartBanner.tsx` are imported by nothing.
@@ -100,4 +116,14 @@ Branch off `main`; never commit directly to it. Never use `--no-verify`, `--forc
 
 `design.md` is the source of truth for how this site looks and moves. This section is a pointer, not a summary — do not restate tokens here.
 
-Be aware the current code largely predates that document: the only `font-family` in `src/styles.css` is the system stack, and `index.html` preconnects to Google Fonts without ever loading one. Where design.md and the code disagree, design.md states the target and the code is the gap. Verify against the code before assuming a surface is already built.
+**As of 2026-07-16 it describes a real target.** `design.md §12` is the storefront and `§11` is the admin, both specified as settled fact from a design handoff, with the prototypes in `design/*.dc.html`. `§1` records the posture and the decisions (colour → black-and-white with warm-paper ink; type → Playfair / Newsreader / IBM Plex Mono / Hanken Grotesk; portfolio-that-sells; both themes first-class).
+
+**The gap between the code and that target is total, and that is by design** — `src/styles.css` is deleted by the rebuild, not migrated toward. `design.md §2–§7` is a legacy inventory of that stylesheet and expires at cutover; **do not read those sections as targets**, and do not "close the gap" against them. `§8` (cross-cutting rules) and `§9` (regressions not to inherit) are live and do apply to the new stack.
+
+Nothing in `§11`/`§12` is built. Verify against the code before assuming a surface exists — the sections are written as settled fact, which reads exactly like a description of something that already works. It isn't one.
+
+Two things the design did **not** settle, both recorded rather than papered over: there is **no home link** in the storefront nav (the cloud mark is the theme toggle instead — `design.md §10 q1`), and **About, Contact, and every legal page are undesigned** while the nav links to two of them (`product.md §4`). Stripe expects a refund policy and there is still no footer to hang one on.
+
+Every price in both prototypes is mock data. **Money comes from the ported pure functions, never from the mock** (`product.md §1.5`).
+
+The admin mock's "$150 base" deserves its own note, because it is not invented — it is `src/data/products.ts`'s `price: 15000`, sitting on all 24 rows. That field is **dead**: `PricingContext` overrides it at runtime with `PRICE_BY_SIZE`, every `ProductCard` caller passes the re-priced product, and no customer has ever seen $150. It survived *because* nothing reads it — and was still alive enough to be copied onto a mockup and nearly become spec. Real prices are $5.00–$65.00, keyed only by size. Treat `products.ts:price` as a trap, not a value.

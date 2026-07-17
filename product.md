@@ -1,6 +1,14 @@
 # product.md
 
-> **STATUS: Groundwork for the rebuild.** Records what each surface **is** and **does**, and what the data model must become for any of it to work. Decided items are marked ✓; stubs and open questions are marked ▢ and are **not** build commitments. Written 2026-07-16, before the rebuild starts.
+> **STATUS: Groundwork for the rebuild — design landed 2026-07-16.** Records what each surface **is** and **does**, and what the data model must become for any of it to work. Decided items are marked ✓; stubs and open questions are marked ▢ and are **not** build commitments.
+>
+> **Both halves are now designed** (`design.md §11` admin, `design.md §12` storefront), which answered §8 q1 (the lab), q2 (caption/description/alt), and q6 (portfolio-vs-store). What the design did **not** cover is recorded honestly: About, Contact, and every legal page are still undesigned (§4), and the storefront has no home link (`design.md §10 q1`).
+>
+> **The data model exists as of 2026-07-16, and it is applied** — `supabase/schema.sql`, derived from §3, §5, §6.1 and `design.md §11`. §3 below says what it must become; the SQL is what it became. Where they differ, the SQL wins and §3 is the stale one.
+>
+> It runs on a **new Supabase project** (the old one is deleted — see `CLAUDE.md` §Architecture). Verified in place: five tables, RLS enabled on all five, `orders` and `order_items` carrying exactly one policy each — the admin's — so `anon` has no path to customer data in either direction. Buckets confirmed `originals` private / `derivatives` public. Both honest-function constraints were tested by trying to violate them: publishing a photo with no alt text and storing a tracking number on an unshipped order are **both rejected by Postgres**. Public signups are **disabled**, which is what makes the `authenticated` policies mean anything.
+>
+> **And the premise of §3 changed.** This document was written believing orders were being saved to Supabase and simply never read. They were not being saved at all — the project had been paused since June 2024, sixteen months before the repo existed. Nothing was lost (zero orders) but several sections were describing a system that does not exist; each is corrected in place rather than quietly rewritten. See `CLAUDE.md` §Architecture.
 
 Companion to `design.md`. **`design.md` = how it looks and moves. `product.md` = what each surface is and does** — information architecture, per-surface behaviour, and the honest-function rules. Questions about *appearance* → design.md. Questions about *behaviour or IA* → here. Questions about *commands, constraints, or the money path* → CLAUDE.md.
 
@@ -32,6 +40,7 @@ Decided 2026-07-16. **This repo is being rebuilt. The current stack is legacy.**
 | Hosting | Netlify + `netlify/functions/*` | **Vercel** |
 | Data | `products.ts` / `collections.ts` as TS files | Supabase tables (§3) |
 | Images | 369MB committed to git | Object storage, derivatives at ingest (§3) |
+| Design | system colours, no type system | **`design.md §11`–§12** — specified 2026-07-16 |
 
 **Why:** three of the biggest outstanding items — image pipeline, routing/SEO, per-page metadata — are hand-rolled work on Vite and native features in Next.js. The presentation layer was being rewritten anyway for the redesign, so the marginal cost of the stack move is negative: it removes work. Vercel follows from Next.js (first-party support), and it's already in use on the owner's other projects. Astro was seriously considered and rejected: it's the better fit for a content site, but an authenticated CRUD admin (§5, §6) breaks that premise, and Astro's MPA model would force a rewrite of all five React Contexts.
 
@@ -47,6 +56,16 @@ Decided 2026-07-16. **This repo is being rebuilt. The current stack is legacy.**
 - **The Stripe webhook endpoint must be re-registered** at the new URL in Stripe's dashboard. Miss it and payments silently stop being confirmed; orders sit at `pending` forever.
 - **`VITE_SUPABASE_URL` is read server-side** in `stripe-webhook.js:5` despite the `VITE_` prefix, which only means anything to Vite. Rename on the way over.
 - `netlify.toml` (SPA catch-all, `NODE_VERSION`) and `netlify/functions/package.json` are Netlify-specific and do not travel.
+- **Stripe is never told where to ship.** `create-checkout-session.js` sets no `shipping_address_collection`, and the client POSTs only `{ country, region }` — enough to price tax and shipping, not to post a parcel. The address lives *only* in the `orders` row. If the rebuild ever writes an order without it, the failure is invisible: Stripe still charges, the customer still gets a receipt, and the print has nowhere to go. Either write `shipping_address` reliably or turn on `shipping_address_collection` — but not both carelessly, because the address Stripe collects can differ from the one the tax was computed against, and then you charge Texas rates to a California address.
+
+### Cutover checklist — the silent, expensive ones
+
+Each of these passes every gate and logs nothing when missed.
+
+- **`process.env.URL` → Vercel's equivalent.** See above. Customers get charged and redirected to localhost.
+- **Re-register the Stripe webhook** at the new URL. Miss it and orders never leave `pending`.
+- **Upgrade Supabase off the free tier.** The free tier pauses after ~7 days of inactivity, and **that is exactly how the last database died** — paused 23 Jun 2024, unnoticed for two years, taking order persistence with it and telling nobody. Free is correct *during the build*, when daily activity keeps it awake. It becomes disqualifying the moment the site is live and quiet, which for a print portfolio is its resting state. The failure correlates backwards: no orders → no logins → pause → the next order is the one that's lost. **Upgrade before the store can take money, not after.**
+- **Point env at the new project.** The old ref (`xecesotunsxkkgxiicqb`) is deleted; anything still holding it fails silently into the `localStorage` path.
 
 ---
 
@@ -69,10 +88,10 @@ The admin is impossible against the current model. These are prerequisites, not 
 
 | Today | Must become | Why |
 |---|---|---|
-| `src/data/products.ts` — hand-edited TS, compiled into the bundle. Its own header claims it is auto-generated by `scripts/generate-products.mjs`, which does not exist. | A `products` table | You cannot upload a photo into a TypeScript file. The file also currently lies about its own provenance. |
+| `src/data/products.ts` — hand-edited TS, compiled into the bundle. Its own header claims it is auto-generated by `scripts/generate-products.mjs`, which does not exist. It also carries a dead `price: 15000` on all 24 rows. | A **`photos`** table (`supabase/schema.sql`) | You cannot upload a photo into a TypeScript file. The file lies about its own provenance *and* its own prices. **Named `photos`, not `products`** — the sellable unit is photo × size × register, so the photo is the work, not the SKU. Calling it `products` is what invites back the price column that `price: 15000` already proved is a trap. |
 | `src/data/collections.ts` — same, including the Relics `literature` essay | A `collections` table + join to products, with ordering | §1 of design.md puts the emotional register in `literature`. The admin owns the writing. |
 | `public/images/` — **369MB committed to git**. `thumbs/` are byte-identical copies of `prints/`. | Object storage, two tiers (below) | 369MB leaves the repo. The clone stops being a download. Thumbnails stop being a lie. |
-| Orders in Supabase that **nothing ever reads** | Same table, richer status, read by the admin | `getOrder()` exists with 0 callers. `Orders.tsx` reads `o.createdAt` while every order saves `created_at`, so every order renders "Invalid Date". |
+| **No orders in Supabase at all.** Not "orders nothing reads" — none. The project was paused 16 months before this repo existed; `saveOrder()` has never once succeeded. Every order ever placed went to `localStorage` in the *customer's own browser*. | An `orders` + `order_items` pair, read by the admin (`supabase/schema.sql`) | This row used to say "orders in Supabase that nothing ever reads," which gave the problem far too much credit. `Orders.tsx:17` reading `o.createdAt` against a `created_at` column was never the bug — there was nothing to render either way. |
 
 ### Storage tiers ✓
 
@@ -83,25 +102,31 @@ Two tiers, and the split is load-bearing:
 
 **Derivatives are generated at ingest, not at build time.** A build-time `sharp` script is a workaround for not having an upload path. Once photos arrive through the admin, the thing that has the file in hand makes the sizes. The thumbnail problem stops existing rather than being papered over.
 
-`averageColor()` (`src/utils/color.ts`) becomes a **stored column**, computed once on upload. Today it fetches full-resolution images in a `useEffect`, which is why `loading="lazy"` is a no-op site-wide. design.md §1 names borrowed colour as the preferred direction; this is what makes it free instead of a liability.
+`averageColor()` (`src/utils/color.ts`) becomes a **stored column**, computed once on upload. Today it fetches full-resolution images in a `useEffect`, which is why `loading="lazy"` is a no-op site-wide — killing that runtime fetch is worth doing on its own terms.
+
+> **Superseded 2026-07-16 — the aura is speculative now, not a feature.** This paragraph used to justify the column with *"design.md §1 names borrowed colour as the preferred direction; this is what makes it free instead of a liability."* **`design.md §12.1` rejected borrowed colour.** Nothing on the storefront reads an aura — the hero's colour bleed is a blur of the *actual plate*, not a computed average, so it does not rescue the justification. The column is retained because it is cheap with the file in hand at ingest and expensive to backfill later — **not** because anything consumes it. Do not build UI implying otherwise (`design.md §11.4-C`). Decide its fate before it becomes another `sendOrderNotification()`: written, never called, permanent. Tracked at `design.md §10 q3`.
 
 ---
 
 ## 4. Storefront surfaces
 
-Carried over from the current site. Status reflects the **rebuild**, not the live site.
+Carried over from the current site. Status reflects the **rebuild**, not the live site. Appearance is `design.md §12`.
 
 | Surface | Status | Notes |
 |---|---|---|
-| Home | ▢ | design.md §1: "must be grander." Currently the weakest surface — the hero photo renders at ~440px, narrower than interior pages. |
-| Shop | ▢ | Currently 20 products, unpaginated, catalog-shaped. |
-| Product | ▢ | Keep the crop-guide overlay — it is genuinely novel and shows what a size actually cuts. Keep the colour/B&W toggle: per §1 it hands the viewer both registers and names neither as correct. |
-| Collections / Collection detail | ▢ | Currently one collection. `.shop-grid` on the detail page has no CSS rule anywhere in the repo — it silently degrades to stacked blocks. |
-| Cart / Checkout | ▢ | Money path works and is hardened. **Port `netlify/functions/lib/pricing.js` verbatim.** |
-| Order confirmation | ▢ | Now able to show a real status (§6). |
-| About | ▢ stub | Currently `<p>Coming soon.</p>`. |
-| Contact | ▢ | Currently emoji-corporate register, and the social links point at `#/`. Rewrite to sound like the Relics essay (§1's falsifiable test). |
-| Privacy / Terms / Refund / Shipping | ▢ **missing entirely** | No footer either. Stripe expects a refund policy. |
+| Home | ✓ `design.md §12.5-A` | "Must be grander" is answered: a full-height, uncropped, full-bleed plate with an index rail. Replaces the ~440px boxed hero. |
+| Shop → **Prints** | ✓ `design.md §12.5-B` | 3-col 4:5 grid. Title leads, price recedes. Currently 20 products, unpaginated — pagination is still unaddressed. |
+| Product | ✓ `design.md §12.5-D` | Crop-guide overlay **kept** — genuinely novel, and it survives precisely because five of seven sizes crop. Colour/B&W kept as the **Colour / Silver** register toggle: both registers, neither named correct (§1). |
+| Collections / Collection detail | ✓ `design.md §12.5-C` | Masthead → literature at reading measure → works as a film-strip. `.shop-grid`'s missing CSS rule dies with the rewrite. |
+| Cart / Checkout | ✓ `design.md §12.5-F/G` | Money path works and is hardened. **Port `netlify/functions/lib/pricing.js` verbatim** (§1.5). |
+| Order confirmation | ✓ `design.md §12.5-H` | Shows only states that are true (§1, §6). The customer's only receipt is Stripe's — say so, imply nothing else. |
+| About | ▢ **stub, and not designed** | Still `<p>Coming soon.</p>`. **The handoff does not design it** — yet `design.md §12`'s nav links to it. |
+| Contact | ▢ **not designed** | Emoji-corporate register today, social links point at `#/`. **The handoff does not design it** — yet the nav links to it. Rewrite to sound like the Relics essay (§1's falsifiable test). |
+| Privacy / Terms / Refund / Shipping | ▢ **missing entirely, and not designed** | Still no pages and **still no footer** — the handoff adds neither. Stripe expects a refund policy. |
+
+> **Gap in the handoff — the nav promises two surfaces that do not exist.** `design.md §12` specifies seven storefront surfaces (Home, Prints, Collection, Product, Cart, Checkout, Confirmation) plus mobile. Its nav is **Prints / Collections / About / Contact / Cart** — but there is no About surface and no Contact surface anywhere in the prototype, and no footer or legal page of any kind (`grep -ci '<footer' design/*.dc.html` → 0; no Privacy/Terms/Refund/Shipping link at all). Building §12 exactly as written ships **two nav links that go nowhere**, which is §1's own rule broken: a control's label must match what it does. These four-plus surfaces need design before the storefront is buildable end-to-end, and the refund policy is not optional — Stripe expects it.
+
+There is also **no home link** anywhere in the nav, and the cloud mark is bound to the theme toggle instead. Tracked at `design.md §10 q1`.
 
 ---
 
@@ -110,25 +135,46 @@ Carried over from the current site. Status reflects the **rebuild**, not the liv
 ### 5.1 Auth ✓
 Single admin (Jon). Supabase Auth. Not a role system — there is one user and no plan for a second.
 
-**This forces the RLS question**, which has been open and unverified since the audit: the anon key ships in the bundle, and if RLS is not set on `orders`, every customer's name, email, and address is public. The admin cannot be built without answering it. Originals bucket private, derivatives public, `orders` readable only by the authenticated admin.
+**The RLS question is answered** (2026-07-16). It was open and unverified since the audit. The answer: the old project had been paused since June 2024 and was never reachable, so nothing was ever written and nothing was ever exposed. It has been backed up and deleted. RLS is now settled *by construction* on the new project — `supabase/schema.sql` enables it on every table, `anon` may read only **published** photos and collections, and `anon` has **no access to `orders` in either direction**. Originals bucket private, derivatives public.
 
-### 5.2 Photo library ▢
+**Why `orders` is fully closed to anon rather than "readable by id":** RLS filters rows; it cannot require that a caller named an id. A policy permissive enough for a customer's own confirmation page is permissive enough to dump the table, and the anon key ships in the browser bundle. So every order read and write goes through the **service key** from a server route. This is trivial in Next.js and awkward in the current stack — one more thing the rebuild makes free.
+
+> **The sharpest edge, and it is not SQL.** The admin policies grant the `authenticated` role. Supabase allows public signup **by default**. Left on, anyone can register, become `authenticated`, and read every customer's name, email, and address — a hole exactly as wide as no RLS at all, wearing a lock. **Disable signups** (Authentication → Sign In / Providers). There is one user and no plan for a second; nothing needs it.
+
+### 5.2 Photo library ✓ specified
 Drag-and-drop upload. On ingest, in one pass: store the original privately, generate derivatives, measure aspect ratio, compute the aura colour, create the row.
 
-Per photo: title, description, aspect, price/size availability, published/unlisted, optional B&W variant.
+Designed as `design.md §11.4-C` (surface C, "Post a photo").
 
-**Open:** "caption" needs pinning down. The current model has `description` (a short blurb on the card) and `Collection.literature` (the essay). Which does an uploaded photo get, and is there a third thing — a real descriptive `alt` for accessibility? The a11y audit found every image uses the product's *title* as alt text, so a blind customer cannot learn what a print depicts. A photography store arguably needs all three, and they are different jobs.
+**Resolved 2026-07-16 — caption vs description vs alt are four fields, because they are four jobs.** This was open ("which does an uploaded photo get, and is there a third thing?"). The answer is all of them, named and separated:
 
-### 5.3 Collections + literature ▢
+| Field | Face | Job |
+|---|---|---|
+| **Title** | Playfair | The work's name. |
+| **Caption** | Newsreader | The short line on the card. |
+| **Description** | Newsreader | The print's own page. |
+| **Alt text** | Hanken | **Describes the image.** Accessibility, and nothing else. |
+
+`Collection.literature` remains separate and belongs to the collection, not the photo (§5.3).
+
+The alt field is the one that fixes a real defect: the a11y audit found every image uses the product's *title* as alt text, so a blind customer cannot learn what a print depicts. A title is not a description — "Deterioration" tells you nothing about the photograph. Alt is now a field a human fills in, which is the only thing that could ever have fixed it.
+
+Also per photo: aspect, price/size availability, published/unlisted, optional B&W (Silver) variant.
+
+### 5.3 Collections + literature ✓ specified
 Create a collection, add photos, **order them** (sequence is editorial — it is how a collection reads), set a cover, write the literature.
 
-The literature editor is not a nice-to-have. It is where the site's voice lives. Whatever it is, it has to be pleasant enough to write a real essay in, because a bad editor means the essays stop getting written and §1's whole thesis quietly dies.
+Designed as `design.md §11.4-F`: drag-reorder rows with a cover toggle, beside a Newsreader literature editor with title, dek, body, word count, and a small formatting toolbar.
+
+The literature editor is not a nice-to-have. It is where the site's voice lives. Whatever it is, it has to be pleasant enough to write a real essay in, because a bad editor means the essays stop getting written and §1's whole thesis quietly dies. The design sets it in Newsreader — the same face the essay renders in on the storefront (`design.md §12.3`), so what Jon writes it in is what a reader sees. That is the point, not a coincidence.
 
 ---
 
-## 6. Admin — fulfillment ▢
+## 6. Admin — fulfillment ✓ specified
 
 **Model: a lab, ordered manually.** Jon places the order on the lab's site himself. The admin does not talk to a lab; it tracks state and hands him what he needs to place the order without retyping anything.
+
+**This model is now confirmed rather than assumed.** The lab is Nations Photo Lab (§8 q1) and it offers no way to integrate — so "the admin does not talk to a lab" stopped being a design choice and became a fact of the world. Everything below was specced against a hypothetical manual lab and turned out to be right. Appearance: `design.md §11.4-D/E`.
 
 ### 6.1 The state machine
 
@@ -143,7 +189,7 @@ The literature editor is not a nice-to-have. It is where the site's voice lives.
 
 Forward-only except for cancel/refund. No state is ever set by a timer (§1).
 
-### 6.2 The lab export — the core feature ▢
+### 6.2 The lab export — the core feature ✓ specified
 
 The reason this beats the current workflow. For an order, produce everything needed to place it at the lab without retyping:
 
@@ -151,18 +197,26 @@ The reason this beats the current workflow. For an order, produce everything nee
 - The shipping address, copyable.
 - The order id, for reconciling later.
 
-**Open:** which lab? The export format is downstream of that. WHCC, Bay Photo, and Mpix all want different things. Until a lab is named this stays a spec-shaped hole — do not build a generic exporter for an unknown consumer.
+**Resolved 2026-07-16 — the lab is Nations Photo Lab.** This was q1 in §8 and "the single highest-value unknown here." It is answered, and the answer costs less than feared: **Nations offers no integration to hook into, which confirms the manual model above rather than threatening it.** There is no API to build against, no unknown consumer, and no generic exporter — the export is a plain-text block a human copies into Nations' own order form. Format specified at `design.md §11.4-E`; the surface is `design.md §11.4-E` (surface E). `finish` is a settable field, default **Lustre**.
 
-### 6.3 Amount reconciliation ✓ (known gap, still open)
+**Still open — how the ordered crop reaches Nations.** The export links `<slug>_orig.tif`, the untouched original, which carries the plate's native aspect and *not* the ordered one. But only `8x10` and `16x20` of the seven sizes in `ALL_SIZES` are 4:5; the other five crop. Meanwhile the storefront's crop guide (`design.md §12.5-D`) has already shown the customer exactly what their size cuts — a promise nothing currently keeps on the fulfillment side. Someone or something must produce the print-ready, correctly-cropped file, and the design does not yet say who. Until it does, the export **says nothing about crop rather than guessing** (§1). The handoff's draft NOTES line, `Match crop to 4:5 as delivered`, was removed for exactly this reason: it would mis-print five of seven sizes.
 
-`create-checkout-session` prices whatever `items` the request claims and never checks them against the order already saved under that `orderId`. Someone can save a $65 order, submit the same id with a 4x6, pay ~$5.50, and the webhook still marks the $65 row complete.
+**Confirm before building:** Nations' exact surface/paper vocabulary, so the `finish` enum and the NOTES block match their real order form.
 
-The webhook must compare `session.amount_total` to the stored total and set `amount_mismatch` instead of `paid`. **The admin is what makes that fix meaningful** — a flag nothing surfaces is not a fix. A mismatched order must be visibly quarantined out of the fulfillment queue, because the failure mode is shipping $65 of prints for $5.50.
+### 6.3 Amount reconciliation ✓ decided, and it belongs to the rebuild
 
-This is the top of the money list and it is unchanged by the rebuild.
+`create-checkout-session` prices whatever `items` the request claims and never checks them against the order saved under that `orderId`. The stated exploit was: save a $65 order, submit the same id with a 4x6, pay ~$5.50, and the webhook marks the $65 row complete.
 
-### 6.4 Orders list ▢
+> **Corrected 2026-07-16.** That exploit **cannot happen on the current site, because there is no row.** `saveOrder()` has never succeeded (see `CLAUDE.md` §Architecture), so there is no stored total to defraud and nothing for the webhook to mark. This was written as the top of the money list; it was describing a system that does not exist. The vulnerability was never the urgent thing — **the urgent thing was that nothing was being saved at all.**
+
+The fix is still correct, and now it is *buildable* rather than theoretical: the webhook compares `session.amount_total` to `orders.total_cents` and sets `amount_mismatch` instead of `paid`. `supabase/schema.sql` carries both columns and a constraint forcing a mismatched order to record what was actually paid — `design.md §11.4-D` renders "paid $X · expected $Y" and cannot invent X.
+
+**The admin is what makes the fix meaningful** — a flag nothing surfaces is not a fix. A mismatched order must be visibly quarantined out of the fulfillment queue and **excluded from its count** (`design.md §11.4-D`), because the failure mode is shipping $65 of prints for $5.50.
+
+### 6.4 Orders list ✓ specified
 Default view is the work queue: `paid`, oldest first. Mismatches surfaced, never silently queued. Search by order id or email — the customer's only receipt is Stripe's, so the id is what they will quote.
+
+Designed as `design.md §11.4-D`: tabs (Queue / Needs attention / Shipped / All), expandable rows showing each work's size, register, and price, and a per-row copy of name + address. A mismatched order is held out of the queue on an alert wash with a pulsing chip — **and is excluded from the queue tab count**, so it cannot be fulfilled by someone working the list top-to-bottom (§6.3).
 
 ---
 
@@ -184,9 +238,14 @@ Not chores — consequences of building it right:
 
 ## 8. Open questions
 
-1. **Which lab?** Blocks §6.2. The single highest-value unknown here.
-2. **Caption vs description vs alt text** (§5.2) — three different jobs, currently one field.
-3. **Do prices stay size-only?** `PRICE_BY_SIZE` is keyed *only* by size today; product identity does not affect price. An admin invites per-photo pricing. If that changes, `netlify/functions/lib/pricing.js` must change with it — it is a hand-maintained mirror with no test enforcing it.
-4. **What happens to `unlisted`?** Currently a products.ts boolean for direct-link-only prints. Real feature or leftover?
-5. **Does the storefront read the DB at request time, or build-time static?** Decides whether publishing a photo needs a redeploy. Now a Next.js question specifically (§1.5): static generation with on-demand revalidation, or server components reading Supabase per request. Leaning revalidation — publishing a photo should not require a deploy, but a gallery does not need per-request freshness either.
-6. **Portfolio-vs-store** (design.md §1, still open) — decides whether Shop and Home are the same idea.
+**The numbering is stable and load-bearing** — `design.md §11.7` cites q3/q4/q5 by number. Answered questions are marked in place, never renumbered away.
+
+1. ✓ **Which lab? — answered 2026-07-16: Nations Photo Lab.** It offers no way to integrate, which **confirms** the manual model in §6 rather than threatening it: there is no API to build, no unknown consumer, no generic exporter. This was "the single highest-value unknown here" and it unblocked §6.2 at a cost of nothing. See §6.2.
+2. ✓ **Caption vs description vs alt — answered 2026-07-16: four fields.** Title, Caption, Description, Alt (§5.2). Three jobs crammed into one field became four fields doing four jobs. Alt is the one that fixes a real defect.
+3. ▢ **Do prices stay size-only?** — **open.** `PRICE_BY_SIZE` is keyed *only* by size today; product identity does not affect price. An admin invites per-photo pricing. If that changes, `netlify/functions/lib/pricing.js` must change with it — it is a hand-maintained mirror with no test enforcing it. Note the design mock shows a "$150 base" that is pure fiction: the real ladder is `$5.00 → $65.00`.
+4. ▢ **What happens to `unlisted`?** — **open.** Currently a `products.ts` boolean for direct-link-only prints. `design.md §11.4-B/C` surface it as a real, first-class status, which leans hard toward "kept" — but leaning is not deciding. Confirm it is a feature and not a leftover being cemented by a mockup.
+5. ▢ **Does the storefront read the DB at request time, or build-time static?** — **open, and now printed in the UI.** Decides whether publishing a photo needs a redeploy. A Next.js question specifically (§1.5): static generation with on-demand revalidation, or server components reading Supabase per request. Leaning revalidation. **Raised urgency:** `design.md §11.4-G` puts "publishing needs no redeploy" on screen as copy. Until this is confirmed, that copy is a promise the system may not keep — a §1 violation waiting to ship.
+6. ✓ **Portfolio-vs-store — answered 2026-07-16: portfolio that sells.** The layout decided it before any prose did; it is now recorded in `design.md §1`. Home is an index of works, the shop is titled "Prints," title leads and price recedes.
+7. ▢ **How does the ordered crop reach Nations?** — **new, open.** The export links the untouched original; five of seven sizes crop; the storefront's crop guide has already promised the customer a specific crop. Nothing currently produces the print-ready file. See §6.2.
+
+**Resolved without ever being a question here:** the print size list. `ALL_SIZES` keeps all seven (`4x6, 5x7, 8x10, 11x14, 12x16, 16x20, 20x30`) and `PRICE_BY_SIZE` is untouched (decided 2026-07-16). The handoff's "all 4:5" was loose wording, not a proposal — but it is recorded because it nearly became one silently, and it would have landed in the money code. See `design.md §12.5-D`.

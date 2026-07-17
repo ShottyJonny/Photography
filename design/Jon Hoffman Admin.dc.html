@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet data-dc-atomics>
+<meta name="design_doc_mode" content="canvas">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;1,6..72,300;1,6..72,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#0b0b0b;--panel:#0e0e0e;--panel2:#131313;--ink:#efeae0;
+    --dim:rgba(239,234,224,.62);--faint:rgba(239,234,224,.42);
+    --hair:rgba(239,234,224,.15);--hairsoft:rgba(239,234,224,.08);
+    --ok:#8fae8b;--warn:#cf934f;--alert:#c85b3d;--info:#8a9db0;
+    --btnbg:#efeae0;--btnink:#0b0b0b;
+  }
+  body{margin:0;background:#d7d5d0;font-family:'Hanken Grotesk',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+  a{color:var(--ink);text-decoration:none}
+  a:hover{color:#fff}
+  .wrap{display:flex;flex-direction:column;gap:14px;padding:54px 56px 90px}
+  .scr-cap{display:flex;align-items:center;gap:10px;margin:40px 0 4px}
+  .scr-cap:first-child{margin-top:0}
+  .scr-cap .n{font:600 10px ui-monospace,Menlo,monospace;padding:3px 7px;background:#111;color:#fff;border-radius:4px}
+  .scr-cap .t{font:600 13px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:#1a1a1a}
+  .scr-cap .d{font:400 12px/1.2 'Hanken Grotesk',system-ui,sans-serif;color:rgba(0,0,0,.5)}
+  .card{border-radius:6px;box-shadow:0 30px 70px -34px rgba(0,0,0,.6);overflow:hidden;display:flex;background:var(--paper);color:var(--ink)}
+  .mrow{display:flex;gap:44px;flex-wrap:wrap;align-items:flex-start}
+  .navitem{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:7px;color:var(--dim);cursor:pointer;font:500 13px/1 'IBM Plex Mono',monospace;letter-spacing:.01em;transition:background .16s,color .16s}
+  .navitem:hover{background:rgba(239,234,224,.05);color:var(--ink)}
+  .navitem.is-active{background:rgba(239,234,224,.09);color:var(--ink)}
+  .nb{width:5px;height:5px;border-radius:50%;background:currentColor;opacity:.35;flex:none}
+  .navitem.is-active .nb{opacity:1}
+  .abtn{cursor:pointer;transition:opacity .18s,transform .1s,background .18s,color .18s,border-color .18s}
+  .abtn:hover{opacity:.88}
+  .abtn:active{transform:translateY(1px)}
+  .prow{transition:background .16s;cursor:pointer}
+  .prow:hover{background:rgba(239,234,224,.045)}
+  .tab{cursor:pointer;color:var(--dim);padding-bottom:9px;border-bottom:1px solid transparent;transition:color .18s,border-color .18s;white-space:nowrap}
+  .tab:hover{color:var(--ink)}
+  .tab.is-active{color:var(--ink);border-bottom-color:var(--ink)}
+  .chip{cursor:pointer;color:var(--dim);border:1px solid var(--hair);transition:all .16s;white-space:nowrap}
+  .chip:hover{color:var(--ink);border-color:var(--dim)}
+  .chip.is-active{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+  .switch{width:40px;height:22px;border-radius:999px;background:rgba(239,234,224,.16);position:relative;cursor:pointer;transition:background .2s;flex:none}
+  .switch::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#efeae0;transition:transform .2s}
+  .switch.on{background:var(--ok)}
+  .switch.on::after{transform:translateX(18px)}
+  .drop{transition:border-color .2s,background .2s}
+  .drop:hover{border-color:var(--dim);background:rgba(239,234,224,.03)}
+  .tcard .timg{transition:filter .25s}
+  .tcard:hover .timg{filter:brightness(1.07)}
+  .copybtn.copied{background:var(--ok)!important;color:#0b0b0b!important;border-color:var(--ok)!important}
+  .railstep .rdot{transition:background .25s,border-color .25s}
+  .railstep.done .rdot{background:var(--ok);border-color:var(--ok)}
+  .railstep.done .rlab{color:var(--ink)}
+  .abtn.is-done{background:transparent!important;color:var(--ok)!important;border-color:var(--ok)!important;cursor:default;opacity:1}
+  .seg{cursor:pointer;transition:all .16s}
+  .colrow{cursor:grab;transition:background .16s}
+  .colrow:hover{background:rgba(239,234,224,.045)}
+  @keyframes softpulse{0%,100%{opacity:.5}50%{opacity:1}}
+  .pulse{animation:softpulse 2.2s ease-in-out infinite}
+  .phone{background:#0b0b0b;border-radius:44px;padding:12px;box-shadow:0 30px 70px -30px rgba(0,0,0,.6);border:1px solid #222}
+  .phone-screen{width:376px;height:812px;border-radius:33px;overflow:hidden;position:relative;background:var(--paper);display:flex;flex-direction:column}
+  .ascroll::-webkit-scrollbar{width:0}
+  .phone-screen>*{flex-shrink:0}
+</style>
+</helmet>
+
+<div class="wrap">
+
+  <!-- ============================== A · DASHBOARD ============================== -->
+  <div class="scr-cap"><span class="n">A</span><span class="t">Dashboard — the console</span><span class="d">Get photos in, get orders out · the queue leads, everything else waits</span></div>
+  <div class="card" style="width:1440px;min-height:900px">
+    <aside style="width:242px;flex:none;background:var(--panel);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:26px 18px 24px">
+      <div style="display:flex;align-items:center;gap:11px;padding:0 8px">
+        <img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:26px;width:auto;display:block">
+        <div><div style="font-family:'Playfair Display',serif;font-size:18px;line-height:1">Jon Hoffman</div><div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:4px">Studio Admin</div></div>
+      </div>
+      <div style="height:1px;background:var(--hair);margin:22px 8px 18px"></div>
+      <nav style="display:flex;flex-direction:column;gap:3px" data-navgroup>
+        <div class="navitem is-active"><span class="nb"></span>Dashboard</div>
+        <div class="navitem"><span class="nb"></span>Photographs</div>
+        <div class="navitem"><span class="nb"></span>Collections</div>
+        <div class="navitem"><span class="nb"></span>Orders<span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;background:var(--warn);color:#1a1200;padding:2px 7px;border-radius:999px">3</span></div>
+        <div class="navitem"><span class="nb"></span>Home feature</div>
+      </nav>
+      <div style="margin-top:auto;padding:0 8px">
+        <a class="abtn" href="#" style="display:flex;align-items:center;justify-content:space-between;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--dim);padding:11px 0;border-top:1px solid var(--hairsoft)">View live site<span>↗</span></a>
+        <div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--hairsoft)">
+          <div style="width:32px;height:32px;border-radius:50%;background:#2a2a28;display:grid;place-items:center;font:600 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH</div>
+          <div style="font-size:11px;line-height:1.4"><div style="color:var(--ink)">Jon Hoffman</div><div style="color:var(--faint);font-size:10px">signed in</div></div>
+        </div>
+      </div>
+    </aside>
+    <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:34px 40px 26px;border-bottom:1px solid var(--hair)">
+        <div>
+          <div style="font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--dim);margin-bottom:12px;font-family:'IBM Plex Mono',monospace">Thursday · 16 July 2026</div>
+          <div style="font-family:'Playfair Display',serif;font-size:44px;line-height:1">Good evening, Jon.</div>
+        </div>
+        <a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:14px 22px">＋ Post a photo</a>
+      </div>
+      <div style="padding:30px 40px;display:grid;grid-template-columns:repeat(4,1fr);gap:20px">
+        <div style="border:1px solid var(--hair);padding:22px 20px"><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:16px">In the queue</div><div style="font-family:'Playfair Display',serif;font-size:42px;line-height:1">3</div><div style="font-size:11px;color:var(--faint);margin-top:8px">paid · awaiting the lab</div></div>
+        <div style="border:1px solid var(--alert);padding:22px 20px;background:rgba(200,91,61,.06)"><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--alert);margin-bottom:16px">Needs attention</div><div style="font-family:'Playfair Display',serif;font-size:42px;line-height:1;color:var(--ink)">1</div><div style="font-size:11px;color:var(--alert);margin-top:8px">amount mismatch — quarantined</div></div>
+        <div style="border:1px solid var(--hair);padding:22px 20px"><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:16px">Published works</div><div style="font-family:'Playfair Display',serif;font-size:42px;line-height:1">16</div><div style="font-size:11px;color:var(--faint);margin-top:8px">2 unlisted</div></div>
+        <div style="border:1px solid var(--hair);padding:22px 20px"><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:16px">Collections</div><div style="font-family:'Playfair Display',serif;font-size:42px;line-height:1">3</div><div style="font-size:11px;color:var(--faint);margin-top:8px"><span data-featured>Relics</span> is featured</div></div>
+      </div>
+      <div style="padding:6px 40px 40px;display:grid;grid-template-columns:1fr 340px;gap:34px;align-items:start">
+        <div>
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--hair)">
+            <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--dim)">Fulfillment queue · oldest first</div>
+            <a class="abtn" href="#" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)">All orders →</a>
+          </div>
+          <div class="prow" style="display:grid;grid-template-columns:118px 1fr auto auto;gap:16px;align-items:center;padding:14px 10px;border-bottom:1px solid var(--hairsoft)">
+            <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH…0039</span>
+            <div><div style="font-size:13px;color:var(--ink)">Maya Lindqvist</div><div style="font-size:11px;color:var(--faint)">2 works · 11 Jul</div></div>
+            <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:4px 9px">PAID</span>
+            <a class="abtn copybtn" href="#" data-copy="lab-0039" data-label="Copy for lab" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:7px 12px">Copy for lab</a>
+          </div>
+          <div class="prow" style="display:grid;grid-template-columns:118px 1fr auto auto;gap:16px;align-items:center;padding:14px 10px;border-bottom:1px solid var(--hairsoft)">
+            <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH…0041</span>
+            <div><div style="font-size:13px;color:var(--ink)">Théo Fontaine</div><div style="font-size:11px;color:var(--faint)">1 work · 13 Jul</div></div>
+            <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:4px 9px">PAID</span>
+            <a class="abtn copybtn" href="#" data-copy="lab-0041" data-label="Copy for lab" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:7px 12px">Copy for lab</a>
+          </div>
+          <div class="prow" style="display:grid;grid-template-columns:118px 1fr auto auto;gap:16px;align-items:center;padding:14px 10px;border-bottom:1px solid var(--hairsoft)">
+            <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH…0042</span>
+            <div><div style="font-size:13px;color:var(--ink)">Alex Rivera</div><div style="font-size:11px;color:var(--faint)">2 works · 16 Jul</div></div>
+            <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:4px 9px">PAID</span>
+            <a class="abtn copybtn" href="#" data-copy="lab-0042" data-label="Copy for lab" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:7px 12px">Copy for lab</a>
+          </div>
+          <div style="display:grid;grid-template-columns:118px 1fr auto auto;gap:16px;align-items:center;padding:14px 10px;border-bottom:1px solid var(--hairsoft);background:rgba(200,91,61,.06)">
+            <span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH…0040</span>
+            <div><div style="font-size:13px;color:var(--ink)">Priya Nair</div><div style="font-size:11px;color:var(--alert)">paid $5.50 · order total $65</div></div>
+            <span class="pulse" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--alert);border:1px solid var(--alert);padding:4px 9px">MISMATCH</span>
+            <a class="abtn" href="#" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--alert);border:1px solid var(--alert);padding:7px 12px">Review</a>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:26px">
+          <div style="border:1px solid var(--hair);padding:0;overflow:hidden">
+            <div style="position:relative;height:150px"><img src="assets/photos/Deterioration.jpg" alt="" style="width:100%;height:100%;object-fit:cover;display:block"><div style="position:absolute;inset:0;background:linear-gradient(180deg,transparent 30%,rgba(11,11,11,.88))"></div><div style="position:absolute;left:16px;bottom:14px"><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--dim)">Home focal point</div><div style="font-family:'Playfair Display',serif;font-size:26px;line-height:1;margin-top:5px" data-featured>Relics</div></div></div>
+            <a class="abtn" href="#" style="display:block;text-align:center;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);padding:13px;border-top:1px solid var(--hair)">Change what leads home →</a>
+          </div>
+          <div>
+            <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin-bottom:12px">Recent uploads</div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">
+              <img src="assets/photos/We%20Can%20Rest%20Now.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block">
+              <img src="assets/photos/Evil%20Lies.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block">
+              <img src="assets/photos/Differential%20Emotion.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block">
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================== B · PHOTO LIBRARY ============================== -->
+  <div class="scr-cap"><span class="n">B</span><span class="t">Photographs — the library</span><span class="d">Every work, its price, and whether the world can see it</span></div>
+  <div class="card" style="width:1440px;min-height:900px">
+    <aside style="width:242px;flex:none;background:var(--panel);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:26px 18px 24px">
+      <div style="display:flex;align-items:center;gap:11px;padding:0 8px"><img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:26px;width:auto;display:block"><div><div style="font-family:'Playfair Display',serif;font-size:18px;line-height:1">Jon Hoffman</div><div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:4px">Studio Admin</div></div></div>
+      <div style="height:1px;background:var(--hair);margin:22px 8px 18px"></div>
+      <nav style="display:flex;flex-direction:column;gap:3px" data-navgroup>
+        <div class="navitem"><span class="nb"></span>Dashboard</div>
+        <div class="navitem is-active"><span class="nb"></span>Photographs</div>
+        <div class="navitem"><span class="nb"></span>Collections</div>
+        <div class="navitem"><span class="nb"></span>Orders<span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;background:var(--warn);color:#1a1200;padding:2px 7px;border-radius:999px">3</span></div>
+        <div class="navitem"><span class="nb"></span>Home feature</div>
+      </nav>
+      <div style="margin-top:auto;padding:0 8px"><a class="abtn" href="#" style="display:flex;align-items:center;justify-content:space-between;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--dim);padding:11px 0;border-top:1px solid var(--hairsoft)">View live site<span>↗</span></a><div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--hairsoft)"><div style="width:32px;height:32px;border-radius:50%;background:#2a2a28;display:grid;place-items:center;font:600 12px 'IBM Plex Mono',monospace">JH</div><div style="font-size:11px;line-height:1.4"><div>Jon Hoffman</div><div style="color:var(--faint);font-size:10px">signed in</div></div></div></div>
+    </aside>
+    <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;padding:34px 40px 24px">
+        <div><div style="font-family:'Playfair Display',serif;font-size:44px;line-height:1">Photographs</div><div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-top:10px">18 works · 16 published</div></div>
+        <a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:14px 22px">＋ Post a photo</a>
+      </div>
+      <div style="display:flex;align-items:center;gap:10px;padding:0 40px 22px;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase" data-chipgroup>
+        <span class="chip is-active" style="padding:8px 14px">All</span>
+        <span class="chip" style="padding:8px 14px">Published</span>
+        <span class="chip" style="padding:8px 14px">Unlisted</span>
+        <span class="chip" style="padding:8px 14px">Relics</span>
+        <span class="chip" style="padding:8px 14px">Urban</span>
+        <span style="margin-left:auto;color:var(--dim);display:flex;align-items:center;gap:8px"><span style="border:1px solid var(--hair);padding:8px 14px">⌕ Search</span><span style="border:1px solid var(--hair);padding:8px 14px">Sort — Newest ▾</span></span>
+      </div>
+      <div style="padding:0 40px 40px;display:grid;grid-template-columns:repeat(4,1fr);gap:26px 22px">
+        <div class="tcard"><div style="position:relative"><img class="timg" src="assets/photos/Grand%20Ring.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><span style="position:absolute;top:10px;left:10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,11,11,.7);color:var(--ok);padding:4px 8px;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Live</span></div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-family:'Playfair Display',serif;font-size:18px">Grand Ring</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">$150</span></div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px">Relics · 8×10–32×40</div></div>
+        <div class="tcard"><div style="position:relative"><img class="timg" src="assets/photos/Omniprominence.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><span style="position:absolute;top:10px;left:10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,11,11,.7);color:var(--ok);padding:4px 8px;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Live</span></div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-family:'Playfair Display',serif;font-size:18px">Omniprominence</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">$150</span></div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px">Relics · 8×10–32×40</div></div>
+        <div class="tcard"><div style="position:relative"><img class="timg" src="assets/photos/If%20Gold%20Could%20Rust.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><span style="position:absolute;top:10px;left:10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,11,11,.7);color:var(--ok);padding:4px 8px;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Live</span></div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-family:'Playfair Display',serif;font-size:18px">If Gold Could Rust</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">$150</span></div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px">Relics · 8×10–32×40</div></div>
+        <div class="tcard"><div style="position:relative"><img class="timg" src="assets/photos/We%20Can%20Rest%20Now.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block;filter:brightness(.7)"><span style="position:absolute;top:10px;left:10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,11,11,.72);color:var(--faint);padding:4px 8px;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--faint)"></span>Unlisted</span></div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-family:'Playfair Display',serif;font-size:18px;color:var(--dim)">We Can Rest Now</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--faint)">$150</span></div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px">Draft · not visible</div></div>
+        <div class="tcard"><div style="position:relative"><img class="timg" src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><span style="position:absolute;top:10px;left:10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,11,11,.7);color:var(--ok);padding:4px 8px;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Live</span></div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-family:'Playfair Display',serif;font-size:18px">Never Sleeps</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">$150</span></div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px">Urban · 8×10–32×40</div></div>
+        <div class="tcard"><div style="position:relative"><img class="timg" src="assets/photos/Urban%20Sisyphus.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><span style="position:absolute;top:10px;left:10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,11,11,.7);color:var(--ok);padding:4px 8px;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Live</span></div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-family:'Playfair Display',serif;font-size:18px">Urban Sisyphus</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">$150</span></div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px">Urban · 8×10–32×40</div></div>
+        <div class="tcard"><div style="position:relative"><img class="timg" src="assets/photos/Path%20of%20Most%20Enchantment.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><span style="position:absolute;top:10px;left:10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,11,11,.7);color:var(--ok);padding:4px 8px;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Live</span></div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-family:'Playfair Display',serif;font-size:18px">Path of Most Enchantment</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">$150</span></div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px">Landscape · 8×10–32×40</div></div>
+        <div class="tcard"><div style="position:relative"><img class="timg" src="assets/photos/Among%20Giants.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><span style="position:absolute;top:10px;left:10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;background:rgba(11,11,11,.7);color:var(--ok);padding:4px 8px;display:flex;align-items:center;gap:6px"><span style="width:6px;height:6px;border-radius:50%;background:var(--ok)"></span>Live</span></div><div style="display:flex;justify-content:space-between;align-items:baseline;margin-top:12px"><span style="font-family:'Playfair Display',serif;font-size:18px">Among Giants</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">$150</span></div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--faint);margin-top:4px">Landscape · 8×10–32×40</div></div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================== C · POST A PHOTO ============================== -->
+  <div class="scr-cap"><span class="n">C</span><span class="t">Post a photo — ingest</span><span class="d">Drag it in · caption, description, and a real alt · originals go to fulfillment, not the browser</span></div>
+  <div class="card" style="width:1440px;min-height:980px">
+    <aside style="width:242px;flex:none;background:var(--panel);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:26px 18px 24px">
+      <div style="display:flex;align-items:center;gap:11px;padding:0 8px"><img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:26px;width:auto;display:block"><div><div style="font-family:'Playfair Display',serif;font-size:18px;line-height:1">Jon Hoffman</div><div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:4px">Studio Admin</div></div></div>
+      <div style="height:1px;background:var(--hair);margin:22px 8px 18px"></div>
+      <nav style="display:flex;flex-direction:column;gap:3px" data-navgroup>
+        <div class="navitem"><span class="nb"></span>Dashboard</div>
+        <div class="navitem is-active"><span class="nb"></span>Photographs</div>
+        <div class="navitem"><span class="nb"></span>Collections</div>
+        <div class="navitem"><span class="nb"></span>Orders<span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;background:var(--warn);color:#1a1200;padding:2px 7px;border-radius:999px">3</span></div>
+        <div class="navitem"><span class="nb"></span>Home feature</div>
+      </nav>
+      <div style="margin-top:auto;padding:0 8px"><a class="abtn" href="#" style="display:flex;align-items:center;justify-content:space-between;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--dim);padding:11px 0;border-top:1px solid var(--hairsoft)">View live site<span>↗</span></a><div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--hairsoft)"><div style="width:32px;height:32px;border-radius:50%;background:#2a2a28;display:grid;place-items:center;font:600 12px 'IBM Plex Mono',monospace">JH</div><div style="font-size:11px;line-height:1.4"><div>Jon Hoffman</div><div style="color:var(--faint);font-size:10px">signed in</div></div></div></div>
+    </aside>
+    <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:12px;padding:28px 40px 22px;border-bottom:1px solid var(--hair)">
+        <a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--dim)">← Photographs</a>
+        <span style="color:var(--faint)">/</span>
+        <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ink)">New photograph</span>
+      </div>
+      <div style="padding:34px 40px 40px;display:grid;grid-template-columns:480px 1fr;gap:44px;align-items:start">
+        <div>
+          <div class="drop" style="border:1.5px dashed var(--hair);padding:0;overflow:hidden;position:relative">
+            <img src="assets/photos/Evil%20Lies.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block">
+            <div style="position:absolute;top:12px;right:12px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;background:rgba(11,11,11,.72);color:var(--ink);padding:6px 10px">Replace ↺</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px">
+            <div style="border:1px solid var(--hair);padding:13px 15px"><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:7px">Detected</div><div style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">4:5 · portrait</div><div style="font:500 11px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:3px">6048 × 7560 · 41 MB</div></div>
+            <div style="border:1px solid var(--hair);padding:13px 15px"><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);margin-bottom:9px">Aura — computed</div><div style="display:flex;align-items:center;gap:8px"><span style="width:20px;height:20px;background:#6b4a33;display:block"></span><span style="width:20px;height:20px;background:#9c7a52;display:block"></span><span style="width:20px;height:20px;background:#2b2119;display:block"></span></div></div>
+          </div>
+          <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--faint);margin-top:14px;line-height:1.7">On save: original stored privately · thumbnail, display &amp; srcset generated once · aura written to the row.</div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:26px">
+          <div>
+            <label style="display:block;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Title</label>
+            <div style="border:1px solid var(--hair);padding:15px 16px;font-family:'Playfair Display',serif;font-size:22px;color:var(--ink)">Evil Lies</div>
+          </div>
+          <div>
+            <label style="display:flex;align-items:baseline;justify-content:space-between;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Caption<span style="color:var(--faint);text-transform:none;letter-spacing:0;font-size:10px">short line on the card</span></label>
+            <div style="border:1px solid var(--hair);padding:14px 16px;font-family:'Newsreader',serif;font-size:16px;color:var(--ink)">The prettiest things are the ones asking the most of you.</div>
+          </div>
+          <div>
+            <label style="display:flex;align-items:baseline;justify-content:space-between;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Description<span style="color:var(--faint);text-transform:none;letter-spacing:0;font-size:10px">the print's page</span></label>
+            <div style="border:1px solid var(--hair);padding:14px 16px;font-family:'Newsreader',serif;font-size:16px;line-height:1.6;color:var(--dim);min-height:74px">Shot on a morning that had no business being that quiet. The frame keeps its own counsel about what's true in it.</div>
+          </div>
+          <div>
+            <label style="display:flex;align-items:baseline;justify-content:space-between;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Alt text<span style="color:var(--ok);text-transform:none;letter-spacing:0;font-size:10px">describes the image — accessibility</span></label>
+            <div style="border:1px solid var(--hair);padding:14px 16px;font-size:14px;line-height:1.55;color:var(--dim)">A lone figure on a fog-covered pier at dawn, water and sky the same pale grey.</div>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div>
+              <label style="display:block;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Collection</label>
+              <div style="border:1px solid var(--hair);padding:14px 16px;font-size:14px;color:var(--ink);display:flex;justify-content:space-between">Relics <span style="color:var(--faint)">▾</span></div>
+            </div>
+            <div>
+              <label style="display:block;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:9px">Base price</label>
+              <div style="border:1px solid var(--hair);padding:14px 16px;font-size:14px;color:var(--dim);display:flex;justify-content:space-between">$150 · by size <span style="color:var(--faint)">▾</span></div>
+            </div>
+          </div>
+          <div>
+            <label style="display:block;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim);margin-bottom:11px">Sizes offered — all 4:5</label>
+            <div style="display:flex;gap:9px;flex-wrap:wrap;font:500 12px 'IBM Plex Mono',monospace">
+              <span class="seg" style="padding:10px 15px;border:1px solid var(--btnbg);background:var(--btnbg);color:var(--btnink)">8×10 · $150</span>
+              <span class="seg" style="padding:10px 15px;border:1px solid var(--btnbg);background:var(--btnbg);color:var(--btnink)">16×20 · $260</span>
+              <span class="seg" style="padding:10px 15px;border:1px solid var(--hair);color:var(--dim)">24×30 · $360</span>
+              <span class="seg" style="padding:10px 15px;border:1px solid var(--btnbg);background:var(--btnbg);color:var(--btnink)">32×40 · $480</span>
+            </div>
+          </div>
+          <div style="display:flex;flex-direction:column;border-top:1px solid var(--hair);border-bottom:1px solid var(--hair)">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 2px"><div><div style="font-size:14px;color:var(--ink)">Offer a silver (B&amp;W) variant</div><div style="font-size:12px;color:var(--faint);margin-top:3px">Hands the viewer both registers; names neither as correct.</div></div><div class="switch on"></div></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 2px;border-top:1px solid var(--hairsoft)"><div><div style="font-size:14px;color:var(--ink)">Publish now</div><div style="font-size:12px;color:var(--faint);margin-top:3px">Off keeps it unlisted — reachable only by direct link.</div></div><div class="switch"></div></div>
+          </div>
+          <div style="display:flex;gap:12px;padding-top:4px">
+            <a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:15px 30px">Save &amp; publish</a>
+            <a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:15px 24px">Save as draft</a>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================== D · ORDERS ============================== -->
+  <div class="scr-cap"><span class="n">D</span><span class="t">Orders — the work queue</span><span class="d">Paid, oldest first · mismatches quarantined out of the queue, never silently in it</span></div>
+  <div class="card" style="width:1440px;min-height:860px">
+    <aside style="width:242px;flex:none;background:var(--panel);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:26px 18px 24px">
+      <div style="display:flex;align-items:center;gap:11px;padding:0 8px"><img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:26px;width:auto;display:block"><div><div style="font-family:'Playfair Display',serif;font-size:18px;line-height:1">Jon Hoffman</div><div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:4px">Studio Admin</div></div></div>
+      <div style="height:1px;background:var(--hair);margin:22px 8px 18px"></div>
+      <nav style="display:flex;flex-direction:column;gap:3px" data-navgroup>
+        <div class="navitem"><span class="nb"></span>Dashboard</div>
+        <div class="navitem"><span class="nb"></span>Photographs</div>
+        <div class="navitem"><span class="nb"></span>Collections</div>
+        <div class="navitem is-active"><span class="nb"></span>Orders<span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;background:var(--warn);color:#1a1200;padding:2px 7px;border-radius:999px">3</span></div>
+        <div class="navitem"><span class="nb"></span>Home feature</div>
+      </nav>
+      <div style="margin-top:auto;padding:0 8px"><a class="abtn" href="#" style="display:flex;align-items:center;justify-content:space-between;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--dim);padding:11px 0;border-top:1px solid var(--hairsoft)">View live site<span>↗</span></a><div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--hairsoft)"><div style="width:32px;height:32px;border-radius:50%;background:#2a2a28;display:grid;place-items:center;font:600 12px 'IBM Plex Mono',monospace">JH</div><div style="font-size:11px;line-height:1.4"><div>Jon Hoffman</div><div style="color:var(--faint);font-size:10px">signed in</div></div></div></div>
+    </aside>
+    <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="padding:34px 40px 20px"><div style="font-family:'Playfair Display',serif;font-size:44px;line-height:1">Orders</div></div>
+      <div style="display:flex;align-items:center;gap:26px;padding:0 40px;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;border-bottom:1px solid var(--hair)" data-tabgroup>
+        <span class="tab is-active">Queue · 3</span>
+        <span class="tab" style="display:flex;align-items:center;gap:7px">Needs attention <span style="color:var(--alert)">1</span></span>
+        <span class="tab">Shipped</span>
+        <span class="tab">All</span>
+        <span style="margin-left:auto;padding-bottom:9px;color:var(--dim);display:flex;align-items:center;gap:8px"><span style="border:1px solid var(--hair);padding:8px 14px">⌕ Search id or email</span></span>
+      </div>
+      <div style="padding:8px 40px 40px">
+        <div style="display:grid;grid-template-columns:120px 1.4fr 130px 90px auto auto;gap:16px;padding:14px 10px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--faint);border-bottom:1px solid var(--hair)">
+          <span>Order</span><span>Customer</span><span>Works</span><span>Total</span><span>Status</span><span></span>
+        </div>
+        <div class="prow" data-expand="ex-0039" style="display:grid;grid-template-columns:120px 1.4fr 130px 90px auto auto;gap:16px;align-items:center;padding:16px 10px;border-bottom:1px solid var(--hairsoft)">
+          <div><div style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH…0039</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:3px">11 Jul</div></div>
+          <div><div style="font-size:13px;color:var(--ink)">Maya Lindqvist</div><div style="font-size:11px;color:var(--faint)">maya.l@email.com</div><span id="cust-0039" style="display:none">Maya Lindqvist
+812 Alder Court, Apt 4
+Portland, OR 97209
+United States</span><a class="abtn copybtn" href="#" data-copy="cust-0039" data-label="⧉ Name + address" style="display:inline-flex;margin-top:8px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border:1px solid var(--hair);padding:5px 9px">⧉ Name + address</a></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="display:flex;gap:5px"><img src="assets/photos/If%20Gold%20Could%20Rust.jpg" alt="" style="width:30px;height:38px;object-fit:cover"><img src="assets/photos/Deterioration.jpg" alt="" style="width:30px;height:38px;object-fit:cover"></div><span class="excaret" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--faint);transition:transform .18s">⌄</span></div>
+          <span style="font-family:'Playfair Display',serif;font-size:18px">$410</span>
+          <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:4px 9px;justify-self:start">PAID</span>
+          <a class="abtn" href="#" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:8px 13px;justify-self:end">Open →</a>
+        </div>
+        <div id="ex-0039" style="display:none;padding:6px 10px 16px;border-bottom:1px solid var(--hairsoft);background:rgba(239,234,224,.02)">
+          <div style="display:grid;grid-template-columns:36px 1fr 120px 120px 70px;gap:14px;align-items:center;padding:8px 6px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)"><span></span><span>Work</span><span>Size</span><span>Register</span><span>Price</span></div>
+          <div style="display:grid;grid-template-columns:36px 1fr 120px 120px 70px;gap:14px;align-items:center;padding:8px 6px"><img src="assets/photos/If%20Gold%20Could%20Rust.jpg" alt="" style="width:36px;height:45px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">If Gold Could Rust</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">16×20</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">Colour</span><span style="font:500 12px 'IBM Plex Mono',monospace">$260</span></div>
+          <div style="display:grid;grid-template-columns:36px 1fr 120px 120px 70px;gap:14px;align-items:center;padding:8px 6px"><img src="assets/photos/Deterioration.jpg" alt="" style="width:36px;height:45px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Deterioration</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">8×10</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">Silver B&amp;W</span><span style="font:500 12px 'IBM Plex Mono',monospace">$150</span></div>
+        </div>
+        <div class="prow" data-expand="ex-0041" style="display:grid;grid-template-columns:120px 1.4fr 130px 90px auto auto;gap:16px;align-items:center;padding:16px 10px;border-bottom:1px solid var(--hairsoft)">
+          <div><div style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH…0041</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:3px">13 Jul</div></div>
+          <div><div style="font-size:13px;color:var(--ink)">Théo Fontaine</div><div style="font-size:11px;color:var(--faint)">theo.f@email.com</div><span id="cust-0041" style="display:none">Théo Fontaine
+27 Rue des Cévennes
+Montréal, QC H4C 2R5
+Canada</span><a class="abtn copybtn" href="#" data-copy="cust-0041" data-label="⧉ Name + address" style="display:inline-flex;margin-top:8px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border:1px solid var(--hair);padding:5px 9px">⧉ Name + address</a></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="display:flex;gap:5px"><img src="assets/photos/Among%20Giants.jpg" alt="" style="width:30px;height:38px;object-fit:cover"></div><span class="excaret" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--faint);transition:transform .18s">⌄</span></div>
+          <span style="font-family:'Playfair Display',serif;font-size:18px">$260</span>
+          <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:4px 9px;justify-self:start">PAID</span>
+          <a class="abtn" href="#" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:8px 13px;justify-self:end">Open →</a>
+        </div>
+        <div id="ex-0041" style="display:none;padding:6px 10px 16px;border-bottom:1px solid var(--hairsoft);background:rgba(239,234,224,.02)">
+          <div style="display:grid;grid-template-columns:36px 1fr 120px 120px 70px;gap:14px;align-items:center;padding:8px 6px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)"><span></span><span>Work</span><span>Size</span><span>Register</span><span>Price</span></div>
+          <div style="display:grid;grid-template-columns:36px 1fr 120px 120px 70px;gap:14px;align-items:center;padding:8px 6px"><img src="assets/photos/Among%20Giants.jpg" alt="" style="width:36px;height:45px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Among Giants</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">16×20</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">Colour</span><span style="font:500 12px 'IBM Plex Mono',monospace">$260</span></div>
+        </div>
+        <div class="prow" data-expand="ex-0042" style="display:grid;grid-template-columns:120px 1.4fr 130px 90px auto auto;gap:16px;align-items:center;padding:16px 10px;border-bottom:1px solid var(--hairsoft)">
+          <div><div style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH…0042</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:3px">16 Jul</div></div>
+          <div><div style="font-size:13px;color:var(--ink)">Alex Rivera</div><div style="font-size:11px;color:var(--faint)">alex.r@email.com</div><span id="cust-0042" style="display:none">Alex Rivera
+418 Waverly Place
+Seattle, WA 98101
+United States</span><a class="abtn copybtn" href="#" data-copy="cust-0042" data-label="⧉ Name + address" style="display:inline-flex;margin-top:8px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border:1px solid var(--hair);padding:5px 9px">⧉ Name + address</a></div>
+          <div style="display:flex;align-items:center;gap:7px"><div style="display:flex;gap:5px"><img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:30px;height:38px;object-fit:cover"><img src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:30px;height:38px;object-fit:cover"></div><span class="excaret" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--faint);transition:transform .18s">⌄</span></div>
+          <span style="font-family:'Playfair Display',serif;font-size:18px">$428</span>
+          <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:4px 9px;justify-self:start">PAID</span>
+          <a class="abtn" href="#" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:8px 13px;justify-self:end">Open →</a>
+        </div>
+        <div id="ex-0042" style="display:none;padding:6px 10px 16px;border-bottom:1px solid var(--hairsoft);background:rgba(239,234,224,.02)">
+          <div style="display:grid;grid-template-columns:36px 1fr 120px 120px 70px;gap:14px;align-items:center;padding:8px 6px;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--faint)"><span></span><span>Work</span><span>Size</span><span>Register</span><span>Price</span></div>
+          <div style="display:grid;grid-template-columns:36px 1fr 120px 120px 70px;gap:14px;align-items:center;padding:8px 6px"><img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:36px;height:45px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Grand Ring</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">16×20</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">Colour</span><span style="font:500 12px 'IBM Plex Mono',monospace">$260</span></div>
+          <div style="display:grid;grid-template-columns:36px 1fr 120px 120px 70px;gap:14px;align-items:center;padding:8px 6px"><img src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:36px;height:45px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Never Sleeps</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">8×10</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">Silver B&amp;W</span><span style="font:500 12px 'IBM Plex Mono',monospace">$150</span></div>
+        </div>
+        <div style="display:grid;grid-template-columns:120px 1.4fr 130px 90px auto auto;gap:16px;align-items:center;padding:16px 10px;border-bottom:1px solid var(--hairsoft);background:rgba(200,91,61,.06);border-left:2px solid var(--alert)">
+          <div><div style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">JH…0040</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:3px">12 Jul</div></div>
+          <div><div style="font-size:13px;color:var(--ink)">Priya Nair</div><div style="font-size:11px;color:var(--alert)">paid $5.50 · expected $65.00</div></div>
+          <div style="display:flex;gap:5px"><img src="assets/photos/Sidelines.jpg" alt="" style="width:30px;height:38px;object-fit:cover;opacity:.6"></div>
+          <span style="font-family:'Playfair Display',serif;font-size:18px;color:var(--alert)">$65</span>
+          <span class="pulse" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--alert);border:1px solid var(--alert);padding:4px 9px;justify-self:start">MISMATCH</span>
+          <a class="abtn" href="#" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--alert);border:1px solid var(--alert);padding:8px 13px;justify-self:end">Review</a>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;margin-top:20px;padding:14px 16px;border:1px solid var(--alert);background:rgba(200,91,61,.06);font-size:12px;color:var(--alert)"><span style="font-size:15px">⚠</span> One order paid less than its total. It is held out of the queue — do not fulfill until reconciled.</div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================== E · ORDER + LAB EXPORT ============================== -->
+  <div class="scr-cap"><span class="n">E</span><span class="t">Order detail — the Nations lab export</span><span class="d">One line per print · copy the block, paste it into your lab order · status is set by hand, never a timer</span></div>
+  <div class="card" style="width:1440px;min-height:920px">
+    <aside style="width:242px;flex:none;background:var(--panel);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:26px 18px 24px">
+      <div style="display:flex;align-items:center;gap:11px;padding:0 8px"><img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:26px;width:auto;display:block"><div><div style="font-family:'Playfair Display',serif;font-size:18px;line-height:1">Jon Hoffman</div><div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:4px">Studio Admin</div></div></div>
+      <div style="height:1px;background:var(--hair);margin:22px 8px 18px"></div>
+      <nav style="display:flex;flex-direction:column;gap:3px" data-navgroup>
+        <div class="navitem"><span class="nb"></span>Dashboard</div>
+        <div class="navitem"><span class="nb"></span>Photographs</div>
+        <div class="navitem"><span class="nb"></span>Collections</div>
+        <div class="navitem is-active"><span class="nb"></span>Orders<span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;background:var(--warn);color:#1a1200;padding:2px 7px;border-radius:999px">3</span></div>
+        <div class="navitem"><span class="nb"></span>Home feature</div>
+      </nav>
+      <div style="margin-top:auto;padding:0 8px"><a class="abtn" href="#" style="display:flex;align-items:center;justify-content:space-between;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--dim);padding:11px 0;border-top:1px solid var(--hairsoft)">View live site<span>↗</span></a><div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--hairsoft)"><div style="width:32px;height:32px;border-radius:50%;background:#2a2a28;display:grid;place-items:center;font:600 12px 'IBM Plex Mono',monospace">JH</div><div style="font-size:11px;line-height:1.4"><div>Jon Hoffman</div><div style="color:var(--faint);font-size:10px">signed in</div></div></div></div>
+    </aside>
+    <main style="flex:1;min-width:0;display:flex;flex-direction:column">
+      <div style="display:flex;align-items:center;gap:12px;padding:26px 40px 20px;border-bottom:1px solid var(--hair)">
+        <a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--dim)">← Orders</a><span style="color:var(--faint)">/</span><span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ink)">JH-20260716-0042</span>
+      </div>
+      <div style="padding:30px 40px 40px;display:grid;grid-template-columns:1fr 470px;gap:44px;align-items:start">
+        <div>
+          <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:26px">
+            <div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin-bottom:10px">Order JH-20260716-0042 · 16 Jul 2026</div><div style="display:flex;align-items:baseline;gap:14px"><div id="custname-0042" style="font-family:'Playfair Display',serif;font-size:36px;line-height:1">Alex Rivera</div><a class="abtn copybtn" href="#" data-copy="custname-0042" data-label="⧉ Copy name" style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);border:1px solid var(--hair);padding:6px 10px">⧉ Copy name</a></div></div>
+            <span style="font:500 11px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:6px 12px">PAID · $428</span>
+          </div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--hair);margin-bottom:30px">
+            <div style="padding:18px 20px;border-right:1px solid var(--hairsoft)">
+              <div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:11px">Ship to</div>
+              <div id="ship-0042" style="font-size:13px;line-height:1.8;color:var(--ink)">Alex Rivera<br>418 Waverly Place<br>Seattle, WA 98101<br>United States</div>
+              <div style="display:flex;gap:8px;margin-top:12px"><a class="abtn copybtn" href="#" data-copy="ship-0042" data-label="⧉ Copy address" style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border:1px solid var(--hair);padding:6px 11px">⧉ Copy address</a><a class="abtn copybtn" href="#" data-copy="custname-0042" data-label="⧉ Copy name" style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);border:1px solid var(--hair);padding:6px 11px">⧉ Copy name</a></div>
+            </div>
+            <div style="padding:18px 20px">
+              <div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--faint);margin-bottom:11px">Contact</div>
+              <div style="font-size:13px;line-height:1.8;color:var(--ink)">alex.r@email.com<br><span style="color:var(--faint)">Receipt: Stripe only</span></div>
+            </div>
+          </div>
+          <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--hair)">Two works</div>
+          <div style="display:grid;grid-template-columns:64px 1fr auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--hairsoft)">
+            <img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:64px;height:80px;object-fit:cover">
+            <div><div style="font-family:'Playfair Display',serif;font-size:19px">Grand Ring</div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-top:5px">16×20 · Colour · <span data-finish>Lustre</span> · qty 1</div><a class="abtn" href="#" style="font:500 10px 'IBM Plex Mono',monospace;color:var(--info);margin-top:5px;display:inline-block">↓ original.tif · 41 MB</a></div>
+            <span style="font-family:'Playfair Display',serif;font-size:18px">$260</span>
+          </div>
+          <div style="display:grid;grid-template-columns:64px 1fr auto;gap:16px;align-items:center;padding:14px 0;border-bottom:1px solid var(--hairsoft)">
+            <img src="assets/photos/Never%20Sleeps.jpg" alt="" style="width:64px;height:80px;object-fit:cover">
+            <div><div style="font-family:'Playfair Display',serif;font-size:19px">Never Sleeps</div><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--dim);margin-top:5px">8×10 · Silver B&amp;W · <span data-finish>Lustre</span> · qty 1</div><a class="abtn" href="#" style="font:500 10px 'IBM Plex Mono',monospace;color:var(--info);margin-top:5px;display:inline-block">↓ original.tif · 38 MB</a></div>
+            <span style="font-family:'Playfair Display',serif;font-size:18px">$150</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:24px">
+          <div style="border:1px solid var(--hair)">
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--hair)">
+              <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)">Nations Photo Lab — order sheet</div>
+              <a class="abtn copybtn" href="#" data-copy="lab-0042" data-label="Copy block" style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:8px 14px">Copy block</a>
+            </div>
+            <pre id="lab-0042" style="margin:0;padding:20px 18px;font:400 12px/1.75 'IBM Plex Mono',monospace;color:var(--ink);white-space:pre-wrap;word-break:break-word;background:var(--panel2)">ORDER  JH-20260716-0042
+DATE   2026-07-16
+LAB    Nations Photo Lab
+
+SHIP TO
+  Alex Rivera
+  418 Waverly Place
+  Seattle, WA 98101
+  United States
+  alex.r@email.com
+
+PRINTS  (finish: Lustre · paper: Fuji Crystal Archive)
+  1x  Grand Ring        16x20  Colour       file: grand-ring_orig.tif
+  1x  Never Sleeps       8x10  Silver B&W   file: never-sleeps_orig.tif
+
+NOTES
+  Borderless. No auto-correct — files are print-ready.
+  Match crop to 4:5 as delivered.
+</pre>
+          </div>
+          <div style="border:1px solid var(--hair);padding:18px">
+            <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:18px">Fulfillment status</div>
+            <div style="display:flex;flex-direction:column;gap:0">
+              <div class="railstep done" style="display:flex;align-items:center;gap:12px;padding:9px 0"><span class="rdot" style="width:12px;height:12px;border-radius:50%;border:1.5px solid var(--hair);flex:none"></span><span class="rlab" style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">Paid</span><span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;color:var(--faint)">16 Jul · Stripe</span></div>
+              <div style="width:1.5px;height:14px;background:var(--hairsoft);margin-left:5px"></div>
+              <div class="railstep" data-railstep="submitted" style="display:flex;align-items:center;gap:12px;padding:9px 0"><span class="rdot" style="width:12px;height:12px;border-radius:50%;border:1.5px solid var(--hair);flex:none"></span><span class="rlab" style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">Submitted to lab</span></div>
+              <div style="width:1.5px;height:14px;background:var(--hairsoft);margin-left:5px"></div>
+              <div class="railstep" data-railstep="shipped" style="display:flex;align-items:center;gap:12px;padding:9px 0"><span class="rdot" style="width:12px;height:12px;border-radius:50%;border:1.5px solid var(--hair);flex:none"></span><span class="rlab" style="font:500 12px 'IBM Plex Mono',monospace;color:var(--dim)">Shipped</span></div>
+            </div>
+            <div id="trackrow" style="display:none;align-items:center;gap:10px;margin:14px 0 4px;padding:12px 14px;border:1px solid var(--hair)"><span style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--faint)">Tracking</span><span style="font:500 12px 'IBM Plex Mono',monospace;color:var(--ink)">Enter carrier + number…</span></div>
+            <div style="display:flex;gap:10px;margin-top:16px">
+              <a class="abtn" href="#" data-mark="submitted" data-done-label="Submitted" style="flex:1;text-align:center;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:12px">Mark submitted to lab</a>
+              <a class="abtn" href="#" data-mark="shipped" data-done-label="Shipped" style="flex:1;text-align:center;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:12px">Mark shipped + tracking</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================== F · COLLECTIONS ============================== -->
+  <div class="scr-cap"><span class="n">F</span><span class="t">Collections — order &amp; the literature</span><span class="d">Sequence is editorial · the literature is where the voice lives</span></div>
+  <div class="card" style="width:1440px;min-height:960px">
+    <aside style="width:242px;flex:none;background:var(--panel);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:26px 18px 24px">
+      <div style="display:flex;align-items:center;gap:11px;padding:0 8px"><img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:26px;width:auto;display:block"><div><div style="font-family:'Playfair Display',serif;font-size:18px;line-height:1">Jon Hoffman</div><div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:4px">Studio Admin</div></div></div>
+      <div style="height:1px;background:var(--hair);margin:22px 8px 18px"></div>
+      <nav style="display:flex;flex-direction:column;gap:3px" data-navgroup>
+        <div class="navitem"><span class="nb"></span>Dashboard</div>
+        <div class="navitem"><span class="nb"></span>Photographs</div>
+        <div class="navitem is-active"><span class="nb"></span>Collections</div>
+        <div class="navitem"><span class="nb"></span>Orders<span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;background:var(--warn);color:#1a1200;padding:2px 7px;border-radius:999px">3</span></div>
+        <div class="navitem"><span class="nb"></span>Home feature</div>
+      </nav>
+      <div style="margin-top:auto;padding:0 8px"><a class="abtn" href="#" style="display:flex;align-items:center;justify-content:space-between;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--dim);padding:11px 0;border-top:1px solid var(--hairsoft)">View live site<span>↗</span></a><div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--hairsoft)"><div style="width:32px;height:32px;border-radius:50%;background:#2a2a28;display:grid;place-items:center;font:600 12px 'IBM Plex Mono',monospace">JH</div><div style="font-size:11px;line-height:1.4"><div>Jon Hoffman</div><div style="color:var(--faint);font-size:10px">signed in</div></div></div></div>
+    </aside>
+    <main style="flex:1;min-width:0;display:grid;grid-template-columns:250px 1fr">
+      <div style="border-right:1px solid var(--hair);padding:28px 20px;display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:12px"><div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--dim)">Collections</div><a class="abtn" href="#" style="font-size:16px;color:var(--ink)">＋</a></div>
+        <div class="prow is-active" style="display:flex;align-items:center;gap:12px;padding:12px 10px;background:rgba(239,234,224,.07)"><img src="assets/photos/Deterioration.jpg" alt="" style="width:38px;height:48px;object-fit:cover"><div><div style="font-family:'Playfair Display',serif;font-size:17px;line-height:1.1">Relics</div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--ok);margin-top:4px">Featured · 6 works</div></div></div>
+        <div class="prow" style="display:flex;align-items:center;gap:12px;padding:12px 10px"><img src="assets/photos/Urban%20Sisyphus.jpg" alt="" style="width:38px;height:48px;object-fit:cover"><div><div style="font-family:'Playfair Display',serif;font-size:17px;line-height:1.1;color:var(--dim)">Urban Studies</div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--faint);margin-top:4px">7 works</div></div></div>
+        <div class="prow" style="display:flex;align-items:center;gap:12px;padding:12px 10px"><img src="assets/photos/Path%20of%20Most%20Enchantment.jpg" alt="" style="width:38px;height:48px;object-fit:cover"><div><div style="font-family:'Playfair Display',serif;font-size:17px;line-height:1.1;color:var(--dim)">Wide Open</div><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--faint);margin-top:4px">5 works</div></div></div>
+      </div>
+      <div style="padding:30px 36px 40px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:24px">
+          <div><div style="display:flex;align-items:center;gap:12px;margin-bottom:8px"><div style="font-family:'Playfair Display',serif;font-size:38px;line-height:1">Relics</div><span style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--ok);border:1px solid var(--ok);padding:4px 9px">Featured on home</span></div><div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--dim)">Collection No. 01 · 6 photographs</div></div>
+          <a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:12px 20px">Save collection</a>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:34px;align-items:start">
+          <div>
+            <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--hair);display:flex;justify-content:space-between"><span>Works — drag to order</span><span style="color:var(--faint)">cover ★</span></div>
+            <div class="colrow" style="display:grid;grid-template-columns:20px 46px 1fr auto;gap:12px;align-items:center;padding:9px 6px"><span style="color:var(--faint);font-family:'IBM Plex Mono',monospace">⠿</span><img src="assets/photos/Deterioration.jpg" alt="" style="width:46px;height:58px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Deterioration</span><span style="color:var(--warn)">★</span></div>
+            <div class="colrow" style="display:grid;grid-template-columns:20px 46px 1fr auto;gap:12px;align-items:center;padding:9px 6px"><span style="color:var(--faint);font-family:'IBM Plex Mono',monospace">⠿</span><img src="assets/photos/Forever%20Dancing.jpg" alt="" style="width:46px;height:58px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Forever Dancing</span><span style="color:var(--faint)">☆</span></div>
+            <div class="colrow" style="display:grid;grid-template-columns:20px 46px 1fr auto;gap:12px;align-items:center;padding:9px 6px"><span style="color:var(--faint);font-family:'IBM Plex Mono',monospace">⠿</span><img src="assets/photos/Sidelines.jpg" alt="" style="width:46px;height:58px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Sidelines</span><span style="color:var(--faint)">☆</span></div>
+            <div class="colrow" style="display:grid;grid-template-columns:20px 46px 1fr auto;gap:12px;align-items:center;padding:9px 6px"><span style="color:var(--faint);font-family:'IBM Plex Mono',monospace">⠿</span><img src="assets/photos/Lost%20Innocence.jpg" alt="" style="width:46px;height:58px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Lost Innocence</span><span style="color:var(--faint)">☆</span></div>
+            <div class="colrow" style="display:grid;grid-template-columns:20px 46px 1fr auto;gap:12px;align-items:center;padding:9px 6px"><span style="color:var(--faint);font-family:'IBM Plex Mono',monospace">⠿</span><img src="assets/photos/Grand%20Ring.jpg" alt="" style="width:46px;height:58px;object-fit:cover"><span style="font-family:'Playfair Display',serif;font-size:16px">Grand Ring</span><span style="color:var(--faint)">☆</span></div>
+            <a class="abtn" href="#" style="display:block;text-align:center;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);border:1px dashed var(--hair);padding:12px;margin-top:12px">＋ Add works</a>
+          </div>
+          <div>
+            <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--hair)">The literature</div>
+            <div style="border:1px solid var(--hair);padding:22px 22px;background:var(--panel2)">
+              <div style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:6px">Relics</div>
+              <div style="font-family:'Newsreader',serif;font-style:italic;font-size:15px;color:var(--dim);margin-bottom:18px">Objects surviving from an earlier time — of historical, or sentimental, interest.</div>
+              <div style="font-family:'Newsreader',serif;font-size:15px;line-height:1.7;color:var(--dim)">Relics, as defined by Oxford, are "an object surviving from an earlier time, especially one of historical or sentimental interest." It's that second part I find interesting — that sentimentality has similar value as historical significance…<span style="color:var(--faint)"> </span></div>
+              <div style="display:flex;align-items:center;gap:14px;margin-top:18px;padding-top:14px;border-top:1px solid var(--hairsoft);font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.08em;text-transform:uppercase;color:var(--faint)"><span style="color:var(--dim)">Newsreader · 412 words</span><span style="margin-left:auto;display:flex;gap:12px"><span style="color:var(--ink)">B</span><span style="font-style:italic;color:var(--ink)">i</span><span>“ ”</span><span>¶</span></span></div>
+            </div>
+            <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;color:var(--faint);margin-top:12px;line-height:1.6">This is where the site's voice lives. If it stops sounding like this essay, the site is wrong.</div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================== G · HOME FEATURE ============================== -->
+  <div class="scr-cap"><span class="n">G</span><span class="t">Home feature — what leads the page</span><span class="d">Pick the collection the home page opens on · preview before you commit</span></div>
+  <div class="card" style="width:1440px;min-height:860px">
+    <aside style="width:242px;flex:none;background:var(--panel);border-right:1px solid var(--hair);display:flex;flex-direction:column;padding:26px 18px 24px">
+      <div style="display:flex;align-items:center;gap:11px;padding:0 8px"><img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:26px;width:auto;display:block"><div><div style="font-family:'Playfair Display',serif;font-size:18px;line-height:1">Jon Hoffman</div><div style="font-size:9px;letter-spacing:.28em;text-transform:uppercase;color:var(--faint);margin-top:4px">Studio Admin</div></div></div>
+      <div style="height:1px;background:var(--hair);margin:22px 8px 18px"></div>
+      <nav style="display:flex;flex-direction:column;gap:3px" data-navgroup>
+        <div class="navitem"><span class="nb"></span>Dashboard</div>
+        <div class="navitem"><span class="nb"></span>Photographs</div>
+        <div class="navitem"><span class="nb"></span>Collections</div>
+        <div class="navitem"><span class="nb"></span>Orders<span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;background:var(--warn);color:#1a1200;padding:2px 7px;border-radius:999px">3</span></div>
+        <div class="navitem is-active"><span class="nb"></span>Home feature</div>
+      </nav>
+      <div style="margin-top:auto;padding:0 8px"><a class="abtn" href="#" style="display:flex;align-items:center;justify-content:space-between;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.06em;color:var(--dim);padding:11px 0;border-top:1px solid var(--hairsoft)">View live site<span>↗</span></a><div style="display:flex;align-items:center;gap:10px;padding-top:12px;border-top:1px solid var(--hairsoft)"><div style="width:32px;height:32px;border-radius:50%;background:#2a2a28;display:grid;place-items:center;font:600 12px 'IBM Plex Mono',monospace">JH</div><div style="font-size:11px;line-height:1.4"><div>Jon Hoffman</div><div style="color:var(--faint);font-size:10px">signed in</div></div></div></div>
+    </aside>
+    <main style="flex:1;min-width:0;padding:34px 40px 40px">
+      <div style="font-family:'Playfair Display',serif;font-size:44px;line-height:1;margin-bottom:8px">Home feature</div>
+      <div style="font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);margin-bottom:30px">What the home page opens on</div>
+      <div style="display:grid;grid-template-columns:360px 1fr;gap:44px;align-items:start">
+        <div data-featgroup>
+          <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:14px">Choose a focal point</div>
+          <div class="featopt is-active" data-feat="Relics" style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--ink);margin-bottom:12px;cursor:pointer">
+            <img src="assets/photos/Deterioration.jpg" alt="" style="width:52px;height:66px;object-fit:cover"><div style="flex:1"><div style="font-family:'Playfair Display',serif;font-size:20px;line-height:1.05">Relics</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:4px">6 works · the essay leads</div></div><span class="fradio" style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink);display:grid;place-items:center"><span style="width:8px;height:8px;border-radius:50%;background:var(--ink)"></span></span>
+          </div>
+          <div class="featopt" data-feat="Urban Studies" style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--hair);margin-bottom:12px;cursor:pointer">
+            <img src="assets/photos/Urban%20Sisyphus.jpg" alt="" style="width:52px;height:66px;object-fit:cover"><div style="flex:1"><div style="font-family:'Playfair Display',serif;font-size:20px;line-height:1.05;color:var(--dim)">Urban Studies</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:4px">7 works</div></div><span class="fradio" style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--hair)"></span>
+          </div>
+          <div class="featopt" data-feat="Wide Open" style="display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--hair);margin-bottom:20px;cursor:pointer">
+            <img src="assets/photos/Path%20of%20Most%20Enchantment.jpg" alt="" style="width:52px;height:66px;object-fit:cover"><div style="flex:1"><div style="font-family:'Playfair Display',serif;font-size:20px;line-height:1.05;color:var(--dim)">Wide Open</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:4px">5 works</div></div><span class="fradio" style="width:16px;height:16px;border-radius:50%;border:1.5px solid var(--hair)"></span>
+          </div>
+          <a class="abtn" href="#" style="display:block;text-align:center;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:14px">Set as home focal point</a>
+          <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.04em;color:var(--faint);margin-top:12px;line-height:1.6">Publishes on save — no redeploy. The change is live within a minute.</div>
+        </div>
+        <div>
+          <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.18em;text-transform:uppercase;color:var(--dim);margin-bottom:14px">Live preview — home hero</div>
+          <div style="position:relative;width:100%;height:520px;overflow:hidden;border:1px solid var(--hair)">
+            <img id="feat-img" src="assets/photos/Deterioration.jpg" alt="" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center 40%">
+            <div style="position:absolute;inset:0;background:linear-gradient(90deg,rgba(11,11,11,.9) 0%,rgba(11,11,11,.55) 38%,transparent 70%)"></div>
+            <div style="position:absolute;top:26px;left:30px;right:30px;display:flex;align-items:center;justify-content:space-between"><div style="display:flex;align-items:center;gap:11px"><img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:24px"><span style="font-family:'Playfair Display',serif;font-size:20px">Jon Hoffman</span></div><nav style="display:flex;gap:20px;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)"><span>Work</span><span>Collections</span><span>Prints</span><span>About</span></nav></div>
+            <div style="position:absolute;left:30px;bottom:34px;max-width:420px">
+              <div style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.28em;text-transform:uppercase;color:var(--dim);margin-bottom:14px">From the <span id="feat-name">Relics</span> collection</div>
+              <div id="feat-title" style="font-family:'Playfair Display',serif;font-size:52px;line-height:1;margin-bottom:16px">Relics</div>
+              <p id="feat-line" style="font-family:'Newsreader',serif;font-size:17px;line-height:1.5;color:var(--dim);margin:0 0 22px">Objects surviving from an earlier time — of historical, or sentimental, interest.</p>
+              <span style="font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:12px 20px">Enter the collection →</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ============================== H · MOBILE ============================== -->
+  <div class="scr-cap"><span class="n">H</span><span class="t">Mobile — post &amp; fulfill from anywhere</span><span class="d">The console, the ingest form, and the copyable lab block on a phone</span></div>
+  <div class="mrow">
+    <!-- phone: dashboard -->
+    <div class="phone"><div class="phone-screen ascroll" style="overflow-y:auto">
+      <div style="padding:50px 20px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--hair)">
+        <div style="display:flex;align-items:center;gap:9px"><img src="assets/CloudLogoWhiteHalf.png" alt="" style="height:22px"><span style="font-family:'Playfair Display',serif;font-size:17px">Admin</span></div>
+        <div style="width:30px;height:30px;border-radius:50%;background:#2a2a28;display:grid;place-items:center;font:600 11px 'IBM Plex Mono',monospace">JH</div>
+      </div>
+      <div style="padding:22px 20px 8px"><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.24em;text-transform:uppercase;color:var(--dim);margin-bottom:8px">16 July 2026</div><div style="font-family:'Playfair Display',serif;font-size:30px;line-height:1">Good evening,<br>Jon.</div></div>
+      <div style="padding:14px 20px;display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="border:1px solid var(--hair);padding:14px"><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--dim);margin-bottom:10px">In queue</div><div style="font-family:'Playfair Display',serif;font-size:30px">3</div></div>
+        <div style="border:1px solid var(--alert);padding:14px;background:rgba(200,91,61,.07)"><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--alert);margin-bottom:10px">Flagged</div><div style="font-family:'Playfair Display',serif;font-size:30px">1</div></div>
+      </div>
+      <div style="padding:8px 20px 20px">
+        <div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.2em;text-transform:uppercase;color:var(--dim);margin:8px 0 12px">Fulfillment queue</div>
+        <div class="prow" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--hairsoft)"><div style="flex:1"><div style="font:500 11px 'IBM Plex Mono',monospace">JH…0039</div><div style="font-size:12px;color:var(--dim);margin-top:2px">Maya · 2 works</div></div><span style="font:500 10px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:3px 8px">PAID</span></div>
+        <div class="prow" style="display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--hairsoft)"><div style="flex:1"><div style="font:500 11px 'IBM Plex Mono',monospace">JH…0041</div><div style="font-size:12px;color:var(--dim);margin-top:2px">Théo · 1 work</div></div><span style="font:500 10px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:3px 8px">PAID</span></div>
+        <div style="display:flex;align-items:center;gap:12px;padding:12px 0;background:rgba(200,91,61,.06)"><div style="flex:1"><div style="font:500 11px 'IBM Plex Mono',monospace">JH…0040</div><div style="font-size:12px;color:var(--alert);margin-top:2px">Priya · underpaid</div></div><span class="pulse" style="font:500 10px 'IBM Plex Mono',monospace;color:var(--alert);border:1px solid var(--alert);padding:3px 8px">FLAG</span></div>
+      </div>
+      <div style="margin-top:auto;padding:14px 20px 22px;border-top:1px solid var(--hair)"><a class="abtn" href="#" style="display:block;text-align:center;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:15px">＋ Post a photo</a></div>
+    </div></div>
+
+    <!-- phone: post a photo -->
+    <div class="phone"><div class="phone-screen ascroll" style="overflow-y:auto">
+      <div style="padding:50px 20px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--hair)"><a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--dim)">←</a><span style="font-family:'Playfair Display',serif;font-size:20px">New photograph</span></div>
+      <div class="drop" style="margin:18px 20px 0;border:1.5px dashed var(--hair);overflow:hidden;position:relative"><img src="assets/photos/Evil%20Lies.jpg" alt="" style="width:100%;aspect-ratio:4/5;object-fit:cover;display:block"><div style="position:absolute;top:10px;right:10px;font:500 9px 'IBM Plex Mono',monospace;text-transform:uppercase;background:rgba(11,11,11,.72);padding:6px 9px">Replace ↺</div></div>
+      <div style="padding:20px 20px 30px;display:flex;flex-direction:column;gap:18px">
+        <div><label style="display:block;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Title</label><div style="border:1px solid var(--hair);padding:13px 14px;font-family:'Playfair Display',serif;font-size:19px">Evil Lies</div></div>
+        <div><label style="display:block;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Caption</label><div style="border:1px solid var(--hair);padding:12px 14px;font-family:'Newsreader',serif;font-size:15px">The prettiest things ask the most of you.</div></div>
+        <div><label style="display:block;font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);margin-bottom:7px">Alt text <span style="color:var(--ok);text-transform:none;letter-spacing:0">a11y</span></label><div style="border:1px solid var(--hair);padding:12px 14px;font-size:13px;color:var(--dim);line-height:1.5">A lone figure on a fog-covered pier at dawn.</div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 0;border-top:1px solid var(--hairsoft);border-bottom:1px solid var(--hairsoft)"><span style="font-size:13px">Silver (B&amp;W) variant</span><div class="switch on"></div></div>
+        <div style="display:flex;align-items:center;justify-content:space-between"><span style="font-size:13px">Publish now</span><div class="switch"></div></div>
+        <a class="abtn" href="#" style="display:block;text-align:center;font:500 11px 'IBM Plex Mono',monospace;letter-spacing:.14em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:15px;margin-top:4px">Save &amp; publish</a>
+      </div>
+    </div></div>
+
+    <!-- phone: order + lab export -->
+    <div class="phone"><div class="phone-screen ascroll" style="overflow-y:auto">
+      <div style="padding:50px 20px 14px;display:flex;align-items:center;gap:12px;border-bottom:1px solid var(--hair)"><a class="abtn" href="#" style="font:500 11px 'IBM Plex Mono',monospace;color:var(--dim)">←</a><span style="font:500 12px 'IBM Plex Mono',monospace">JH…0042</span><span style="margin-left:auto;font:500 10px 'IBM Plex Mono',monospace;color:var(--ok);border:1px solid var(--ok);padding:3px 8px">PAID</span></div>
+      <div style="padding:20px 20px 8px"><div style="font-family:'Playfair Display',serif;font-size:26px;line-height:1">Alex Rivera</div><div style="font:500 10px 'IBM Plex Mono',monospace;color:var(--faint);margin-top:6px">2 works · $428 · 16 Jul</div></div>
+      <div style="padding:8px 20px 0">
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px"><div style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.16em;text-transform:uppercase;color:var(--dim)">Nations lab sheet</div><a class="abtn copybtn" href="#" data-copy="lab-m0042" data-label="Copy" style="font:500 9px 'IBM Plex Mono',monospace;letter-spacing:.1em;text-transform:uppercase;color:var(--btnink);background:var(--btnbg);padding:7px 12px">Copy</a></div>
+        <pre id="lab-m0042" style="margin:0;padding:14px;font:400 10.5px/1.7 'IBM Plex Mono',monospace;color:var(--ink);white-space:pre-wrap;word-break:break-word;background:var(--panel2);border:1px solid var(--hair)">ORDER  JH-20260716-0042
+LAB    Nations Photo Lab
+
+SHIP TO
+  Alex Rivera
+  418 Waverly Place
+  Seattle, WA 98101
+
+PRINTS (finish: Lustre)
+  1x Grand Ring   16x20  Colour
+  1x Never Sleeps  8x10  Silver B&W
+</pre>
+      </div>
+      <div style="padding:18px 20px 26px"><a class="abtn" href="#" data-mark="submitted" data-done-label="Submitted" style="display:block;text-align:center;font:500 10px 'IBM Plex Mono',monospace;letter-spacing:.12em;text-transform:uppercase;color:var(--ink);border:1px solid var(--hair);padding:13px">Mark submitted to lab</a></div>
+    </div></div>
+  </div>
+
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1440,&quot;height&quot;:900},&quot;labFinish&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Lustre&quot;,&quot;Glossy&quot;,&quot;Metallic&quot;,&quot;Deep Matte&quot;,&quot;True Matte&quot;],&quot;default&quot;:&quot;Lustre&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Lab export&quot;},&quot;featuredCollection&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;Relics&quot;,&quot;Urban Studies&quot;,&quot;Wide Open&quot;],&quot;default&quot;:&quot;Relics&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Home feature&quot;}}">
+class Component extends DCLogic {
+  featData = {
+    'Relics':        { img:'assets/photos/Deterioration.jpg',            title:'Relics',        line:'Objects surviving from an earlier time — of historical, or sentimental, interest.' },
+    'Urban Studies': { img:'assets/photos/Urban%20Sisyphus.jpg',         title:'Urban Studies', line:'The city keeps rolling the same stone uphill, and so do we.' },
+    'Wide Open':     { img:'assets/photos/Path%20of%20Most%20Enchantment.jpg', title:'Wide Open', line:'Somewhere past the last turn, the map runs out and the walking begins.' }
+  };
+  applyProps() {
+    const fin = this.props.labFinish || 'Lustre';
+    document.querySelectorAll('[data-finish]').forEach(n => { n.textContent = fin; });
+    const feat = this.props.featuredCollection || 'Relics';
+    document.querySelectorAll('[data-featured]').forEach(n => { n.textContent = feat; });
+  }
+  setActive(el, groupSel, activeClass) {
+    const group = el.closest(groupSel);
+    if (!group) return;
+    group.querySelectorAll('.' + activeClass).forEach(n => { if (n !== el) n.classList.remove(activeClass); });
+    el.classList.add(activeClass);
+  }
+  selectFeature(el) {
+    const name = el.getAttribute('data-feat');
+    const group = el.closest('[data-featgroup]');
+    if (!group) return;
+    group.querySelectorAll('.featopt').forEach(o => {
+      const on = o === el;
+      o.style.borderColor = on ? 'var(--ink)' : 'var(--hair)';
+      const r = o.querySelector('.fradio');
+      if (r) { r.style.borderColor = on ? 'var(--ink)' : 'var(--hair)'; r.innerHTML = on ? '<span style="width:8px;height:8px;border-radius:50%;background:var(--ink)"></span>' : ''; }
+      const t = o.querySelector('div > div:first-child'); if (t) t.style.color = on ? 'var(--ink)' : 'var(--dim)';
+    });
+    const d = this.featData[name];
+    if (d) {
+      const img = document.getElementById('feat-img'); if (img) img.src = d.img;
+      const nm = document.getElementById('feat-name'); if (nm) nm.textContent = name;
+      const ti = document.getElementById('feat-title'); if (ti) ti.textContent = d.title;
+      const ln = document.getElementById('feat-line'); if (ln) ln.textContent = d.line;
+    }
+  }
+  componentDidMount() {
+    this.applyProps();
+    this._onClick = (e) => {
+      const copy = e.target.closest('.copybtn');
+      if (copy) {
+        e.preventDefault();
+        const src = document.getElementById(copy.getAttribute('data-copy'));
+        const txt = src ? (src.innerText || src.textContent) : '';
+        try { navigator.clipboard && navigator.clipboard.writeText(txt); } catch (err) {}
+        const label = copy.getAttribute('data-label') || copy.textContent;
+        copy.classList.add('copied'); copy.textContent = '✓ Copied';
+        clearTimeout(copy._t);
+        copy._t = setTimeout(() => { copy.classList.remove('copied'); copy.textContent = label; }, 1600);
+        return;
+      }
+      const mark = e.target.closest('[data-mark]');
+      if (mark) {
+        e.preventDefault();
+        if (mark.classList.contains('is-done')) return;
+        const state = mark.getAttribute('data-mark');
+        const node = document.querySelector('[data-railstep="' + state + '"]');
+        if (node) node.classList.add('done');
+        if (state === 'shipped') { const t = document.getElementById('trackrow'); if (t) t.style.display = 'flex'; }
+        mark.classList.add('is-done'); mark.textContent = '✓ ' + (mark.getAttribute('data-done-label') || 'Done');
+        return;
+      }
+      const exRow = e.target.closest('[data-expand]');
+      if (exRow && !e.target.closest('a') && !e.target.closest('button')) {
+        e.preventDefault();
+        const panel = document.getElementById(exRow.getAttribute('data-expand'));
+        if (panel) {
+          const open = panel.style.display !== 'none';
+          panel.style.display = open ? 'none' : 'block';
+          const caret = exRow.querySelector('.excaret');
+          if (caret) caret.style.transform = open ? 'none' : 'rotate(180deg)';
+        }
+        return;
+      }
+      const feat = e.target.closest('.featopt');
+      if (feat) { e.preventDefault(); this.selectFeature(feat); return; }
+      const sw = e.target.closest('.switch');
+      if (sw) { e.preventDefault(); sw.classList.toggle('on'); return; }
+      const tab = e.target.closest('.tab');
+      if (tab) { e.preventDefault(); this.setActive(tab, '[data-tabgroup]', 'is-active'); return; }
+      const chip = e.target.closest('.chip');
+      if (chip) { e.preventDefault(); this.setActive(chip, '[data-chipgroup]', 'is-active'); return; }
+      const nav = e.target.closest('.navitem');
+      if (nav) { e.preventDefault(); this.setActive(nav, '[data-navgroup]', 'is-active'); return; }
+    };
+    document.addEventListener('click', this._onClick);
+  }
+  componentWillUnmount() { if (this._onClick) document.removeEventListener('click', this._onClick); }
+  componentDidUpdate() { this.applyProps(); }
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
