@@ -22,6 +22,34 @@ All three are removed. They were removed rather than fixed because there was no 
 
 ---
 
+## 1.5. The rebuild — stack and hosting ✓
+
+Decided 2026-07-16. **This repo is being rebuilt. The current stack is legacy.**
+
+| | Now (legacy) | Target |
+|---|---|---|
+| Framework | Vite + React 18, hand-rolled hash router | **Next.js** (App Router) |
+| Hosting | Netlify + `netlify/functions/*` | **Vercel** |
+| Data | `products.ts` / `collections.ts` as TS files | Supabase tables (§3) |
+| Images | 369MB committed to git | Object storage, derivatives at ingest (§3) |
+
+**Why:** three of the biggest outstanding items — image pipeline, routing/SEO, per-page metadata — are hand-rolled work on Vite and native features in Next.js. The presentation layer was being rewritten anyway for the redesign, so the marginal cost of the stack move is negative: it removes work. Vercel follows from Next.js (first-party support), and it's already in use on the owner's other projects. Astro was seriously considered and rejected: it's the better fit for a content site, but an authenticated CRUD admin (§5, §6) breaks that premise, and Astro's MPA model would force a rewrite of all five React Contexts.
+
+### Rules for the rebuild
+
+- **Do not invest in the legacy stack.** No build-time image pipeline, no hash-router migration, no Netlify config work beyond keeping the live site alive. That work is throwaway.
+- **The current site stays live** until the new one is real. It takes real money today. Build beside it; cut over when it works.
+- **Port the money logic verbatim.** `computeOrderAmounts()`, `PRICE_BY_SIZE`, `estimateTaxRate`, `estimateShipping` are pure functions with no framework in them. They are the most dangerous code in the repo and the easiest to move. Do not "improve" them in transit.
+
+### Migration hazards — read before porting the functions
+
+- **`process.env.URL` is Netlify-only.** `create-checkout-session.js:89-90` builds Stripe's `success_url` and `cancel_url` from `${process.env.URL || 'http://localhost:5181'}`. Netlify sets `URL`; **Vercel does not.** On Vercel the fallback fires and every paying customer is redirected to `http://localhost:5181`. The session creates fine, the card charges, the webhook still marks the order paid, and nothing logs an error — you get the money, they get a dead link. Vercel's equivalents are `VERCEL_URL` (no protocol) and `VERCEL_PROJECT_PRODUCTION_URL`. `node --check` and every CI job pass this. Nothing catches it.
+- **The Stripe webhook endpoint must be re-registered** at the new URL in Stripe's dashboard. Miss it and payments silently stop being confirmed; orders sit at `pending` forever.
+- **`VITE_SUPABASE_URL` is read server-side** in `stripe-webhook.js:5` despite the `VITE_` prefix, which only means anything to Vite. Rename on the way over.
+- `netlify.toml` (SPA catch-all, `NODE_VERSION`) and `netlify/functions/package.json` are Netlify-specific and do not travel.
+
+---
+
 ## 2. The two halves ✓
 
 | | Storefront | Admin |
@@ -160,5 +188,5 @@ Not chores — consequences of building it right:
 2. **Caption vs description vs alt text** (§5.2) — three different jobs, currently one field.
 3. **Do prices stay size-only?** `PRICE_BY_SIZE` is keyed *only* by size today; product identity does not affect price. An admin invites per-photo pricing. If that changes, `netlify/functions/lib/pricing.js` must change with it — it is a hand-maintained mirror with no test enforcing it.
 4. **What happens to `unlisted`?** Currently a products.ts boolean for direct-link-only prints. Real feature or leftover?
-5. **Does the storefront read the DB at request time, or build-time static?** Decides whether publishing a photo needs a rebuild. Cross-check with the stack decision.
+5. **Does the storefront read the DB at request time, or build-time static?** Decides whether publishing a photo needs a redeploy. Now a Next.js question specifically (§1.5): static generation with on-demand revalidation, or server components reading Supabase per request. Leaning revalidation — publishing a photo should not require a deploy, but a gallery does not need per-request freshness either.
 6. **Portfolio-vs-store** (design.md §1, still open) — decides whether Shop and Home are the same idea.

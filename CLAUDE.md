@@ -4,6 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Jon Hoffman Photography — a React + TypeScript print portfolio and storefront. It sells physical prints to the public with real money.
 
+## READ FIRST — this stack is legacy
+
+**Decided 2026-07-16: this site is being rebuilt as Next.js on Vercel.** Everything below describes the **current, live** app — accurate, still deployed, still taking real payments — but it is not the destination. See `product.md` §1.5 for the decision, the rationale, and the migration hazards.
+
+**Do not invest in the current stack.** Specifically, do not build a build-time image pipeline, do not migrate the hash router to `react-router`, and do not do Netlify config work beyond keeping the live site alive. All three are native features of the target stack and the work is throwaway. This is not hypothetical — an image-pipeline task was scoped and cancelled for exactly this reason.
+
+What still matters here: keeping the live site honest and working until the new one is real, and **porting the money logic verbatim** (`computeOrderAmounts()`, `PRICE_BY_SIZE`, `estimateTaxRate`, `estimateShipping` — pure functions, no framework, the most dangerous code in the repo and the easiest to move).
+
+One trap worth knowing before you touch `netlify/functions/` with Vercel in mind: **`process.env.URL` is Netlify-only.** On Vercel it is undefined, the `|| 'http://localhost:5181'` fallback fires, and every paying customer is redirected to localhost while the charge succeeds. Nothing logs it and every gate passes. `product.md` §1.5 has the full list.
+
 ## Working norms
 
 Be direct. If you see a flaw in the reasoning — a wrong framing, a contradiction with a prior decision, an under-considered tradeoff — name it plainly, and lead with the part that's wrong. No softening preambles, no agreement-shaped responses. Pushback is the value.
