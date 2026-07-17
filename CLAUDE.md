@@ -4,6 +4,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Jon Hoffman Photography — a React + TypeScript print portfolio and storefront. It sells physical prints to the public with real money.
 
+## READ FIRST — this stack is legacy
+
+**Decided 2026-07-16: this site is being rebuilt as Next.js on Vercel.** Everything below describes the **current, live** app — accurate, still deployed, still taking real payments — but it is not the destination. See `product.md` §1.5 for the decision, the rationale, and the migration hazards.
+
+**Do not invest in the current stack.** Specifically, do not build a build-time image pipeline, do not migrate the hash router to `react-router`, and do not do Netlify config work beyond keeping the live site alive. All three are native features of the target stack and the work is throwaway. This is not hypothetical — an image-pipeline task was scoped and cancelled for exactly this reason.
+
+What still matters here: keeping the live site honest and working until the new one is real, and **porting the money logic verbatim** (`computeOrderAmounts()`, `PRICE_BY_SIZE`, `estimateTaxRate`, `estimateShipping` — pure functions, no framework, the most dangerous code in the repo and the easiest to move).
+
+One trap worth knowing before you touch `netlify/functions/` with Vercel in mind: **`process.env.URL` is Netlify-only.** On Vercel it is undefined, the `|| 'http://localhost:5181'` fallback fires, and every paying customer is redirected to localhost while the charge succeeds. Nothing logs it and every gate passes. `product.md` §1.5 has the full list.
+
 ## Working norms
 
 Be direct. If you see a flaw in the reasoning — a wrong framing, a contradiction with a prior decision, an under-considered tradeoff — name it plainly, and lead with the part that's wrong. No softening preambles, no agreement-shaped responses. Pushback is the value.
@@ -19,7 +29,7 @@ npm run dev            # Vite dev server, --host (LAN-accessible, for phone test
 npm run dev:local      # Vite dev server, localhost only
 npm run build          # tsc -b && vite build -> dist/
 npm run preview        # serve the production build locally
-npm run lint           # eslint src/**/*.{ts,tsx} -- see the baseline below, 0 is not the target
+npm run lint           # eslint src/**/*.{ts,tsx} -- baseline is 0; CI gates on it
 npx tsc --noEmit       # typecheck only; must stay at 0 errors
 node --check <file>    # the ONLY mechanical check for netlify/functions/*.js
 ```
@@ -35,10 +45,12 @@ The gate, measured 2026-07-16:
 | Check | Baseline | Rule |
 |---|---|---|
 | `npx tsc --noEmit` | **0 errors** | Hard gate. Must stay 0. |
-| `npm run lint` | **37 errors, 0 warnings** | Pre-existing. "Clean" is not achievable — do not exceed 37. |
+| `npm run lint` | **0 errors, 0 warnings** | Hard gate. Must stay 0. |
 | `npm run build` | passes | Must pass. |
 
-The 37 lint errors are mostly `no-empty` and `no-unused-vars` and exist on a clean checkout. Confirm via stash + re-run, mention, move on. Do not spend a turn "fixing" them as part of unrelated work.
+All three run in CI on every PR as separate jobs (`lint`, `typecheck`, `build`, `functions`), and `main` and `develop` both require them green. Split jobs are deliberate: a failure names itself instead of collapsing into one red dot. It has already earned this — a vite bump passed `lint`, `typecheck`, and `functions` and failed only `build`, which pointed straight at the real cause (vite 8 needs Node 20+).
+
+The lint baseline was **37 errors** until 2026-07-16 and is now **0**. Most of it was never code debt: `eslint.config.js` had not applied typescript-eslint's `eslint-recommended` override, so the base `no-undef` and `no-unused-vars` rules were flagging things they structurally cannot see — `EventListener` (a type, not a runtime global) and parameter names in type-only signatures. Only 11 of the 37 were real dead code. `no-unused-vars` is now **swapped** for `@typescript-eslint/no-unused-vars` at `error`, not disabled; `no-undef` is off because `tsc --noEmit` resolves names correctly including type positions and is gated at 0. There are no `eslint-disable` comments in `src/` — do not add one.
 
 **The gate has a hole, and it is exactly where the money is.** `npm run lint` globs only `src/**/*.{ts,tsx}`, and tsc only covers the TS project. Neither reaches `netlify/functions/*.js` — the Stripe checkout path. Those files have no automated check at all; `node --check` catches syntax and nothing else. Anything touching `netlify/functions/` or URL/routing behavior needs an adversarial read regardless of what the gate says. In the 2026-07-16 wave, two agents reported a green gate truthfully and both had shipped a P0 — one in a netlify function, one in a URL round-trip. Green was never going to catch either.
 
