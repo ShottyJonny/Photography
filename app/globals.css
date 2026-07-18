@@ -1,0 +1,20 @@
+:root {
+  --paper: #0b0b0b;
+  --ink: #efeae0;
+  --dim: rgba(239, 234, 224, 0.62);
+  --faint: rgba(239, 234, 224, 0.45);
+  --hair: rgba(239, 234, 224, 0.18);
+  --btnbg: #efeae0;
+  --btnink: #0b0b0b;
+}
+:root[data-theme='light'] {
+  --paper: #f2efe8;
+  --ink: #1c1a17;
+  --dim: rgba(28, 26, 23, 0.66);
+  --faint: rgba(28, 26, 23, 0.42);
+  --hair: rgba(28, 26, 23, 0.18);
+  --btnbg: #1c1a17;
+  --btnink: #f2efe8;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-hanken), system-ui, sans-serif; }
