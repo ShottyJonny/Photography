@@ -2,17 +2,23 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Jon Hoffman Photography — a React + TypeScript print portfolio and storefront. It sells physical prints to the public with real money.
+Jon Hoffman Photography — a **Next.js + TypeScript** print portfolio and storefront. It sells physical prints to the public with real money, and (later slices) has an admin for getting photos in and orders out.
 
-## READ FIRST — this stack is legacy
+## READ FIRST — status
 
-**Decided 2026-07-16: this site is being rebuilt as Next.js on Vercel.** Everything below describes the **current, live** app — accurate, still deployed, still taking real payments — but it is not the destination. See `product.md` §1.5 for the decision, the rationale, and the migration hazards.
+**This is the Next.js rebuild.** The repo was previously a Vite + React SPA on Netlify; that app was **deleted** in slice 1 (2026-07-18). Any reference you find to Vite, Netlify functions, a hash router, `src/`, `styles.css`, `products.ts`, or "pushing to main deploys to LIVE Stripe" is **stale** — it survives only in the archived legacy repo (see [The legacy quarry](#the-legacy-quarry)). The current stack:
 
-**Do not invest in the current stack.** Specifically, do not build a build-time image pipeline, do not migrate the hash router to `react-router`, and do not do Netlify config work beyond keeping the live site alive. All three are native features of the target stack and the work is throwaway. This is not hypothetical — an image-pipeline task was scoped and cancelled for exactly this reason.
+| | Stack |
+|---|---|
+| Framework | **Next.js 15 (App Router), TypeScript strict, React 18** |
+| Hosting | **Vercel** (target — not wired/deployed yet) |
+| Data | **Supabase** (Postgres + Auth + Storage; `supabase/schema.sql` is applied and live) |
+| Payments | **Stripe Checkout** (**test mode** — not live) |
+| Tests | **Vitest** |
 
-What still matters here: keeping the live site honest and working until the new one is real, and **porting the money logic verbatim** (`computeOrderAmounts()`, `PRICE_BY_SIZE`, `estimateTaxRate`, `estimateShipping` — pure functions, no framework, the most dangerous code in the repo and the easiest to move).
+**Nothing is deployed. There is no live-money constraint on this repo** — that was the legacy site, now taken down. Build and push freely on feature branches.
 
-One trap worth knowing before you touch `netlify/functions/` with Vercel in mind: **`process.env.URL` is Netlify-only.** On Vercel it is undefined, the `|| 'http://localhost:5181'` fallback fires, and every paying customer is redirected to localhost while the charge succeeds. Nothing logs it and every gate passes. `product.md` §1.5 has the full list.
+**The rebuild is happening in slices.** Slice 1 (Foundation + Money path) is built and on `develop`. Later slices are specced/planned under `docs/superpowers/`. See [Roadmap](#roadmap).
 
 ## Working norms
 
@@ -20,110 +26,153 @@ Be direct. If you see a flaw in the reasoning — a wrong framing, a contradicti
 
 Surface forks; don't pick silently. When two or more defensible approaches exist, present them with a recommendation and tradeoffs before drafting. A finished draft of an undecided question is the wrong artifact.
 
-Evidence before assertions. This repo's gate does not cover its most dangerous code (see [Verification](#verification)), so "the build passed" is not evidence that a change works. Paste real command output. If you could not verify something, say so rather than claiming it works.
+Evidence before assertions. Paste real command output. If you could not verify something, say so rather than claiming it works. The money path especially deserves an adversarial read regardless of a green gate (see [Money path](#money-path)).
 
 ## Commands
 
 ```bash
-npm run dev            # Vite dev server, --host (LAN-accessible, for phone testing)
-npm run dev:local      # Vite dev server, localhost only
-npm run build          # tsc -b && vite build -> dist/
-npm run preview        # serve the production build locally
-npm run lint           # eslint src/**/*.{ts,tsx} -- baseline is 0; CI gates on it
-npx tsc --noEmit       # typecheck only; must stay at 0 errors
-node --check <file>    # the ONLY mechanical check for netlify/functions/*.js
+npm run dev        # next dev (http://localhost:3000)
+npm run build      # next build
+npm run start      # next start (serve the production build)
+npm run lint       # next lint (ESLint 9 flat config via @eslint/eslintrc FlatCompat)
+npm run typecheck  # tsc --noEmit
+npm test           # vitest run
 ```
 
-`npm run build` leaves untracked artifacts behind (`tsconfig.tsbuildinfo`, `tsconfig.node.tsbuildinfo`, `vite.config.js`, `vite.config.d.ts`). They are not gitignored. Delete them before committing.
+Node **20+** (`.nvmrc` is `20`).
 
-`npm run gen:products` is listed in package.json but `scripts/generate-products.mjs` does not exist. `src/data/products.ts` claims to be auto-generated by it. Both are stale — edit `products.ts` by hand.
+## Verification — the gate
 
-## Verification
+Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR to `main` and `develop`, on Node 20:
 
-The gate, measured 2026-07-16:
-
-| Check | Baseline | Rule |
+| Check | Command | Baseline |
 |---|---|---|
-| `npx tsc --noEmit` | **0 errors** | Hard gate. Must stay 0. |
-| `npm run lint` | **0 errors, 0 warnings** | Hard gate. Must stay 0. |
-| `npm run build` | passes | Must pass. |
+| lint | `npm run lint` | 0 errors/warnings |
+| typecheck | `npm run typecheck` | 0 errors |
+| build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
+| test | `npm test` | all green (**1498** tests as of slice 1) |
 
-All three run in CI on every PR as separate jobs (`lint`, `typecheck`, `build`, `functions`), and `main` and `develop` both require them green. Split jobs are deliberate: a failure names itself instead of collapsing into one red dot. It has already earned this — a vite bump passed `lint`, `typecheck`, and `functions` and failed only `build`, which pointed straight at the real cause (vite 8 needs Node 20+).
+Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
-The lint baseline was **37 errors** until 2026-07-16 and is now **0**. Most of it was never code debt: `eslint.config.js` had not applied typescript-eslint's `eslint-recommended` override, so the base `no-undef` and `no-unused-vars` rules were flagging things they structurally cannot see — `EventListener` (a type, not a runtime global) and parameter names in type-only signatures. Only 11 of the 37 were real dead code. `no-unused-vars` is now **swapped** for `@typescript-eslint/no-unused-vars` at `error`, not disabled; `no-undef` is off because `tsc --noEmit` resolves names correctly including type positions and is gated at 0. There are no `eslint-disable` comments in `src/` — do not add one.
+**Unlike the legacy app, the money code is now under test.** `lib/pricing.ts` is proven byte-identical in logic to the frozen legacy original by a 1471-case golden equivalence test (`test/pricing.equivalence.test.ts` vs `test/fixtures/legacy-pricing.cjs`); the checkout route, webhook, and reconciliation are all tested. Still: green is necessary, not sufficient — **end-to-end verification against real Stripe (test mode) is a manual step and hasn't run yet** (see [Money path](#money-path)).
 
-**The gate has a hole, and it is exactly where the money is.** `npm run lint` globs only `src/**/*.{ts,tsx}`, and tsc only covers the TS project. Neither reaches `netlify/functions/*.js` — the Stripe checkout path. Those files have no automated check at all; `node --check` catches syntax and nothing else. Anything touching `netlify/functions/` or URL/routing behavior needs an adversarial read regardless of what the gate says. In the 2026-07-16 wave, two agents reported a green gate truthfully and both had shipped a P0 — one in a netlify function, one in a URL round-trip. Green was never going to catch either.
+**One gate hole:** `next lint` scans `app/`/`components/`/`lib/` but **not `test/`**. `tsc` (`**/*.ts`) and Vitest do cover test files, so test code isn't ungated, but lint won't catch e.g. an unused import in a test.
 
 ## Architecture
 
-Vite + React 18 + TypeScript, custom CSS (no UI framework). Netlify hosting with serverless functions. Stripe Checkout for payment, EmailJS wired but unused, and **Supabase wired but dead — see below.**
+Next.js App Router. Route groups separate the two halves.
 
-> **There is no order persistence, and there never has been.** Verified 2026-07-16. `.env.local` and Netlify point at Supabase project `xecesotunsxkkgxiicqb`, which was **paused on 23 June 2024 — sixteen months before this repo's first commit** (2025-10-27) and nineteen before `src/services/supabase.ts` was written (2026-01-12). `saveOrder()` has not regressed; **it has never once succeeded.** The project has since been backed up and deleted, which changes nothing behaviourally.
->
-> Do not read the rest of this section as describing something that works.
+```
+app/
+  layout.tsx                   # root: next/font faces + globals.css
+  page.tsx                     # placeholder home (slice 2 rebuilds home under (store))
+  globals.css                  # design tokens (design.md §12.2), both themes
+  (store)/                     # public storefront — light/dark
+    layout.tsx                 # ThemeProvider + CartProvider
+    prints/page.tsx            # minimal shop (slice 1) → §12.5-B (slice 2)
+    checkout/page.tsx          # checkout form → POST /api/checkout
+    order/[id]/page.tsx        # confirmation (service-key read, honest states)
+  api/
+    checkout/route.ts          # POST — the money endpoint
+    stripe-webhook/route.ts    # POST — payment confirmation
+lib/
+  pricing.ts                   # VERBATIM port of the 4 pricing functions (money authority)
+  checkout/{build,schema}.ts   # pure checkout core + zod request contract
+  orders/reconcile.ts          # pure amount reconciliation
+  env.ts                       # typed, validated env (throws loud on missing)
+  supabase/{admin,server,client}.ts  # service-key / anon-server / browser clients
+  stripe.ts                    # lazy, server-only Stripe client
+components/{cart,theme}/        # CartContext/AddToCart, ThemeProvider
+test/                          # Vitest; test/fixtures/legacy-pricing.cjs is the pricing reference
+supabase/schema.sql            # the applied data model (5 tables, RLS)
+docs/superpowers/{specs,plans}/  # the rebuild's design + implementation docs, one per slice
+design/*.dc.html               # design prototypes (reference, not production code)
+```
 
-**Routing is a hand-rolled hash router** in `src/App.tsx` — `useHashRoute`/`parseHashLocation`/`HashRouter`, matching on string prefixes. `react-router-dom` is in package.json and imported nowhere. Consequences: one indexable URL for the whole site, and any query string must sit *before* the `#` or it becomes part of the route.
+The **admin half** (`(admin)` route group, Supabase Auth, ingest, orders queue, lab export) is **not built yet** — slices 4+.
 
-State is Context only: `CartContext`, `ThemeContext`, `PricingContext`, `ConsentContext`, `ToastContext`. No store, no server state library.
+State is React Context (`ThemeProvider`, `CartProvider`). No store or server-state library yet.
 
-Money flows — **as designed**: `Checkout.tsx` saves the order to Supabase → POSTs to `create-checkout-session` → Stripe → redirect to `/?payment=success&session_id=...#/order/:id` → `Order.tsx` reads the order back via `getOrder()` → `stripe-webhook.js` marks it `completed`.
+## Money path
 
-Money flows — **what actually happens**: `saveOrder()` throws. `Checkout.tsx:107` swallows it, writes the order to `localStorage['orders:v1']` **in the customer's own browser**, and falls straight through to `create-checkout-session`. **Stripe charges real money.** The webhook fires, tries to update a row that was never inserted, and fails silently. `Order.tsx` calls `getOrder()`, gets `null`, and can show the customer nothing. Every step after "saves the order" is fiction.
+The most dangerous code in the project.
 
-**And the shipping address is worse than lost.** `create-checkout-session.js` sets no `shipping_address_collection`, so **Stripe never receives an address** — the client POSTs only `{ country, region }`, and only to price tax and shipping. Stripe holds the email, the name (via `metadata`), the line items, and the amount. The street address exists nowhere but that customer's `localStorage`. Either gap alone is survivable; together they mean **the site can take real money for a physical print and have no way to learn where to send it.**
+- **`POST /api/checkout`** (server, service key): zod-validates the request → resolves each cart item against the `photos` table (a **silver** register snapshots `original_bw_key`, not the colour `original_key`) → `computeOrderAmounts()` (`lib/pricing.ts`) derives every cent server-side → inserts `orders` (pending) + `order_items` (snake_case `shipping_address` via `toStoredShippingAddress`) → creates a Stripe Checkout session (`payment_method_types: ['card']`, `billing_address_collection: 'required'`, **no** `shipping_address_collection` — we collect + own the shipping address ourselves; `success_url` from `SITE_URL`) → returns the URL. On an `order_items` insert failure it deletes the just-created order (no orphan).
+- **`POST /api/stripe-webhook`** (server, service key): verifies the signature against the **raw** body → gates on `session.payment_status === 'paid'` → `reconcile()` compares `amount_total` to the stored `total_cents` → sets `paid`, or **`amount_mismatch`** (quarantine, records the amount actually paid) → **idempotent** (only advances a `pending` order). `checkout.session.expired` → `cancelled`; `payment_intent.payment_failed` → stays `pending`.
+- **`/order/[id]`** confirmation reads the order via the service key (anon has no orders access) and shows only true states.
 
-## Key constraints
+**Invariants — do not break:**
 
-- **Pushing to `main` deploys to production, and Stripe is in LIVE mode.** `netlify.toml` carries `# Stripe live mode integration`. A push here spends real money and is not a normal push. Never push without explicit authorization, even when green and reviewed.
-- **`netlify/functions/lib/pricing.js` is a hand-maintained mirror** of `src/context/PricingContext.tsx` (`ALL_SIZES`, `PRICE_BY_SIZE`) and `src/utils/taxShipping.ts` (`estimateTaxRate`, `estimateShipping`). It is the server's sole price authority. If you change a price, a size, or a tax rate on the client, you MUST change it here too — a divergence means the customer sees one total and Stripe charges another. There is no test enforcing this.
-- **The server never trusts client prices.** `computeOrderAmounts()` derives every cent from `item.size` and the shipping address; `item.unit` and client `totals` are ignored by design. Do not "simplify" this by reading the client's numbers back.
-- **`netlify/functions/` is a flat function directory.** Every `.js` file directly inside it deploys as its own public endpoint — an underscore prefix does NOT exclude it. Shared modules go in `netlify/functions/lib/`.
-- **The customer's only receipt is Stripe's.** This app sends no email. `src/services/emailService.ts` implements `sendOrderNotification()` and nothing calls it. Do not write copy claiming the site emailed anyone.
-- **Tax is not real.** `src/utils/taxShipping.ts:1` says so in its own comment: rates are hardcoded for 8 states, 6% nominal elsewhere, flat 12% international. It is collected as a real Stripe line item labelled "Tax". Treat it as a known liability, not a feature.
+- **The server is the sole price authority.** `computeOrderAmounts` derives cents from `item.size` + the address; any client `price`/`unit`/`totals` are ignored.
+- **`lib/pricing.ts` is a verbatim port**, logic byte-identical to the legacy original and locked to it by the golden equivalence test. There is no longer a client/server mirror to keep in sync (the legacy `netlify/functions/lib/pricing.js` duplication is gone) — it's one module the routes import. Pricing is **size-keyed** today (per-photo pricing is `product.md §8 q3`, open). A *deliberate* pricing change means updating the unit tests and consciously retiring/adjusting the equivalence lock — not a casual edit.
+- **Orders are service-key only.** `orders`/`order_items` are touched only via `lib/supabase/admin.ts`; RLS gives anon no access. **No order data in `localStorage`, ever** (that was the legacy bug).
+- **DB is snake_case**, no exceptions.
+- **Order status enum:** `pending | paid | amount_mismatch | submitted_to_lab | shipped | cancelled | refunded`. The legacy `completed`/`expired`/`failed` do not exist.
 
-## Do not touch without scoping
+**Two traps the rebuild handles — know why the code is shaped this way:**
 
-- `netlify/functions/create-checkout-session.js` and `netlify/functions/lib/pricing.js` — the price authority. No automated gate protects these. Changes need an adversarial review, not a build.
-- `netlify/functions/stripe-webhook.js` — the signed payment callback.
-- `netlify/functions/package.json` — scopes the functions dir to CommonJS under a root `"type": "module"`. Load-bearing for local tooling.
+- **Never `process.env.URL`.** It is Netlify-only; on Vercel it is undefined, and the old localhost fallback would redirect a paying customer to localhost *after* charging the card. Redirect URLs come from `SITE_URL` (→ `VERCEL_URL` fallback; `lib/env.ts` **throws in production** if neither is set). **Set `SITE_URL` in the Vercel production env** to the canonical domain — `VERCEL_URL` is the per-deploy `*.vercel.app` host, not your domain.
+- **`SUPABASE_SERVICE_ROLE_KEY` is server-only.** `lib/supabase/admin.ts` and `lib/stripe.ts` begin with `import 'server-only'` (a stray client import is a build error); Vitest neutralizes it via `test/stubs/server-only.ts`. Never `NEXT_PUBLIC_` it.
 
-## Known gaps
+**End-to-end money verification is manual and has not run.** Drive `/api/checkout` → Stripe test Checkout → webhook against real (test-mode) Stripe + a live Supabase project, and observe: order `pending → paid`; a forced `amount_mismatch` quarantined with the amount recorded; the shipping address stored complete + snake_case; and `success_url` resolving to a real origin (not localhost). **This gates `develop → main`.**
 
-Real, verified, deliberately unfixed. Do not silently fold these into unrelated work; do not re-diagnose them from scratch.
+## Environment
 
-- **The site takes orders it has no shipping address for. Accepted until cutover — decided 2026-07-16.** This replaces the two entries below, both of which described a system that does not exist. There is no order record and no address anywhere durable (see Architecture); checkout is live, in Stripe **live mode**.
+`.env.local` is not committed; `.env.example` lists the names. In deploy, set these in Vercel per environment.
 
-  **Severity, stated accurately** (an earlier draft of this entry overstated it): Stripe holds the customer's email, name, line items, and amount, and notifies on payment. A stray order is therefore **recoverable with one email asking where to send it** — awkward, not lost. It is not an unfulfillable order.
+| Var | Purpose |
+|---|---|
+| `SUPABASE_URL` | server |
+| `NEXT_PUBLIC_SUPABASE_URL` | browser client (same value as `SUPABASE_URL`) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon — published-catalog reads only |
+| `SUPABASE_SERVICE_ROLE_KEY` | **server-only**, bypasses RLS |
+| `STRIPE_SECRET_KEY` | **test mode** for now |
+| `STRIPE_WEBHOOK_SECRET` | webhook signature (re-register the endpoint at the deploy URL) |
+| `SITE_URL` | canonical origin for Stripe redirect URLs |
 
-  **The decision:** leave it. Fixing it properly means a `<select>` for country, a change to the price authority, an adversarial review, and a push that deploys to live Stripe — to enable a checkout that has sold nothing, on a stack being deleted. The rebuild does that work anyway, once, where the address lands in `orders.shipping_address` (`supabase/schema.sql`).
+`lib/env.ts` validates the required vars at first read and throws loudly if any is missing — a misconfigured deploy dies before it can charge a card.
 
-  **What makes that acceptable is `product.md §6.3`'s original mitigation: the site is not advertised.** That is the entire basis of the decision, not an aside. **The day this site is linked anywhere — Instagram, a business card, a card in a package — the calculus changes that same day, and this gets closed before the link goes up.** It is a choice with a stated condition, not an oversight.
-- ~~**The webhook does not reconcile the amount paid.**~~ **Void as written.** It said someone could save a $65 order, pay ~$5.50 against the same id, and have the webhook mark "the $65 row" complete. **There is no row.** Nothing is ever saved, so there is no stored total to defraud and no record to mark. The reconciliation fix (`session.amount_total` vs the stored total) is real and still correct — it is simply *unbuildable* until a database exists, and it belongs to the rebuild, not here. Tracked at `product.md §6.3`.
-- ~~**Supabase RLS on `orders` is unverified.**~~ **Answered 2026-07-16, and moot.** The project was paused, unrecoverable, and has been backed up and deleted. RLS cannot be set on a database that isn't running, and nothing was ever exposed because nothing was ever written. It becomes a live question on the *new* project, where it is answered by construction: `supabase/schema.sql` enables RLS on every table and gives `anon` no access to `orders` in either direction.
-- **Thumbnails are byte-identical copies of the full prints.** `public/images/thumbs/Deterioration.jpg` and `public/images/prints/Deterioration.jpg` are both 12,656,287 bytes. Home pulls ~21MB, product pages average 12.7MB, worst case 34MB. ~369MB of images total. This is the single highest-leverage fix on the site.
-- **Country is a free-text `<input>` feeding an exact-string tax match, and it overcharges.** `src/pages/Checkout.tsx:228` renders country as a plain text field (default `'United States'`). `estimateTaxRate` matches only `'united states' | 'usa' | 'us'`; **everything else falls through to flat 12% international.** So a US customer whose browser autofills "United States of America" — or who types it — is charged 12% instead of their ~6–10% state rate, collected as a real Stripe line item labelled "Tax." It overcharges rather than undercharges, which makes it a liability rather than a loss. The default value is the only thing saving it today; autofill is what breaks it. Fix in the rebuild: a `<select>` of ISO-2 codes, which `isUnitedStates()` already accepts (`'us'`) and which `payment_intent_data.shipping` requires anyway.
-- `src/pages/Orders.tsx:17` reads `o.createdAt`; every order is saved as `created_at`. Every order shows "Invalid Date" and the sort is `NaN`.
-- Orders that fall back to localStorage are never updated by the webhook, so they sit at `pending` forever. **This is not a fallback — it is the only path, and always has been.** The comment "only written when the Supabase save throws" was written believing the throw was exceptional. The save throws every time (see Architecture).
-- `CartClearer`'s 1s timer captures the route at mount; navigating within that window desyncs the address bar.
-- `src/pages/About.tsx` is `<p>Coming soon.</p>`. There are no Privacy, Terms, Refund, or Shipping pages, and no footer.
-- `src/pages/Home.tsx.bak` and `src/pages/Checkout.tsx.bak` are tracked in git. `src/components/ToastTester.tsx` and `AddToCartBanner.tsx` are imported by nothing.
+## Data model
+
+`supabase/schema.sql` is applied and live on a new Supabase project: five tables (`photos`, `collections`, `collection_photos`, `orders`, `order_items`), RLS on all five, `orders`/`order_items` closed to anon (reads go through the service key). Buckets: `originals` private, `derivatives` public. Public signups disabled. Two honest-function invariants are enforced by Postgres: can't publish a photo without alt text; can't store a tracking number without a shipment. The SQL is authoritative over prose in `product.md`.
+
+**Before the store can take money (cutover checklist, `product.md §1.5`):** upgrade Supabase off the free tier (the free-tier pause is how the last database died); re-register the Stripe webhook at the deploy URL; point env at the right project; swap Stripe to live mode **last**.
 
 ## Git workflow
 
-Branch off `main`; never commit directly to it. Never use `--no-verify`, `--force`, or bypass hooks. Merging locally is fine — pushing is the gate, because pushing deploys (see Key constraints).
+- **`develop` is the integration branch.** Branch feature/slice work off `develop`; merge back into `develop`.
+- **`develop → main` is gated by the manual money-path verification** (above). `main` is the release branch.
+- **Never commit directly to `main` or `develop`**; never `--no-verify`, `--force`, or bypass hooks.
+- Every commit message ends with:
+  `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`
+- Nothing deploys on push yet (Vercel isn't wired). When it is, `main` → production.
+
+## Roadmap
+
+The rebuild is sliced; each slice is a spec → plan → subagent-driven build under `docs/superpowers/`.
+
+- **Slice 1 — Foundation + Money path: DONE** (on `develop`). Scaffold, tokens/type, clients/env, `lib/pricing.ts`, `/api/checkout`, webhook, order persistence.
+- **Slice 2 — Storefront read-path:** specced (`docs/superpowers/specs/2026-07-17-storefront-read-path-design.md`) and adversarially reviewed (21 findings to apply first — chiefly the CropGuide: native-aspect plate, landscape via `aspect_ratio`). Home / Prints / Collection / Product / Contact + the shared header/shell.
+- Slices 3–9 (planned in the specs / `product.md`): cart+checkout final visual, admin foundation (auth), ingest + derivatives, collections + literature, orders queue + Nations lab export, home feature, and the undesigned surfaces (About / Contact / legal / footer — blocked on design, `product.md §4`).
+
+**Carried forward from slice 1** (do before they bite): the `ThemeProvider` theme-flash (fix with a pre-hydration inline script when the theme toggle ships in slice 2); typed Supabase `Database` clients (codegen once a live project is at hand). Full list of follow-ups: `.superpowers/sdd/progress.md`.
+
+## Source-of-truth docs
+
+- **`product.md`** — information architecture, per-surface behaviour, the honest-function rules, open questions, and the migration hazards (§1.5).
+- **`design.md`** — how it looks and moves. `§11` (admin) and `§12` (storefront) are the design target; `§8` cross-cutting rules are live. `§2–§7` are a legacy inventory of the deleted stylesheet and expire at cutover — do not read them as targets.
+- **`supabase/schema.sql`** — the applied data model (authoritative over prose).
+- **`docs/superpowers/specs/` + `plans/`** — the rebuild's design and TDD implementation docs, one per slice.
+- **`.superpowers/sdd/progress.md`** — the slice-1 execution ledger and follow-up findings (git-ignored scratch).
+
+## Honest function — the governing rule
+
+From `product.md §1`: **a control's label must match what it does; a status must reflect reality; copy must not claim an action the system never performed.** No fake tracking, no "we emailed you" the system didn't send — the customer's only receipt is Stripe's. If a surface can't tell the truth about a state, it says less instead of guessing. This is enforced in code (the confirmation page renders only true states) and in the schema (Postgres rejects a tracking number without a shipment).
+
+## The legacy quarry
+
+The deleted Vite app lives in the sibling folder `C:\Users\Shott\Photography-main` and the private archived repo `ShottyJonny/Photography-legacy` (which also holds the ~369MB of images stripped from this repo). It is the **quarry** — copy reference logic out of it (e.g. the CropGuide math for slice 2), never work in it.
 
 ## Design system
 
-`design.md` is the source of truth for how this site looks and moves. This section is a pointer, not a summary — do not restate tokens here.
-
-**As of 2026-07-16 it describes a real target.** `design.md §12` is the storefront and `§11` is the admin, both specified as settled fact from a design handoff, with the prototypes in `design/*.dc.html`. `§1` records the posture and the decisions (colour → black-and-white with warm-paper ink; type → Playfair / Newsreader / IBM Plex Mono / Hanken Grotesk; portfolio-that-sells; both themes first-class).
-
-**The gap between the code and that target is total, and that is by design** — `src/styles.css` is deleted by the rebuild, not migrated toward. `design.md §2–§7` is a legacy inventory of that stylesheet and expires at cutover; **do not read those sections as targets**, and do not "close the gap" against them. `§8` (cross-cutting rules) and `§9` (regressions not to inherit) are live and do apply to the new stack.
-
-Nothing in `§11`/`§12` is built. Verify against the code before assuming a surface exists — the sections are written as settled fact, which reads exactly like a description of something that already works. It isn't one.
-
-Two things the design did **not** settle, both recorded rather than papered over: there is **no home link** in the storefront nav (the cloud mark is the theme toggle instead — `design.md §10 q1`), and **About, Contact, and every legal page are undesigned** while the nav links to two of them (`product.md §4`). Stripe expects a refund policy and there is still no footer to hang one on.
-
-Every price in both prototypes is mock data. **Money comes from the ported pure functions, never from the mock** (`product.md §1.5`).
-
-The admin mock's "$150 base" deserves its own note, because it is not invented — it is `src/data/products.ts`'s `price: 15000`, sitting on all 24 rows. That field is **dead**: `PricingContext` overrides it at runtime with `PRICE_BY_SIZE`, every `ProductCard` caller passes the re-priced product, and no customer has ever seen $150. It survived *because* nothing reads it — and was still alive enough to be copied onto a mockup and nearly become spec. Real prices are $5.00–$65.00, keyed only by size. Treat `products.ts:price` as a trap, not a value.
+`design.md` is the source of truth for how the site looks and moves. `§11` (admin) and `§12` (storefront) are the settled target; `§8` cross-cutting rules — visible focus, `prefers-reduced-motion`, pinch-zoom on the photograph, give the photograph the dominant share, `alt` text that describes the image — apply to every slice. Every price comes from `lib/pricing.ts`, never from the design mocks' hardcoded numbers.
