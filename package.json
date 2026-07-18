@@ -1,39 +1,34 @@
 {
   "name": "jon-hoffman-photography",
+  "version": "0.1.0",
   "private": true,
-  "version": "0.0.1",
   "type": "module",
-  "engines": {
-    "node": ">=18.0.0",
-    "npm": ">=8.0.0"
-  },
+  "engines": { "node": ">=20" },
   "scripts": {
-    "dev": "vite --host",
-    "dev:local": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview",
-    "lint": "eslint \"src/**/*.{ts,tsx}\"",
-    "gen:products": "node ./scripts/generate-products.mjs"
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@emailjs/browser": "^4.4.1",
-    "@stripe/stripe-js": "^8.2.0",
     "@supabase/supabase-js": "^2.76.1",
+    "next": "^15.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "react-router-dom": "^7.18.1",
-    "stripe": "^19.1.0"
+    "server-only": "^0.0.1",
+    "stripe": "^19.1.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
-    "@types/react": "^18.2.66",
-    "@types/react-dom": "^18.2.22",
-    "@typescript-eslint/eslint-plugin": "^6.21.0",
-    "@typescript-eslint/parser": "^6.21.0",
-    "@vitejs/plugin-react": "^4.3.1",
-    "eslint": "^8.57.0",
-    "eslint-plugin-react": "^7.34.1",
-    "eslint-plugin-react-hooks": "^4.6.0",
-    "typescript": "^5.5.4",
-    "vite": "^5.3.4"
+    "@types/node": "^20.17.0",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "@eslint/eslintrc": "^3.2.0",
+    "eslint": "^9.17.0",
+    "eslint-config-next": "^15.1.0",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }
