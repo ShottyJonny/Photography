@@ -46,7 +46,9 @@ jobs:
           node-version-file: .nvmrc
           cache: npm
       - run: npm ci
-      # `next lint`. Gates on whatever the real count is today, not a
+      # `eslint .` (Next.js 16 removed `next lint` and dropped build-time
+      # linting; `package.json`'s "lint" script now runs the ESLint CLI
+      # directly). Gates on whatever the real count is today, not a
       # softened version of it: plain `npm run lint`, no continue-on-error,
       # no `|| true`.
       - run: npm run lint

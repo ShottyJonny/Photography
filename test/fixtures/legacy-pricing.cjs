@@ -70,6 +70,8 @@ function estimateTaxRate(country, region) {
 // NOTE: as of the canonical source, this ALWAYS returns a flat $9.95
 // (995 cents) regardless of destination or subtotal. Free shipping is
 // disabled there. Do not "improve" this here without updating the client.
+// Params are accepted (matching the mirrored signature) and intentionally unused.
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function estimateShipping(subtotalCents, country, method) {
   const base = 995
   return {

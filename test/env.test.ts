@@ -11,7 +11,7 @@ const base = {
 
 describe('loadEnv', () => {
   it('throws with the missing key name when a required var is absent', () => {
-    const { SUPABASE_URL, ...missing } = base
+    const missing = { ...base, SUPABASE_URL: undefined }
     expect(() => loadEnv(missing)).toThrow(/SUPABASE_URL/)
   })
 

@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll } from 'vitest'
+import { it, expect, beforeAll } from 'vitest'
 
 beforeAll(() => {
   process.env.SUPABASE_URL = 'https://x.supabase.co'
