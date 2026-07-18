@@ -10,7 +10,7 @@ Jon Hoffman Photography — a **Next.js + TypeScript** print portfolio and store
 
 | | Stack |
 |---|---|
-| Framework | **Next.js 15 (App Router), TypeScript strict, React 18** |
+| Framework | **Next.js 16 (App Router, Turbopack), TypeScript strict, React 19** |
 | Hosting | **Vercel** (target — not wired/deployed yet) |
 | Data | **Supabase** (Postgres + Auth + Storage; `supabase/schema.sql` is applied and live) |
 | Payments | **Stripe Checkout** (**test mode** — not live) |
@@ -34,12 +34,12 @@ Evidence before assertions. Paste real command output. If you could not verify s
 npm run dev        # next dev (http://localhost:3000)
 npm run build      # next build
 npm run start      # next start (serve the production build)
-npm run lint       # next lint (ESLint 9 flat config via @eslint/eslintrc FlatCompat)
+npm run lint       # eslint . (ESLint 9 flat config; Next 16 removed the `next lint` command)
 npm run typecheck  # tsc --noEmit
 npm test           # vitest run
 ```
 
-Node **20+** (`.nvmrc` is `20`).
+Node **20.9+** (`.nvmrc` is `20`). `next dev` / `next build` use **Turbopack** by default (Next 16).
 
 ## Verification — the gate
 
@@ -56,7 +56,7 @@ Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs
 
 **Unlike the legacy app, the money code is now under test.** `lib/pricing.ts` is proven byte-identical in logic to the frozen legacy original by a 1471-case golden equivalence test (`test/pricing.equivalence.test.ts` vs `test/fixtures/legacy-pricing.cjs`); the checkout route, webhook, and reconciliation are all tested. Still: green is necessary, not sufficient — **end-to-end verification against real Stripe (test mode) is a manual step and hasn't run yet** (see [Money path](#money-path)).
 
-**One gate hole:** `next lint` scans `app/`/`components/`/`lib/` but **not `test/`**. `tsc` (`**/*.ts`) and Vitest do cover test files, so test code isn't ungated, but lint won't catch e.g. an unused import in a test.
+Lint runs via the ESLint CLI (`eslint .` — Next 16 removed `next lint`), so it covers **all** of `app/`/`components/`/`lib/`/`test/`; the legacy "test files aren't linted" gap is closed.
 
 ## Architecture
 
