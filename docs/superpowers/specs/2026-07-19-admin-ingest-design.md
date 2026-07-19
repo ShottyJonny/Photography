@@ -38,7 +38,7 @@ wins where `§11` is silent).
 | Derivative generation | **Staged, one call per register**, not one call for all 24 encodes | brainstorm |
 | Publish gate | **`derivatives_ready` column + a Postgres `check`**, sibling of `alt_text_required_when_published` | brainstorm |
 | Silver (B&W) | **A second uploaded file**, revealed by the toggle. Never a server-side desaturation | Jon |
-| **`product.md §8 q3`** | **CLOSED — pricing stays size-only.** Base price select deleted; size chips become a read-only ladder | **Jon** |
+| **`product.md §8 q3`** | **Size-only for slice 5 — deferred, not declined.** Base price select deleted; size chips become a read-only ladder. Per-photo pricing is a **real want** ("new releases") and gets its own slice after 5b, because repricing needs an edit surface (§13) | **Jon** |
 | **`product.md §8 q4`** | **CLOSED — `unlisted` was a leftover.** The state is **Draft**: `published=false` means invisible to everyone, which is what RLS already enforces | **Jon** |
 | **`product.md §8 q5`** | **CLOSED — on-demand revalidation, confirmed.** `revalidateTag` on every write; the 3600s TTL stays as a self-healing backstop | **Jon** |
 | **`product.md §8 q7`** | **CLOSED — Nations' own site does the crop.** Nothing here produces a print-ready file | **Jon** |
@@ -533,6 +533,27 @@ The four `§11.7` items this slice closes (q3, q4, q5, crop) are marked resolved
   promise; deviating breaks it silently. Either the lab export eventually states the crop, or a
   per-size crop offset becomes a real feature. Recorded now so slice 7 inherits the constraint
   rather than rediscovering it.
+- **Per-photo pricing — its own slice, after 5b.** `§8 q3` is deferred rather than declined: Jon
+  wants per-photo prices for **new releases**, i.e. a price that *changes over time*, which is why
+  it follows the edit surface rather than preceding it. Three things that slice inherits from this
+  brainstorm rather than rediscovering:
+  - **The equivalence lock survives.** `test/pricing.equivalence.test.ts` feeds `{name, size, qty}`
+    and compares against the frozen legacy module, so a photo with **no** override must still price
+    identically. All 1471 cases pass unchanged; the lock is *repurposed* from "pricing must never
+    change" into "the default path must never drift." `CLAUDE.md` treats retiring it as the
+    dangerous part — it does not have to be retired.
+  - **Blast radius is seven call sites**, four in the money path: `ProductInteractive`,
+    `CartDrawer`, `checkout/page.tsx`, `prints/page.tsx`, `lib/format/quote.ts`,
+    `lib/checkout/build.ts`, `lib/format/price.ts`.
+  - **The trap: `app/(store)/prints/page.tsx:24` computes `FROM_PRICE` at module scope**, baked at
+    import. `priceRangeLabel()` has the same shape. The first photo carrying an override makes
+    "from $5" silently wrong on the shop page, permanently, because nothing re-evaluates it — the
+    `products.ts:price` failure mode, except customer-visible.
+  - Open for that slice: multiplier on the existing ladder (one column, preserves the ladder's
+    derived shape) versus explicit per-size prices (a real table with `cents > 0` and
+    size-validity constraints — not loose jsonb in the money path).
+- **No pricing column is added in 5a.** Deliberately: a column nothing reads is the exact pattern
+  `schema.sql` spends fourteen lines warning about. It arrives in the slice that reads it.
 - **Step 2's duplicate download** (§3.1) — removable with a range-request header read.
 - **`§11.4-B`** (5b), **`§11.4-H` mobile ingest**, and an **edit-after-ingest** surface.
 - **Typed Supabase `Database` generics** — still carried from slice 1, now also for `lib/ingest`.
