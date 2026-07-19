@@ -24,8 +24,7 @@ function CloudMark() {
 
 export function Header() {
   const { toggle } = useTheme()
-  const { lines } = useCart()
-  const cartCount = lines.length
+  const { count, open } = useCart()
 
   return (
     <header style={styles.header}>
@@ -57,9 +56,9 @@ export function Header() {
           <Link href="/contact" style={styles.navLink}>
             Contact
           </Link>
-          <Link href="/checkout" style={styles.navLink}>
-            Cart ({cartCount})
-          </Link>
+          <button type="button" onClick={open} style={styles.cartBtn}>
+            Cart ({count})
+          </button>
         </nav>
       </div>
     </header>
@@ -128,5 +127,16 @@ const styles: Record<string, React.CSSProperties> = {
     textTransform: 'uppercase',
     color: 'var(--ink)',
     textDecoration: 'none',
+  },
+  cartBtn: {
+    fontFamily: 'var(--font-mono)',
+    fontSize: '0.75rem',
+    letterSpacing: '0.06em',
+    textTransform: 'uppercase',
+    color: 'var(--ink)',
+    background: 'transparent',
+    border: 'none',
+    padding: 0,
+    cursor: 'pointer',
   },
 }

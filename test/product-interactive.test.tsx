@@ -102,4 +102,18 @@ describe('ProductInteractive', () => {
     fireEvent.click(screen.getByRole('button', { name: '4x6' }))
     expect(screen.getByText(/Guides show the 4×6 crop/)).toBeTruthy()
   })
+
+  it('includes slug and altText snapshot in the added line', () => {
+    renderWithCart(photoWithBw)
+    fireEvent.click(screen.getByRole('button', { name: 'Add to cart' }))
+    const cart = JSON.parse(screen.getByTestId('cart').textContent!)
+    expect(cart[0]).toMatchObject({ slug: 'test-photo', altText: 'A test photograph' })
+  })
+
+  it('announces an Added confirmation after adding', () => {
+    renderWithCart(photoWithBw)
+    expect(screen.queryByText(/added to your selection/i)).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Add to cart' }))
+    expect(screen.getByText(/added to your selection/i)).toBeTruthy()
+  })
 })
