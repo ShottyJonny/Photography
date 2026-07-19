@@ -10,7 +10,18 @@ export const metadata = { title: 'Jon Hoffman Photography' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${playfair.variable} ${newsreader.variable} ${mono.variable} ${hanken.variable}`}>
+    <html
+      lang="en"
+      className={`${playfair.variable} ${newsreader.variable} ${mono.variable} ${hanken.variable}`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('theme:v1');if(t==='light'||t==='dark'){document.documentElement.dataset.theme=t;}}catch(e){}`,
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   )

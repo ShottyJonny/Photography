@@ -1,6 +1,6 @@
 # Slice 2 — Storefront Read-Path (design spec)
 
-> **Status: proposed, awaiting review.** Written 2026-07-17. The public storefront's
+> **Status: reviewed — corrections applied 2026-07-18 (see §11, which overrides earlier sections where they conflict).** Written 2026-07-17. The public storefront's
 > read surfaces — Home, Prints, Collections (index + detail), Product, Contact — plus the
 > shared store shell/header. Reads *published* rows via ISR + tagged fetches. Consumes
 > slice 1's scaffold, tokens, clients, `ThemeProvider`, and `lib/pricing.ts`.
@@ -208,3 +208,75 @@ boundaries.
 - `product.md §3.2` (derivative ladder), `§4` (surfaces), `§5.2` (alt text), `§8 q5` (freshness).
 - `supabase/schema.sql` — `photos`, `collections`, `collection_photos`, RLS published-read.
 - `docs/superpowers/specs/2026-07-17-rebuild-architecture-money-path-design.md` — slice 1 (dependency).
+
+---
+
+## 11. Post-review corrections (applied 2026-07-18)
+
+A multi-agent adversarial review of this spec surfaced 21 verified findings (deduped below).
+These **override** the earlier sections where they conflict. The plan is built against these.
+
+### C1 — The Product plate renders at the photo's NATIVE aspect; fix the CropGuide + orientation
+The CropGuide's percentage insets are computed against the *displayed* image box. §12.5-D's nominal
+"600×750 (4:5) plate" would `object-fit:cover` a non-4:5 photo — pre-cropping it before the guide draws,
+so the overlay misaligns on exactly the 5 non-4:5 sizes the guide exists for.
+- The Product plate renders at `aspect-ratio: <photo.aspect_ratio>` (its native aspect), **not** a fixed
+  4:5 cover box. The CropGuide overlay shares that same native-aspect element.
+- **Orientation is re-derived from `aspect_ratio` (`> 1` = landscape)**, NOT the legacy
+  `LANDSCAPE_PRODUCTS` product-ID allowlist (dead — those IDs don't exist in the new slug/UUID model).
+  Both the target-aspect flip *and* the displayed size-label flip (e.g. `8x10`→`10x8` for landscape) must be
+  reimplemented against `aspect_ratio`.
+- **Port only the crop-guide computation** from the quarry `Product.tsx` (+ `sizeDisplay.ts`'s label logic,
+  re-keyed to aspect). **Drop the `utils/aspect.ts` citation** in §5 — that file is ingest-time aspect
+  *measurement* (slice 5), not crop logic.
+
+### C2 — The Product page is ONE client-state island, not flat sibling components
+`SizePicker`, `RegisterToggle`, `CropGuide`, the price, and the plate all depend on the selected
+**size** and **register**; as flat siblings under a server page they'd share no state. Restructure §2/§5:
+a single client component (`ProductInteractive`) owns `{ size, register }` and renders the plate
+(swapping the image by register — the §1 "both registers" duality), the size-keyed CropGuide, the
+controls, and the size-derived price. The server page fetches the photo and passes plain data in.
+
+### C3 — The cart is REAL; wire "Add to cart", and delete "Save to collection"
+Slice 1 already ships a working `CartContext` + `AddToCart`. The Product "Add to cart" must **use it**
+(functional) — an inert control is a §1 honest-function violation. (The "cart stub → slice 3" note in §0
+refers to the cart *drawer/visual polish*, not to add-to-cart working.) **Remove "Save to collection"** —
+it implies a feature with no data model, no auth, and no behavior; a dead button breaks §1. Cut it until real.
+
+### C4 — Collections need a visibility gate
+`collections` has no `published` column and RLS lets anon read **all** of them, so `getCollections()` /
+collection-detail would expose drafts and empty collections. **Filter to collections with ≥1 published
+photo** (via the `collection_photos` → `photos.published` join); collection detail **404s** if it has none.
+Cover fallback: when `cover_photo_id` is null or points at an unpublished (RLS-hidden) photo, use the
+collection's first published photo as the cover.
+
+### C5 — Home empty state when the featured collection has zero published works
+Beyond "no featured collection," handle a featured collection that **exists but has 0 published photos**:
+`getFeaturedCollection()` treats it as absent and Home renders the quiet empty state — never a broken
+plate/rail.
+
+### C6 — Product kicker, the stable "No. NN", and Prints ordering/filter
+"No. NN · Collection" is undefined for a photo in **0 or >1 collections**. Resolve: the kicker reflects the
+**collection the user arrived from** (the collection-detail → product link carries the slug), and "No. NN"
+is the photo's **`position` within that collection** (`collection_photos.position`). Reached from **Prints**
+(no collection context), the kicker **omits** the "No. NN · Collection" line. `getPublishedPhotos()` gets a
+**defined order** (`created_at`, since `photos` has no `position`) for a stable grid; the Prints
+collection filter uses the `collection_photos` join.
+
+### C7 — ISR vs the env-free CI build (real tension with slice 1)
+Slice 1 made `/prints` `force-dynamic` so `next build` needs **no env** (the CI `build` job runs without
+secrets). Making the read pages **ISR/static** reintroduces a build-time dependency: Next prerenders the
+static routes (Home, Prints, Collections index) at build, calling `supabaseServer()` → needs `SUPABASE_URL`
++ `NEXT_PUBLIC_SUPABASE_ANON_KEY` at build. **Resolution: give the CI `build` job those two vars** — both
+are *public by design* (the anon key already ships in the browser bundle; this is not a secret leak, unlike
+the service key). Dynamic `[slug]` routes (Product, Collection detail — no `generateStaticParams`) render
+on-demand and need no build data. Document the two public build vars in the `build` job.
+
+### C8 — Seed uses the service key; `<picture>` lazy-loading, LCP, and null dims
+- The seed fixture inserts rows and uploads derivatives to the **admin-write** bucket → it uses the
+  **service key** (a `supabaseAdmin` script), which §7's "seed → build → see it" didn't state.
+- The hand-rolled `Plate` `<picture>` must set `loading="lazy"` by default and
+  **`fetchPriority="high"` + `loading="eager"` on the Home LCP plate** (what `next/image` gave for free).
+- `width_px`/`height_px`/`aspect_ratio` are nullable in the schema (guaranteed only for `alt_text`); `Plate`
+  and `CropGuide` guard the null case with a sensible fallback rather than emitting broken markup — and the
+  seed populates them so the happy path is exercised.
