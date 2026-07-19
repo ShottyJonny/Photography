@@ -59,11 +59,19 @@ policies grant full access to every table, so signup posture *is* the access con
 `GMT-0400`. Slice 4b needs this for date rendering; recorded here because this is where it was
 observed.
 
-**Blocking pre-build item (§9.1):** the Users footer reads "Total: 10 users (estimated)" while
-the list shows one. Believed to be Postgres's `reltuples` estimate, **not confirmed**. Since
-every `authenticated` account has full read *and write* access to every customer's name, email,
-address and order (`schema.sql:301-307`, `with check (true)`), this is settled by query before
-build, not after.
+**✓ Resolved 2026-07-19 — there is exactly one account.** The Users footer's "Total: 10 users
+(estimated)" was Postgres's `reltuples` estimate, as suspected; Jon confirmed the real count is
+**1**. This mattered because every `authenticated` account has full read *and write* access to
+every customer's name, email, address and order (`schema.sql:301-307`, `with check (true)`), so
+"how many accounts exist" *is* the authorization model.
+
+> **The control still lives in a dashboard toggle, not in code.** `requireAdmin()` asserts that
+> *a* Supabase user exists, never *which* — so the single-admin guarantee rests entirely on
+> signups staying disabled, which nothing in this repo enforces or detects. That is the locked
+> decision from §0 ("single admin, not a role system"), and it is sound only while the count
+> stays 1. **If a second account ever appears, it is a full admin.** An `ADMIN_USER_ID`
+> allowlist in `require-admin.ts` would move the control into code; it is deliberately not
+> built, and is recorded in §10 so the decision is visible rather than assumed.
 
 **Not blocking:** the project is on the **FREE tier**. `product.md §1.5` puts leaving it at the
 top of the cutover checklist — the free-tier pause is how the last database died.
@@ -663,6 +671,11 @@ the live database is not an agent's to make.
 - Typed Supabase `Database` generics (from slice 1) — now also `auth-server.ts`/`auth-proxy.ts`.
 - **Consider shortening the access-token TTL** (§3.6's known property).
 - **MFA** — explicitly weighed and deferred; blast radius recorded in §9.1.
+- **`ADMIN_USER_ID` allowlist.** `requireAdmin()` authenticates but does not authorize a specific
+  user. Single-admin safety currently depends on the Supabase signup toggle, which no test or
+  code path can see. Cheap to add (one env var, one equality check); deferred because §0 locked
+  "no new env vars" and the account count is verified at 1. Revisit the moment a second account
+  is needed for any reason.
 - `@media print` for `[data-admin]`: `--ink` is `#efeae0` and browsers drop backgrounds when
   printing, so a printed admin page is near-white on white. Deliberately out of scope until
   slice 7, the surface anyone would actually print.
