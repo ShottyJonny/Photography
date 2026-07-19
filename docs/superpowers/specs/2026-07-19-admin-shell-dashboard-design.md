@@ -20,6 +20,13 @@ Companion: `design.md §11.1` (tokens), `§11.2` (type roles), `§11.3` (shell),
 `design/Jon Hoffman Admin.dc.html` (pixel source — `§11` wins where they disagree, the prototype
 wins where `§11` is silent).
 
+> **Measurements come from the prototype, extracted 2026-07-19.** Most of the admin's layout is
+> inline-styled there rather than in its `<style>` block, so the numbers are not in `§11`'s prose
+> at all. The implementation plan carries the full extracted table; four items in this spec were
+> **corrected against it** after the fact — the signed-in chip (§5), the queue-row grid (§6.2),
+> the `PAID` chip (§6.2), and the ghost-button border (§5). Where this spec's first draft
+> inferred a measurement from `§11`'s prose and the prototype disagrees, the prototype won.
+
 ---
 
 ## 0. Decisions locked
@@ -243,16 +250,26 @@ drop shadow; interior elements square, `§11.5`).
 4. Footer pinned bottom (`margin-top:auto`): **"View live site ↗"** (`href="/"`,
    `target="_blank"`, `rel="noopener noreferrer"`), **"Sign out"** (D2), and the chip.
 
-**The signed-in chip** — markup pinned, because `aria-label` on a generic element is
-inconsistently exposed and, where it is, *replaces* the visible text rather than supplementing it:
+**The signed-in chip** — taken from the prototype, which is more specific than `§11.3`'s prose
+and settles this better than the spec's first draft did. It is **not** an avatar carrying a
+hidden label; it is an avatar *beside a visible two-line lockup*:
 
-```html
-<div class="admin-chip">JH<span class="admin-sr-only">Signed in as {email}</span></div>
+```
+[JH]  Jon Hoffman
+      jonhoffmanbusiness@gmail.com
 ```
 
-Visible "JH" per `§11.3`'s literal; the email in 4a's `.admin-sr-only`. Tests assert the visible
-text and the hidden text **separately**, so a green test cannot stand in for a behaviour that
-does not happen.
+- avatar: `32px`, `border-radius:50%`, `background:#2a2a28`, `display:grid; place-items:center`,
+  `font:600 12px mono`, `color:var(--ink)`
+- lockup: `font-size:11px; line-height:1.4`; name `--ink`, email `--faint` at `10px`
+- row: `display:flex; align-items:center; gap:10px; padding-top:12px;
+  border-top:1px solid var(--hairsoft)`
+
+The email is real, visible text — no `aria-label`, no visually-hidden span. **It will overflow**:
+`jonhoffmanbusiness@gmail.com` at 10px mono is ~162px against ~148px of available width, so the
+email cell takes `overflow:hidden; text-overflow:ellipsis; white-space:nowrap` **plus a `title`
+carrying the full address**. An ellipsised email that cannot be read in full is a small `§1`
+problem of its own.
 
 **Main header band:** mono kicker over a Playfair `44px` H1, primary action top-right.
 
@@ -262,7 +279,7 @@ button" is otherwise unstated and three of the dashboard's controls use it:
 | | Treatment |
 |---|---|
 | Primary | `--btnbg` ground, `--btnink` text, mono `11px` `.14em` uppercase, `14px 22px`, square. Hover `opacity:.88`; active `translateY(1px)` |
-| Secondary / ghost | Same type, transparent ground, `1px --hairform` border (**D11** — `--hair`'s 1.42:1 boundary fails SC 1.4.11) |
+| Secondary / ghost | `font:500 10px mono; letter-spacing:.1em; uppercase; color:var(--ink); padding:7px 12px`, transparent ground, `1px --hairform` border. The prototype specifies `--hair` here; **that is 1.42:1 and fails SC 1.4.11**, so it inherits 4a's `--hairform` (3.02:1) like every other control boundary (**D11**) |
 
 `min-height:44px` on every interactive control (`§8`, `§11.4-H`).
 
@@ -353,16 +370,26 @@ Row composition **from the prototype**, which `§11.4-A` describes only as "comp
 a 'Copy for lab' ghost button":
 
 ```
-JH…0039 · Maya Lindqvist · 2 works · 11 Jul · [PAID] · [Copy for lab]
+grid-template-columns: 118px 1fr auto auto;  gap:16px; align-items:center;
+padding:14px 10px; border-bottom:1px solid var(--hairsoft)
+
+  JH…0039   Maya Lindqvist          [PAID]   [Copy for lab]
+            2 works · 11 Jul
 ```
+
+Four columns, not five — the works count and the date are **one fused sub-line** under the
+customer name, per the prototype. Cell specifics: id `font:500 12px mono; color:var(--ink)`;
+name `font-size:13px; color:var(--ink)`; sub-line `font-size:11px; color:var(--faint)`.
 
 - **Order id:** `id.slice(0, 8)` in mono. `§11.4-E`'s `JH-20260716-0042` has **no backing column**
   in `schema.sql`; deriving one from `created_at` plus an invented counter would fabricate an
   order number in the one place Jon has to reconcile a row against Stripe. Recorded as D14 and
   carried to slice 7.
 - **No Playfair total.** The total belongs to `§11.4-D` (the Orders surface), not the dashboard.
-- **`PAID` chip:** `--ok`, with the literal text `PAID` — `§11.1` requires every status to carry a
-  text label, never colour alone. The first draft named `MISMATCH` and left this unspecified.
+- **`PAID` chip:** **outlined, not filled** — `font:500 11px mono; color:var(--ok);
+  border:1px solid var(--ok); padding:4px 9px`, with the literal text `PAID`. `§11.1` requires
+  every status to carry a text label, never colour alone. The first draft named `MISMATCH` and
+  left this one unspecified.
 - **`Copy for lab`:** ghost button, marked (slice 7).
 - Rows separated by `--hairsoft` (`§11.1`: "soft divider between list rows").
 - Works count pluralizes: `1 work` / `2 works`.
