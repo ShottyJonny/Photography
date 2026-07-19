@@ -50,7 +50,7 @@ Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR 
 | lint | `npm run lint` | 0 errors/warnings |
 | typecheck | `npm run typecheck` | 0 errors |
 | build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
-| test | `npm test` | all green (**1498** tests as of slice 1) |
+| test | `npm test` | all green (**1623** tests as of slice 4a) |
 
 Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
@@ -75,12 +75,20 @@ app/
   api/
     checkout/route.ts          # POST — the money endpoint
     stripe-webhook/route.ts    # POST — payment confirmation
+  admin/                       # ADMIN — dark only, auth-gated (slice 4a)
+    layout.tsx                 # [data-admin] token scope; noindex
+    sign-in/page.tsx           # public sign-in
+    (protected)/               # everything here is guarded
+      layout.tsx               # force-dynamic; requireAdmin()
+      page.tsx                 # /admin — placeholder (slice 4b: §11.4-A dashboard)
 lib/
   pricing.ts                   # VERBATIM port of the 4 pricing functions (money authority)
   checkout/{build,schema}.ts   # pure checkout core + zod request contract
   orders/reconcile.ts          # pure amount reconciliation
   env.ts                       # typed, validated env (throws loud on missing)
   supabase/{admin,server,client}.ts  # service-key / anon-server / browser clients
+  supabase/{auth-server,auth-proxy}.ts # cookie-bound authenticated clients (slice 4a)
+  admin/{require-admin,auth-actions,auth-state}.ts  # requireAdmin() boundary + sign-in/out
   stripe.ts                    # lazy, server-only Stripe client
 components/{cart,theme}/        # CartContext/AddToCart, ThemeProvider
 test/                          # Vitest; test/fixtures/legacy-pricing.cjs is the pricing reference
@@ -89,7 +97,11 @@ docs/superpowers/{specs,plans}/  # the rebuild's design + implementation docs, o
 design/*.dc.html               # design prototypes (reference, not production code)
 ```
 
-The **admin half** (`(admin)` route group, Supabase Auth, ingest, orders queue, lab export) is **not built yet** — slices 4+.
+proxy.ts                       # session refresh + redirect for /admin/:path*
+
+The **admin half** is partly built. Slice 4a shipped auth: the route shape is `app/admin/` with a `(protected)` group — **not** an `(admin)` route group, which would add no URL segment. `app/admin/page.tsx` must never exist (it collides with `(protected)/page.tsx`). Ingest, collections, the orders queue and the lab export are slices 5–7.
+
+**Admin surfaces read as the logged-in user** through `lib/supabase/auth-server.ts` under RLS, so `schema.sql`'s `authenticated` policies are exercised rather than decorative. The service key stays confined to the three sessionless paths (`/api/checkout`, `/api/stripe-webhook`, `/order/[id]`). **Authorization is `requireAdmin()` in the data-access layer, never a layout** — Next layouts do not re-render on client-side navigation, so a layout check stops running on route changes. Every admin read, write, and Server Action calls it first.
 
 State is React Context (`ThemeProvider`, `CartProvider`). No store or server-state library yet.
 
