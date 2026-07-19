@@ -5,7 +5,7 @@ import { useCart } from '@/components/cart/CartContext'
 import { Plate } from '@/components/store/Plate'
 import { CropGuide } from '@/components/product/CropGuide'
 import { cropGuide } from '@/lib/product/crop'
-import { priceForSize } from '@/lib/format/price'
+import { formatPrice, priceForSize } from '@/lib/format/price'
 import { ALL_SIZES } from '@/lib/pricing'
 
 type ProductPhoto = {
@@ -19,10 +19,6 @@ type ProductPhoto = {
   width_px: number | null
   height_px: number | null
   has_bw_variant: boolean
-}
-
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
 }
 
 export function ProductInteractive({ photo }: { photo: ProductPhoto }) {

@@ -3,11 +3,7 @@ import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useCart, lineKey } from '@/components/cart/CartContext'
 import { Plate } from '@/components/store/Plate'
-import { priceForSize } from '@/lib/format/price'
-
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
-}
+import { formatPrice, priceForSize } from '@/lib/format/price'
 
 export function CartDrawer() {
   const { lines, count, isOpen, close, remove, setQty } = useCart()

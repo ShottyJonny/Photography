@@ -1,4 +1,5 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
+import { formatPrice } from '@/lib/format/price'
 
 type OrderStatus = 'pending' | 'paid' | 'amount_mismatch' | 'submitted_to_lab' | 'shipped' | 'cancelled' | 'refunded'
 
@@ -15,10 +16,6 @@ type Order = {
   total_cents: number
 }
 type Item = { title: string; size: string; register: string; qty: number; unit_cents: number }
-
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
-}
 
 // Honest status map (product.md §1). Active = not cancelled/refunded. The ship-window promise is
 // gated to payment-confirmed states; pending/amount_mismatch get the reviewing note and never a
