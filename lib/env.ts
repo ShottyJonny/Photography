@@ -48,3 +48,24 @@ let cached: Env | null = null
 export function env(): Env {
   return (cached ??= loadEnv())
 }
+
+/**
+ * Narrow accessor for the two values Supabase Auth needs.
+ *
+ * Deliberately NOT env(): that validates the Stripe keys too, and it runs on
+ * every /admin request. A missing STRIPE_WEBHOOK_SECRET must not be able to
+ * break admin sign-in.
+ */
+export function supabaseAuthEnv(source: Source = process.env): { url: string; anonKey: string } {
+  const url = (source.SUPABASE_URL ?? source.NEXT_PUBLIC_SUPABASE_URL ?? '').trim()
+  const anonKey = (source.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? '').trim()
+
+  const missing: string[] = []
+  if (!url) missing.push('SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)')
+  if (!anonKey) missing.push('NEXT_PUBLIC_SUPABASE_ANON_KEY')
+  if (missing.length) {
+    throw new Error(`Missing required environment variable(s): ${missing.join(', ')}`)
+  }
+
+  return { url, anonKey }
+}

@@ -2,15 +2,12 @@
 import { useMemo, useState } from 'react'
 import { useCart } from '@/components/cart/CartContext'
 import { previewQuote } from '@/lib/format/quote'
-import { priceForSize } from '@/lib/format/price'
+import { formatPrice, priceForSize } from '@/lib/format/price'
 
 const COUNTRIES: [string, string][] = [
   ['US', 'United States'], ['CA', 'Canada'], ['GB', 'United Kingdom'], ['DE', 'Germany'],
 ]
 
-function formatPrice(cents: number): string {
-  return `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
-}
 function emailValid(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) }
 
 type Fields = { email: string; name: string; street: string; city: string; region: string; postalCode: string; country: string }
