@@ -263,7 +263,18 @@ a.admin-navitem:hover { background: rgba(239, 234, 224, 0.05); color: var(--ink)
 /* --- Marked controls (spec §6.1.1) --- */
 .admin-marked { display: inline-flex; align-items: center; gap: 8px; }
 .admin-mark { font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
-button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disabled='true'] { cursor: not-allowed; opacity: 0.72; }
+/* The marker inherits --faint, tuned against --paper. On the primary button's
+   near-white --btnbg ground that composites to 1.00:1 — invisible, on the one
+   control the eye goes to first. The marker IS the honest-function payload
+   (spec §6.1.1), so it takes a ground-appropriate ink. */
+.admin-btn .admin-mark { color: rgba(11, 11, 11, 0.62); }
+/* No group opacity: it multiplies through to the marker AND the border, taking
+   --faint to 2.92:1 and --hairform to 2.10:1 — silently reverting D10 and D11.
+   "Not yet wired" is carried by the marker text, which is what D4 decided. */
+button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disabled='true'] { cursor: not-allowed; }
+/* A control that depresses under the finger and then does nothing is the
+   affordance-level version of a label that lies (product.md §1). */
+.admin-btn[aria-disabled='true']:active, .admin-ghost[aria-disabled='true']:active { transform: none; }
 
 /* --- Buttons --- */
 .admin-ghost {

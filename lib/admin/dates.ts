@@ -1,3 +1,5 @@
+import 'server-only'
+
 /**
  * Every formatter here carries an EXPLICIT locale and timeZone.
  *

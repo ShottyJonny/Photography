@@ -52,6 +52,25 @@ describe('the admin component classes', () => {
     expect(rule('.admin-mismatch')).toMatch(/color:\s*var\(--ink\)/)
   })
 
+  // The marker carries the honest-function payload, so it has to be legible
+  // on EVERY ground it renders on — not just --paper. It shipped at 1.00:1 on
+  // the primary button, which is where the eye goes first.
+  it('gives the marker a ground-appropriate ink on the primary button', () => {
+    expect(css).toContain('.admin-btn .admin-mark')
+    expect(rule('.admin-btn .admin-mark')).toMatch(/color:\s*rgba\(11,\s*11,\s*11/)
+  })
+
+  // Group opacity multiplies through to the marker AND the border, taking
+  // --faint to 2.92:1 and --hairform to 2.10:1 — silently reverting D10/D11.
+  it('never dims marked controls with group opacity', () => {
+    expect(rule("button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disabled='true']"))
+      .not.toMatch(/opacity\s*:/)
+  })
+
+  it('suppresses the press animation on inert controls', () => {
+    expect(css).toMatch(/\[aria-disabled='true'\]:active[^{]*\{[^}]*transform:\s*none/)
+  })
+
   it('keeps the marked-control marker in the text flow, not a tooltip', () => {
     expect(rule('.admin-mark')).not.toMatch(/content:/)
   })

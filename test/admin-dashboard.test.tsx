@@ -99,6 +99,17 @@ describe('the dashboard', () => {
     expect(container.textContent).toContain('No photographs yet.')
   })
 
+  // The populated branch had no test at all, which is how "Plates arrive in
+  // slice 5" — roadmap jargon under a heading promising content — shipped.
+  it('marks the recent-uploads rail rather than inventing copy when photos exist', async () => {
+    result.value = ok({ summary: { ...ok().summary, publishedCount: 16, unlistedCount: 2 } })
+    const { container } = await renderDash()
+    expect(container.textContent).not.toContain('No photographs yet.')
+    expect(container.textContent).not.toMatch(/slice \d/i)
+    const rail = container.querySelectorAll('.admin-railcard')[1]
+    expect(rail?.textContent).toContain('NOT BUILT')
+  })
+
   it('names the featured collection in the rail once one exists', async () => {
     result.value = ok({ summary: { ...ok().summary, collectionCount: 1, featuredCollectionName: 'Relics' } })
     const { container } = await renderDash()

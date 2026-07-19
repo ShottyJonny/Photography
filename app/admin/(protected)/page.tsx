@@ -106,9 +106,13 @@ export default async function AdminDashboard() {
                 {result.summary.publishedCount + result.summary.unlistedCount === 0 ? (
                   <p className="admin-empty">No photographs yet.</p>
                 ) : (
-                  <ul className="admin-uploads">
-                    <li className="admin-upload">Plates arrive in slice 5</li>
-                  </ul>
+                  // Photographs exist but this surface cannot show them yet:
+                  // getDashboard() does not select titles and there is no
+                  // derivative pipeline until slice 5. Marked like every other
+                  // unbuilt control rather than filled with roadmap jargon — a
+                  // heading promising content it cannot deliver breaks
+                  // product.md §1's "says less instead of guessing".
+                  <MarkedLink label="Recent uploads" />
                 )}
               </div>
             </aside>
