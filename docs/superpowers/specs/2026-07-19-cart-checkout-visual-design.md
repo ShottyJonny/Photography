@@ -108,11 +108,14 @@ export type CartLine = {
 `close()`. Keeping it here means `Header` (opens) and `CartDrawer` (renders/closes) share one
 source of truth.
 
-**Persistence — tolerant rehydrate (sub-decision 2).** Keep the `cart:v1` key. On mount, parse
-and **coerce** each line: default a missing `slug`/`altText` to `''`, drop anything without a
-`photoId`/`size`/`register`, clamp `qty` to `1…100`. A stale slice-1 cart (no `slug`/`altText`)
-degrades — the thumb falls back to no-image, the line stays usable — instead of crashing. The
-first-render-matches-SSR-empty pattern (read localStorage in `useEffect` after mount) is kept.
+**Persistence — tolerant rehydrate (sub-decision 2).** Keep the `cart:v1` key. On mount:
+**wrap `JSON.parse` in try/catch** (corrupt storage → empty cart, never a crash — today's code
+does a bare `JSON.parse(s)`), then **assert the parsed value is an array** (anything else → empty),
+then **coerce** each line: default a missing `slug`/`altText` to `''`, drop anything without a
+`photoId`/`size`/`register`, clamp `qty` to `1…100` (drop non-integer/≤0). A stale slice-1 cart (no
+`slug`/`altText`) degrades — the thumb falls back to no-image, the line stays usable — instead of
+crashing. The first-render-matches-SSR-empty pattern (read localStorage in `useEffect` after mount)
+is kept.
 
 ---
 
@@ -133,8 +136,9 @@ first-render-matches-SSR-empty pattern (read localStorage in `useEffect` after m
   `/checkout` and calls `close()`. **No shipping line, no "total", no "tax" text** — the drawer has
   no address and cannot tell the truth about either.
 - **a11y / motion (§8, §12.6):** `role="dialog"`, `aria-modal="true"`, labelled by the header;
-  focus trap; focus returns to the opener on close; body scroll-lock while open; the slide/fade is
-  gated behind `prefers-reduced-motion` (reduced → appear/disappear, no transform).
+  on open, **focus moves into the dialog** (the ✕ or first focusable); focus is trapped while open
+  and **returns to the opener on close**; body scroll-lock while open; the slide/fade is gated
+  behind `prefers-reduced-motion` (reduced → appear/disappear, no transform).
 
 Prices come from `lib/format/price.ts` (`priceForSize`), never from a stored/client price.
 
@@ -186,6 +190,8 @@ quoted amount. The server stays the authority.
 
 Two columns. **The POST body and `/api/checkout` are unchanged** — same
 `{ items:[{photoId,size,register,qty}], customer:{email,name}, shippingAddress:{name,street,city,region,postalCode,country} }`.
+The new `CartLine.slug`/`altText` are **thumb-only display fields and must never enter the POST** —
+the items mapping stays exactly `{photoId,size,register,qty}` (F5).
 
 - **Left — the form:** Contact (email) + Ship-to, rendered as **real labeled `<input>`s** (not the
   mock's "filled cells"), each with a visible `<label>`, inline validation surfaced via
@@ -217,10 +223,19 @@ Service-key read (anon has no `orders` access). **Expand** the current
   **"Order update"** (cancelled/refunded) → Newsreader note → "— Jon". Keep the existing **honest
   status map** verbatim (active = not cancelled/refunded; each real `order_status` gets a true
   message; `pending` says "received … reviewing"; nothing invents a state).
-- **Note copy (sub-decision 3):** expectation-framed, never a completed action —
+- **`amount_mismatch` is named, not left to fall through (F2).** It is one of the seven
+  `order_status` values and is *not* cancelled/refunded, so it renders **active → "Thank you."** with
+  the generic **"we've received your order and are reviewing it. Your receipt comes from Stripe."**
+  This is the honest read of a quarantine (§6.3): the order genuinely *is* received and under manual
+  review. It must **not** claim `paid`, show a total-as-charged, or render any shipping/tracking
+  state. This is a conscious decision recorded here — not an accident of the default branch.
+- **Note copy (sub-decision 3):** expectation-framed, never a completed action. The **ship-window
+  line is gated to payment-confirmed states** (`paid` / `submitted_to_lab` / `shipped`) —
   *"Every print is made to order and typically ships within 5–7 days. Your receipt comes from
-  Stripe. — Jon."* **No tracking** rendered here; tracking lives in the admin slice, gated on a real
-  `shipped_at` (schema constraint).
+  Stripe. — Jon."* For `pending` / `amount_mismatch` (payment not confirmed) the note drops the
+  5–7-day promise and says only *"We've received your order and are reviewing it. Your receipt comes
+  from Stripe. — Jon."* (F3). **No tracking** rendered here in any state; tracking lives in the admin
+  slice, gated on a real `shipped_at` (schema constraint).
 - **Two cells:**
   - **Shipping to** — the stored snake_case `shipping_address` fields (`name`, `street`, `city`,
     `region`, `postal_code`, `country`) rendered verbatim.
@@ -261,6 +276,7 @@ inputs with validation + focus ring — the cells were a visual placeholder; a r
   from `order_items.unit_cents`, never re-derived, so a later price change never rewrites a receipt.
 - **Orders stay service-key only** (`schema.sql` RLS). No order data in `localStorage`, ever — the
   cart persists only the selection (`photoId/slug/title/altText/size/register/qty`), never order rows.
+  `slug`/`altText` are thumb-only and **never enter the checkout POST** (F5).
 - **Only true states render** on confirmation. No fake tracking, no unsent-email claim.
 
 ---
@@ -275,6 +291,22 @@ inputs with validation + focus ring — the cells were a visual placeholder; a r
 - **Motion (§12.6):** drawer slide + backdrop fade at `.18–.2s`; **all** of it behind
   `@media (prefers-reduced-motion: reduce)` (reduced → no transform, no fade).
 - **Radius (§12.6):** cards 5px; the thumb and stepper are square.
+- **"Added" confirmation is announced (F6):** the inline post-add confirmation on the product page
+  is an `aria-live="polite"` region so screen-reader users hear it, not only sighted ones.
+
+### 9.1 Mobile (`§12.5-I`) — F1
+
+The three surfaces must hold at 375px, not just desktop; §12.5-I is explicit about cart/checkout/
+confirmation on mobile.
+
+- **Drawer width:** `min(456px, 100vw)` — effectively full-width below ~480px. A fixed 456px panel
+  overflows a 375px viewport; this must not ship.
+- **Checkout:** the two columns **stack** to one below the breakpoint (form, then summary); the
+  summary stays reachable without scrolling past a long form (or is sticky). Confirmation's two cells
+  stack likewise.
+- **Hit targets ≥ 44px (§12.5-I):** the stepper −/+, the ✕ close, Remove, and Pay meet the minimum on
+  touch. The stepper's 44px targets can exceed the visual control via padding.
+- **Pinch-zoom (§8):** nothing in these surfaces reintroduces `user-scalable=no`.
 
 ---
 
@@ -291,14 +323,17 @@ inputs with validation + focus ring — the cells were a visual placeholder; a r
   fallback); **faithful-mirror** — equals `computeOrderAmounts` for the same inputs.
 - **CartDrawer** (`cart-drawer.test.tsx`): renders lines; stepper ± and Remove mutate the cart;
   empty state; footer shows subtotal and **no** "total"/"tax"/"shipping" number (guards D1/D2);
-  `role="dialog"` + `aria-modal`; Esc and backdrop click close; reduced-motion path.
+  `role="dialog"` + `aria-modal`; focus moves into the dialog on open; Esc and backdrop click close;
+  reduced-motion path.
 - **Header**: `count = Σ qty`; click opens the drawer.
 - **Checkout** (`checkout.test.tsx`): summary re-quotes on country/region change; Pay disabled until
-  full form valid + cart non-empty; **the POST JSON shape is unchanged** (regression lock on the
-  money contract).
-- **Confirmation** (`order-confirmation.test.tsx`): each status → correct heading/message; works
-  render from the `order_items` snapshot (`unit_cents × qty`); **no `<img>` in the works list**
-  (guards D4); `shipping_address` rendered; not-found path.
+  full form valid + cart non-empty; **the POST JSON shape is unchanged, carrying only
+  `{photoId,size,register,qty}`** — no `slug`/`altText` leak (regression lock on the money contract, F5).
+- **Confirmation** (`order-confirmation.test.tsx`): each of the seven statuses → correct
+  heading/message — including **`amount_mismatch` → active "Thank you." + reviewing message, no
+  ship-window, no "paid" claim** (F2), and the **ship-window line only on `paid`/`submitted_to_lab`/
+  `shipped`** (F3); works render from the `order_items` snapshot (`unit_cents × qty`); **no `<img>` in
+  the works list** (guards D4); `shipping_address` rendered; not-found path.
 
 **Static gate:** `npm run typecheck`, `npm run lint`, `npm run build`, `npm test` all green.
 
@@ -348,3 +383,26 @@ Chunks 1–2 are the money-adjacent core and should land first. 3/4/5 are natura
   `app/api/stripe-webhook/route.ts` — the money path this slice dresses but does not change.
 - `docs/superpowers/specs/2026-07-17-storefront-read-path-design.md` — slice 2 (dependency:
   `CartContext`, `Header`, `Plate`, `ProductInteractive`, `lib/format/price.ts`).
+
+---
+
+## 14. Post-review corrections (applied 2026-07-19)
+
+An adversarial review of this spec (six lenses, grounded against the repo) surfaced six findings.
+Everything else probed — `previewQuote` faithfulness/rounding/ISO-2 matching, `lib/pricing.ts`
+client-safety, `Plate`/`derivatives.ts` in a client tree, the `AddToCart` deletion, the flat-$9.95
+shipping — was verified correct in code and needs no change.
+
+| # | Sev | Correction | Landed in |
+|---|---|---|---|
+| F1 | major | Mobile under-specified: 456px drawer overflows 375px; checkout/confirmation must stack; ≥44px targets; pinch-zoom | §9.1 |
+| F2 | major | `amount_mismatch` confirmation state named explicitly (active, reviewing, no `paid`/tracking claim) — not a fall-through | §7 |
+| F3 | minor | Ship-window copy gated to payment-confirmed states; `pending`/`amount_mismatch` drop the 5–7-day promise | §7, §10 |
+| F4 | minor | Tolerant rehydrate spelled out: `try/catch` around `JSON.parse`, array guard, per-line coercion | §3 |
+| F5 | minor | `slug`/`altText` are thumb-only and never enter the POST; regression-locked in the checkout test | §6, §8.2, §10 |
+| F6 | nit | Drawer focus moves *into* the dialog on open; the "Added" confirmation is an `aria-live` region | §4, §9 |
+
+**Grounding evidence:** `AddToCart` has no importers (`grep`); `lib/images/derivatives.ts` uses only
+`NEXT_PUBLIC_SUPABASE_URL` (no `server-only`) and `Plate` already renders inside the client
+`ProductInteractive`, so the drawer thumb is client-safe; `lines.length` as a count exists only in
+`components/store/Header.tsx:28` (→ Σ qty).
