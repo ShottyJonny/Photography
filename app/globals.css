@@ -114,3 +114,80 @@ body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(
 .confirm-totals dt, .confirm-totals dd { margin: 0; }
 .confirm-totals .confirm-total { font-family: var(--font-playfair); font-size: 1.0625rem; border-top: 1px solid var(--hair); margin-top: 0.4rem; padding-top: 0.4rem; }
 .confirm-review { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dim); line-height: 1.5; }
+
+/* ===================================================================
+   Admin (design.md §11) — dark only, and structurally unreachable by
+   the storefront theme toggle.
+
+   Tokens are declared on the [data-admin] wrapper, never :root. Custom
+   properties resolve per element, so this beats the value inherited
+   from :root[data-theme='light'] regardless of selector specificity.
+
+   --faint (.50) and --hairform (.37) deviate from §11.1 deliberately:
+   §11.1's .42 computes to 3.58:1 and fails AA, and --hair as a control
+   border is 1.42:1 and fails SC 1.4.11. See spec D10 / D11. Locked by
+   contrast assertions in test/admin-tokens.test.ts — do not "correct".
+   =================================================================== */
+[data-admin] {
+  --paper: #0b0b0b;
+  --panel: #0e0e0e;
+  --panel2: #131313;
+  --ink: #efeae0;
+  --dim: rgba(239, 234, 224, 0.62);
+  --faint: rgba(239, 234, 224, 0.50);
+  --hair: rgba(239, 234, 224, 0.15);
+  --hairform: rgba(239, 234, 224, 0.37);
+  --hairsoft: rgba(239, 234, 224, 0.08);
+  --btnbg: #efeae0;
+  --btnink: #0b0b0b;
+  --ok: #8fae8b;
+  --warn: #cf934f;
+  --alert: #c85b3d;
+  --info: #8a9db0;
+  --nb: var(--ink);
+
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100dvh;
+  /* Not a custom property, so the block above does not cover it. Without it
+     Chrome's autofill paints a light ground over the password field — on the
+     saved-credentials path, which is the normal path for the only user. */
+  color-scheme: dark;
+}
+
+/* body { background: var(--paper) } still resolves --paper from :root, so a
+   light body box survives behind the wrapper. */
+html:has([data-admin]) { background: #0b0b0b; color-scheme: dark; }
+html:has([data-admin]) body { background: #0b0b0b; }
+
+.admin-sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Sign-in (spec §6.1, D1) --- */
+.admin-signin { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; padding: 2rem 1.5rem; }
+.admin-signin-lockup { display: flex; align-items: center; gap: 0.875rem; color: var(--ink); }
+.admin-signin-name { margin: 0; font-family: var(--font-playfair); font-size: 1.375rem; line-height: 1.2; }
+.admin-signin-kicker { margin: 0.125rem 0 0; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+.admin-signin-form { width: min(22rem, 100%); display: flex; flex-direction: column; gap: 0.875rem; }
+.admin-field { display: block; }
+.admin-field > span { display: block; font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.375rem; }
+.admin-field input { width: 100%; min-height: 44px; padding: 0.625rem 0.75rem; background: var(--panel2); color: var(--ink); border: 1px solid var(--hairform); border-radius: 0; font-family: var(--font-hanken), system-ui, sans-serif; font-size: 1rem; }
+.admin-field-error { margin: -0.375rem 0 0; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--alert); }
+.admin-alert { min-height: 1.25rem; margin: 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink); }
+.admin-btn { min-height: 44px; padding: 14px 22px; background: var(--btnbg); color: var(--btnink); border: none; border-radius: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+.admin-btn:hover { opacity: 0.88; }
+.admin-btn:active { transform: translateY(1px); }
+.admin-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* --- Placeholder landing (spec §6.3; replaced wholesale in slice 4b) --- */
+.admin-landing { padding: 3rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
+.admin-h1 { margin: 0; font-family: var(--font-playfair); font-weight: 400; font-size: 2.75rem; }
+.admin-meta { margin: 0; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--dim); }
+.admin-linkbtn { min-height: 44px; padding: 0; background: transparent; border: none; color: var(--ink); font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
