@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useCart } from '@/components/cart/CartContext'
 import { Plate } from '@/components/store/Plate'
 import { CropGuide } from '@/components/product/CropGuide'
@@ -29,6 +29,14 @@ export function ProductInteractive({ photo }: { photo: ProductPhoto }) {
   const [size, setSize] = useState('8x10')
   const [register, setRegister] = useState<'colour' | 'silver'>('colour')
   const { add } = useCart()
+
+  const [addedAt, setAddedAt] = useState(0)
+  const added = addedAt > 0
+  useEffect(() => {
+    if (addedAt === 0) return
+    const t = setTimeout(() => setAddedAt(0), 2500)
+    return () => clearTimeout(t)
+  }, [addedAt])
 
   const plateAspect =
     photo.aspect_ratio ??
@@ -83,12 +91,25 @@ export function ProductInteractive({ photo }: { photo: ProductPhoto }) {
       <button
         type="button"
         className="add-to-cart"
-        onClick={() =>
-          add({ photoId: photo.id, title: photo.title, size, register, qty: 1 })
-        }
+        onClick={() => {
+          add({
+            photoId: photo.id,
+            slug: photo.slug,
+            title: photo.title,
+            altText: photo.alt_text ?? '',
+            size,
+            register,
+            qty: 1,
+          })
+          setAddedAt((n) => n + 1)
+        }}
       >
         Add to cart
       </button>
+
+      <p className="added-confirm" role="status" aria-live="polite">
+        {added ? 'Added to your selection.' : ''}
+      </p>
 
       <style>{`
         .product-interactive {
@@ -140,6 +161,13 @@ export function ProductInteractive({ photo }: { photo: ProductPhoto }) {
         }
         .add-to-cart {
           align-self: flex-start;
+        }
+        .added-confirm {
+          min-height: 1.25rem;
+          margin: 0;
+          font-family: var(--font-mono);
+          font-size: 0.75rem;
+          color: var(--dim);
         }
         .chip:focus-visible,
         .register:focus-visible,
