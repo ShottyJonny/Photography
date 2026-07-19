@@ -279,6 +279,13 @@ Expected: FAIL — cannot resolve `@/lib/admin/dates`.
 Create `lib/admin/dates.ts`:
 
 ```ts
+// server-only is enforcement, not decoration: MarkedControl is already in the
+// client bundle via AdminNav's 'use client', so nothing structurally stops a
+// slice-5 client component from importing formatRowDate and hydrate-mismatching
+// against the server render. A comment saying "server-side only" is not a build
+// error; this is.
+import 'server-only'
+
 /**
  * Every formatter here carries an EXPLICIT locale and timeZone.
  *
@@ -778,6 +785,23 @@ describe('the admin component classes', () => {
     expect(rule('.admin-mark')).not.toMatch(/content:/)
   })
 
+  // The marker carries the honest-function payload, so it must be legible on
+  // EVERY ground it renders on — not just --paper. It shipped at 1.00:1 on the
+  // primary button, which is exactly where the eye goes first.
+  it('gives the marker a ground-appropriate ink on the primary button', () => {
+    expect(css).toContain('.admin-btn .admin-mark')
+    expect(rule('.admin-btn .admin-mark')).toMatch(/color:\s*rgba\(11,\s*11,\s*11/)
+  })
+
+  it('never dims marked controls with group opacity (it reverts D10/D11)', () => {
+    expect(rule("button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disabled='true']"))
+      .not.toMatch(/opacity\s*:/)
+  })
+
+  it('suppresses the press animation on inert controls', () => {
+    expect(css).toMatch(/\[aria-disabled='true'\]:active[^{]*\{[^}]*transform:\s*none/)
+  })
+
   it('stacks the shell below 900px (D9)', () => {
     expect(flat).toMatch(/@media \(max-width: 900px\)/)
   })
@@ -865,7 +889,19 @@ a.admin-navitem:hover { background: rgba(239, 234, 224, 0.05); color: var(--ink)
 /* --- Marked controls (spec §6.1.1) --- */
 .admin-marked { display: inline-flex; align-items: center; gap: 8px; }
 .admin-mark { font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
-button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disabled='true'] { cursor: not-allowed; opacity: 0.72; }
+/* --faint is tuned against --paper. On the primary button's near-white --btnbg
+   ground it composites to 1.00:1 — INVISIBLE, on the one control the eye goes
+   to first. The marker IS the honest-function payload (§6.1.1), so it needs a
+   ground-appropriate ink. This shipped broken in the first cut of this plan. */
+.admin-btn .admin-mark { color: rgba(11, 11, 11, 0.62); }
+/* NO group opacity here. It multiplies through to the marker AND the border,
+   taking --faint to 2.92:1 and --hairform to 2.10:1 — silently reverting D10
+   and D11, the two thresholds those deviations exist to hold. "Not yet wired"
+   is carried by the marker text, which is what D4 decided. */
+button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disabled='true'] { cursor: not-allowed; }
+/* A control that depresses under the finger and then does nothing is the
+   affordance-level version of a label that lies (product.md §1). */
+.admin-btn[aria-disabled='true']:active, .admin-ghost[aria-disabled='true']:active { transform: none; }
 
 /* --- Buttons --- */
 .admin-ghost {
@@ -1735,6 +1771,17 @@ describe('the dashboard', () => {
     expect(container.textContent).toContain('No photographs yet.')
   })
 
+  // Cover the POPULATED branch too. The first cut of this plan tested only the
+  // empty one, which is how "Plates arrive in slice 5" reached production copy.
+  it('marks the recent-uploads rail rather than inventing copy when photos exist', async () => {
+    result.value = ok({ summary: { ...ok().summary, publishedCount: 16, unlistedCount: 2 } })
+    const { container } = await renderDash()
+    expect(container.textContent).not.toContain('No photographs yet.')
+    expect(container.textContent).not.toMatch(/slice \d/i)
+    const rail = container.querySelectorAll('.admin-railcard')[1]
+    expect(rail?.textContent).toContain('NOT BUILT')
+  })
+
   it('names the featured collection in the rail once one exists', async () => {
     result.value = ok({ summary: { ...ok().summary, collectionCount: 1, featuredCollectionName: 'Relics' } })
     const { container } = await renderDash()
@@ -1902,9 +1949,13 @@ export default async function AdminDashboard() {
                 {result.summary.publishedCount + result.summary.unlistedCount === 0 ? (
                   <p className="admin-empty">No photographs yet.</p>
                 ) : (
-                  <ul className="admin-uploads">
-                    <li className="admin-upload">Plates arrive in slice 5</li>
-                  </ul>
+                  // Photographs exist but this surface cannot show them yet:
+                  // getDashboard() does not select titles and there is no
+                  // derivative pipeline until slice 5. MARKED like every other
+                  // unbuilt control — never filled with roadmap jargon. A
+                  // heading promising content it cannot deliver breaks
+                  // product.md §1's "says less instead of guessing".
+                  <MarkedLink label="Recent uploads" />
                 )}
               </div>
             </aside>

@@ -625,6 +625,11 @@ describe('proxy', () => {
   // supabase-js RETURNS network errors rather than throwing — this is the real
   // Supabase-down shape, and the case the `!error &&` conjunct exists for.
   it('never fails open when getUser RETURNS an error', async () => {
+    // state.user MUST be set. With user:null this assertion passes even with
+    // the `!error &&` conjunct deleted — i.e. it does not test the thing it
+    // names. A stale cookie decoding to a user alongside a transport error is
+    // the real shape. (The first cut of this plan omitted this line.)
+    state.user = { id: 'u1' }
     state.error = { name: 'AuthRetryableFetchError', status: 0, message: 'fetch failed' }
     const { proxy } = await import('@/proxy')
     const res = await proxy(req('/admin'))
