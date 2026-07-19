@@ -95,3 +95,21 @@ body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(
 .checkout-pay:disabled { opacity: 0.45; cursor: not-allowed; }
 .checkout-secure { font-family: var(--font-mono); font-size: 0.625rem; color: var(--dim); text-align: center; margin: 0.75rem 0 0; }
 .checkout-error { color: var(--ink); background: rgba(200, 60, 60, 0.12); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.5rem; border-radius: 3px; }
+
+/* --- Confirmation (§12.5-H) --- */
+.confirm { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem; text-align: center; }
+.confirm-id { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--dim); letter-spacing: 0.06em; }
+.confirm-h1 { font-family: var(--font-playfair); font-weight: 400; font-size: clamp(2.5rem, 8vw, 4.75rem); margin: 0.5rem 0 1rem; }
+.confirm-note { font-family: var(--font-newsreader); font-size: 1.0625rem; color: var(--ink); max-width: 34rem; margin: 0 auto 2.5rem; }
+.confirm-notfound { font-family: var(--font-newsreader); }
+.confirm-cells { display: grid; grid-template-columns: 1fr; gap: 1.5rem; text-align: left; }
+@media (min-width: 640px) { .confirm-cells { grid-template-columns: 1fr 1fr; } }
+.confirm-cell { border: 1px solid var(--hair); border-radius: 5px; padding: 1.25rem; }
+.confirm-cell-h { font-family: var(--font-mono); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin: 0 0 0.75rem; }
+.confirm-address { font-style: normal; font-family: var(--font-newsreader); }
+.confirm-address span { display: block; }
+.confirm-works { list-style: none; margin: 0 0 1rem; padding: 0; }
+.confirm-works li { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--font-mono); font-size: 0.8125rem; padding: 0.375rem 0; border-bottom: 1px solid var(--hair); }
+.confirm-totals div { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.8125rem; padding: 0.2rem 0; }
+.confirm-totals dt, .confirm-totals dd { margin: 0; }
+.confirm-totals .confirm-total { font-family: var(--font-playfair); font-size: 1.0625rem; border-top: 1px solid var(--hair); margin-top: 0.4rem; padding-top: 0.4rem; }

@@ -1,29 +1,97 @@
 import { supabaseAdmin } from '@/lib/supabase/admin'
 
+type OrderStatus = 'pending' | 'paid' | 'amount_mismatch' | 'submitted_to_lab' | 'shipped' | 'cancelled' | 'refunded'
+
+type Order = {
+  id: string
+  status: OrderStatus
+  created_at: string
+  customer_name: string | null
+  customer_email: string
+  shipping_address: { name?: string; street?: string; city?: string; region?: string; postal_code?: string; country?: string }
+  subtotal_cents: number
+  shipping_cents: number
+  tax_cents: number
+  total_cents: number
+}
+type Item = { title: string; size: string; register: string; qty: number; unit_cents: number }
+
+function formatPrice(cents: number): string {
+  return `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}`
+}
+
+// Honest status map (product.md §1). Active = not cancelled/refunded. The ship-window promise is
+// gated to payment-confirmed states; pending/amount_mismatch get the reviewing note and never a
+// 'paid' claim or a shipment.
+const PAYMENT_CONFIRMED: OrderStatus[] = ['paid', 'submitted_to_lab', 'shipped']
+
+function noteFor(status: OrderStatus): string {
+  if (status === 'cancelled') return 'This order was cancelled.'
+  if (status === 'refunded') return 'This order was refunded.'
+  if (PAYMENT_CONFIRMED.includes(status)) {
+    return 'Every print is made to order and typically ships within 5–7 days. Your receipt comes from Stripe. — Jon'
+  }
+  return "We\u2019ve received your order and are reviewing it. Your receipt comes from Stripe. — Jon"
+}
+
 export default async function OrderConfirmation({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const { data: order } = await supabaseAdmin()
-    .from('orders').select('id, status, total_cents, customer_name').eq('id', id).single()
+  const db = supabaseAdmin()
+  const { data: order } = await db
+    .from('orders')
+    .select('id, status, created_at, customer_name, customer_email, shipping_address, subtotal_cents, shipping_cents, tax_cents, total_cents')
+    .eq('id', id)
+    .single()
 
-  if (!order) return <main style={{ padding: 24 }}><p>We couldn’t find that order.</p></main>
+  if (!order) {
+    return <main className="confirm"><p className="confirm-notfound">We couldn&rsquo;t find that order.</p></main>
+  }
 
-  // Honest function: only true states. No fake tracking, no "email sent"; Stripe's receipt
-  // is the only receipt. Cancelled/refunded orders never show a thank-you; every other
-  // real order_status value (including submitted_to_lab/shipped) is still an active order.
-  const active = order.status !== 'cancelled' && order.status !== 'refunded'
-  const message =
-    order.status === 'paid' ? 'Your order is confirmed. Your receipt comes from Stripe.'
-    : order.status === 'shipped' ? 'Your order is on its way. Your receipt comes from Stripe.'
-    : order.status === 'submitted_to_lab' ? 'Your order is being prepared. Your receipt comes from Stripe.'
-    : order.status === 'cancelled' ? 'This order was cancelled.'
-    : order.status === 'refunded' ? 'This order was refunded.'
-    : 'We’ve received your order and are reviewing it. Your receipt comes from Stripe.'
+  const o = order as Order
+  const { data: itemsData } = await db
+    .from('order_items')
+    .select('title, size, register, qty, unit_cents')
+    .eq('order_id', id)
+  const items = (itemsData ?? []) as Item[]
+
+  const active = o.status !== 'cancelled' && o.status !== 'refunded'
+  const a = o.shipping_address ?? {}
 
   return (
-    <main style={{ padding: 24 }}>
-      <p style={{ fontFamily: 'var(--font-mono)' }}>{order.id}</p>
-      <h1 style={{ fontFamily: 'var(--font-playfair)' }}>{active ? 'Thank you.' : 'Order update'}</h1>
-      <p style={{ fontFamily: 'var(--font-newsreader)' }}>{message}</p>
+    <main className="confirm">
+      <p className="confirm-id">{o.id}</p>
+      <h1 className="confirm-h1">{active ? 'Thank you.' : 'Order update'}</h1>
+      <p className="confirm-note">{noteFor(o.status)}</p>
+
+      <div className="confirm-cells">
+        <section className="confirm-cell">
+          <h2 className="confirm-cell-h">Shipping to</h2>
+          <address className="confirm-address">
+            {a.name && <span>{a.name}</span>}
+            {a.street && <span>{a.street}</span>}
+            <span>{[a.city, a.region, a.postal_code].filter(Boolean).join(', ')}</span>
+            {a.country && <span>{a.country}</span>}
+          </address>
+        </section>
+
+        <section className="confirm-cell">
+          <h2 className="confirm-cell-h">Your works</h2>
+          <ul className="confirm-works">
+            {items.map((it, i) => (
+              <li key={i}>
+                <span>{it.title} · {it.size} · {it.register} × {it.qty}</span>
+                <span>{formatPrice(it.unit_cents * it.qty)}</span>
+              </li>
+            ))}
+          </ul>
+          <dl className="confirm-totals">
+            <div><dt>Subtotal</dt><dd>{formatPrice(o.subtotal_cents)}</dd></div>
+            <div><dt>Shipping</dt><dd>{formatPrice(o.shipping_cents)}</dd></div>
+            <div><dt>Tax</dt><dd>{formatPrice(o.tax_cents)}</dd></div>
+            <div className="confirm-total"><dt>Total</dt><dd>{formatPrice(o.total_cents)}</dd></div>
+          </dl>
+        </section>
+      </div>
     </main>
   )
 }
