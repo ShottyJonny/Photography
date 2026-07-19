@@ -191,3 +191,148 @@ html:has([data-admin]) body { background: #0b0b0b; }
 .admin-h1 { margin: 0; font-family: var(--font-playfair); font-weight: 400; font-size: 2.75rem; }
 .admin-meta { margin: 0; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--dim); }
 .admin-linkbtn { min-height: 44px; padding: 0; background: transparent; border: none; color: var(--ink); font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ===================================================================
+   Admin shell + dashboard (design.md §11.3, §11.4-A).
+   Measurements extracted from design/Jon Hoffman Admin.dc.html, where
+   most of the admin is inline-styled rather than in its <style> block.
+   =================================================================== */
+
+.admin-wrap { padding: 24px; }
+.admin-card {
+  display: flex;
+  min-height: calc(100dvh - 48px);
+  background: var(--paper); color: var(--ink);
+  border-radius: 6px; overflow: hidden;
+  box-shadow: 0 30px 70px -34px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Sidebar --- */
+.admin-sidebar {
+  width: 242px; flex: none;
+  background: var(--panel);
+  border-right: 1px solid var(--hair);
+  display: flex; flex-direction: column;
+  padding: 26px 18px 24px;
+}
+.admin-lockup { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
+.admin-lockup-name { margin: 0; font-family: var(--font-playfair); font-size: 18px; line-height: 1; }
+.admin-lockup-kicker { margin: 4px 0 0; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--faint); }
+.admin-rule { height: 1px; background: var(--hair); margin: 22px 8px 18px; }
+.admin-nav { display: flex; flex-direction: column; gap: 3px; list-style: none; margin: 0; padding: 0; }
+.admin-navitem {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 13px; border-radius: 7px;
+  color: var(--dim); text-decoration: none;
+  font-family: var(--font-mono); font-weight: 500; font-size: 13px; line-height: 1;
+  letter-spacing: 0.01em;
+  transition: background 0.16s, color 0.16s;
+}
+a.admin-navitem:hover { background: rgba(239, 234, 224, 0.05); color: var(--ink); }
+.admin-navitem.is-active { background: rgba(239, 234, 224, 0.09); color: var(--ink); }
+.admin-nb { width: 5px; height: 5px; border-radius: 50%; background: var(--nb); opacity: 0.35; flex: none; }
+.admin-navitem.is-active .admin-nb { opacity: 1; }
+
+.admin-sidefoot { margin-top: auto; padding: 0 8px; }
+.admin-livesite {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.06em;
+  color: var(--dim); text-decoration: none;
+  padding: 11px 0; border-top: 1px solid var(--hairsoft);
+}
+.admin-livesite:hover { color: var(--ink); }
+.admin-chip { display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--hairsoft); }
+.admin-chip-avatar {
+  width: 32px; height: 32px; flex: none; border-radius: 50%;
+  background: #2a2a28; display: grid; place-items: center;
+  font-family: var(--font-mono); font-weight: 600; font-size: 12px; color: var(--ink);
+}
+.admin-chip-text { font-size: 11px; line-height: 1.4; min-width: 0; }
+.admin-chip-name { color: var(--ink); }
+.admin-chip-email { color: var(--faint); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- Main --- */
+.admin-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.admin-band {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+  padding: 34px 40px 26px; border-bottom: 1px solid var(--hair);
+}
+.admin-band-kicker { margin: 0 0 12px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); }
+.admin-band-h1 { margin: 0; font-family: var(--font-playfair); font-weight: 400; font-size: 44px; line-height: 1; }
+
+/* --- Marked controls (spec §6.1.1) --- */
+.admin-marked { display: inline-flex; align-items: center; gap: 8px; }
+.admin-mark { font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disabled='true'] { cursor: not-allowed; opacity: 0.72; }
+
+/* --- Buttons --- */
+.admin-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 7px 12px;
+  background: transparent; color: var(--ink);
+  /* Prototype says --hair; that is 1.42:1 and fails SC 1.4.11 (D11). */
+  border: 1px solid var(--hairform); border-radius: 0;
+  font-family: var(--font-mono); font-weight: 500; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* --- Stat tiles --- */
+.admin-tiles { padding: 30px 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.admin-tile { border: 1px solid var(--hair); padding: 22px 20px; }
+.admin-tile.is-alert { border-color: var(--alert); background: rgba(200, 91, 61, 0.06); }
+.admin-tile-label { margin: 0 0 16px; font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+.admin-tile.is-alert .admin-tile-label { color: var(--alert); }
+.admin-tile-number { margin: 0; font-family: var(--font-playfair); font-weight: 400; font-size: 42px; line-height: 1; color: var(--ink); }
+.admin-tile-sub { margin: 8px 0 0; font-size: 11px; color: var(--faint); }
+.admin-tile.is-alert .admin-tile-sub { color: var(--alert); }
+
+/* --- Columns, queue, rail --- */
+.admin-cols { padding: 0 40px 40px; display: grid; grid-template-columns: 1.55fr 1fr; gap: 32px; align-items: start; }
+.admin-sectionhead { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 6px; font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.admin-queue { list-style: none; margin: 0 0 28px; padding: 0; }
+.admin-queue-row { display: grid; grid-template-columns: 118px 1fr auto auto; gap: 16px; align-items: center; padding: 14px 10px; border-bottom: 1px solid var(--hairsoft); }
+.admin-row-id { font-family: var(--font-mono); font-weight: 500; font-size: 12px; color: var(--ink); }
+.admin-row-name { font-size: 13px; color: var(--ink); }
+.admin-row-sub { font-size: 11px; color: var(--faint); }
+.admin-paid { font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--ok); border: 1px solid var(--ok); padding: 4px 9px; white-space: nowrap; }
+.admin-empty { margin: 0; padding: 14px 10px; font-size: 12px; color: var(--faint); }
+
+/* --- Quarantine (D12/D15) --- */
+.admin-held { background: rgba(200, 91, 61, 0.06); border-left: 2px solid var(--alert); }
+.admin-held-line { font-family: var(--font-mono); font-size: 11px; color: var(--ink); }
+.admin-mismatch {
+  font-family: var(--font-mono); font-weight: 500; font-size: 11px;
+  /* D12: text is --ink on a tinted ground. The prototype's opacity pulse puts
+     --alert text at 1.99:1 at the trough — illegible for half of every cycle,
+     on the one status that must never be missed. */
+  color: var(--ink);
+  background: rgba(200, 91, 61, 0.28);
+  border: 1px solid var(--alert);
+  padding: 4px 9px; white-space: nowrap;
+  animation: softpulse 2.2s ease-in-out infinite;
+}
+/* The ONLY looping animation in the system (§11.5), and it moves the ground. */
+@keyframes softpulse {
+  0%, 100% { background: rgba(200, 91, 61, 0.16); }
+  50%      { background: rgba(200, 91, 61, 0.40); }
+}
+
+/* --- Right rail --- */
+.admin-rail { display: flex; flex-direction: column; gap: 24px; }
+.admin-railcard { border: 1px solid var(--hair); padding: 18px; }
+.admin-railcard-name { margin: 0; font-family: var(--font-playfair); font-size: 20px; line-height: 1.2; }
+.admin-uploads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.admin-upload { border: 1px solid var(--hairsoft); aspect-ratio: 4 / 5; display: grid; place-items: center; padding: 8px; font-size: 10px; color: var(--faint); text-align: center; }
+
+/* --- Responsive fallback (D9) — §11.4-H supersedes this later --- */
+@media (max-width: 900px) {
+  .admin-wrap { padding: 0; }
+  .admin-card { flex-direction: column; min-height: 100dvh; border-radius: 0; box-shadow: none; }
+  .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--hair); }
+  .admin-nav { flex-direction: row; flex-wrap: wrap; }
+  .admin-sidefoot { margin-top: 16px; }
+  .admin-tiles { grid-template-columns: repeat(2, 1fr); padding: 20px; }
+  .admin-cols { grid-template-columns: 1fr; padding: 0 20px 20px; }
+  .admin-band { padding: 20px; }
+  .admin-queue-row { grid-template-columns: 1fr auto; row-gap: 6px; }
+}
