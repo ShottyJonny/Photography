@@ -278,23 +278,42 @@ filename** — not merely that six files were written.
 
 ## 6. Colour management
 
-**This is the finding most likely to be skipped and most likely to be blamed on AVIF.**
+**Downgraded on evidence, 2026-07-19.** An earlier draft of this section called this load-bearing
+and described flat, desaturated photographs. Measured against the real archive, it is not.
 
-sharp discards the embedded ICC profile by default (§0.1). A Lightroom export in Adobe RGB or
-Display P3 therefore reaches the browser as wide-gamut pixel values with no profile attached;
-every browser assumes sRGB and renders them as-is. The result is visibly flat and desaturated,
-worst in reds and deep blues, and nothing about it looks like a bug — the photographs just lose
-their punch.
+sharp discards the embedded ICC profile by default (§0.1). The feared scenario is a Lightroom
+export in Adobe RGB or Display P3 reaching the browser as wide-gamut pixel values with no profile
+attached: every browser assumes sRGB and renders them as-is, and the result is visibly flat with
+nothing looking broken.
 
-**Every derivative is produced with an explicit transform to sRGB**, using the source's embedded
-profile rather than discarding it.
+**That scenario does not apply to the current archive.** Five real files from the legacy quarry:
 
-> **The plan pins the exact sharp call; this spec does not.** I verified that the default drops
-> the profile. I did **not** verify a specific incantation end-to-end, and asserting one here as
-> settled fact would be the kind of plausible-sounding reasoning this project removes rather than
-> leaves lying around. `ingest-pipeline.test.ts` proves correctness **on pixel values**, because
-> the obvious assertion — that an ICC profile is present on the output — passes while the image
-> is still wrong.
+```
+Evil Lies.jpg              space: srgb   icc: NONE
+Grand Ring.jpg             space: srgb   icc: NONE
+Omniprominence.jpg         space: srgb   icc: NONE
+bw/Omniprominence.jpg      space: srgb   icc: 3144B
+Among Giants.jpg           space: srgb   icc: 3144B
+```
+
+All already sRGB; the two profiles are 3144 bytes, the standard sRGB IEC61966-2.1 size. Dropping
+a profile is harmless when the pixels are sRGB and the browser's assumption is sRGB.
+
+**The pipeline still converts to sRGB explicitly**, as one line of insurance against the day an
+export arrives in P3 — increasingly likely as wide-gamut displays become standard, and a silent
+failure when it happens. It is **insurance, not a fix for a present defect**, and the plan must
+not spend a task treating it as one.
+
+> **A synthetic wide-gamut test was attempted and is inconclusive.** Tagging a buffer with
+> `withMetadata({ icc: 'p3' })` attaches a profile without making the pixels genuinely P3-encoded,
+> so every variant returned identical pixel values — that proves the test construction wrong, not
+> sharp's behaviour. **Do not write a pixel-value wide-gamut assertion without a real P3 fixture,
+> which this repo does not have.** What `ingest-pipeline.test.ts` asserts instead: an sRGB input
+> round-trips without corruption, and the output declares sRGB. Reproducibly true, unlike the
+> assertion it replaces.
+
+The **original is never colour-managed, resized, re-encoded or touched.** It goes to the private
+bucket byte-for-byte as uploaded, and that is what Nations pulls.
 
 The **original is never colour-managed, resized, re-encoded or touched.** It goes to the private
 bucket byte-for-byte as uploaded, and that is what Nations pulls.
@@ -444,7 +463,7 @@ components.
 |---|---|
 | `ingest-slug.test.ts` | Diacritics, punctuation, collapsing, casing, leading/trailing separators, the empty result, and a title that slugifies to nothing |
 | `ingest-core.test.ts` | Key builders against `product.md §3.2` **and against `lib/images/derivatives.ts`'s existing output**, so the two cannot drift; `expectedObjects()` for both register counts; mime allowlist; size cap; `MIN_WIDTH` |
-| `ingest-pipeline.test.ts` | **Real sharp**, tiny synthetic sources. Six widths per register in both formats; **each output's decoded width equals its filename** (the upscale trap); a wide-gamut source lands in sRGB, asserted on **pixel values, not profile presence**; `stats().dominant` is `{r,g,b}` |
+| `ingest-pipeline.test.ts` | **Real sharp**, tiny synthetic sources. Six widths per register in both formats; **each output's decoded width equals its filename** (the upscale trap); an sRGB source round-trips without pixel corruption and the output declares sRGB (**not** a wide-gamut pixel assertion — see §6); `stats().dominant` is `{r,g,b}` |
 | `ingest-actions.test.ts` | `requireAdmin()` first in all four; duplicate slug, bad mime and under-width rejected; under-width deletes the uploaded originals and creates no row; the draft inserts `published:false` + `derivatives_ready:false`; **`finishIngest` refuses to publish when one expected object is missing**; `revalidateTag` called with each tag |
 | `ingest-surface.test.tsx` | Labels bound to inputs; publish blocked with empty alt; the crop preview drives off `cropGuide()`; progress names the real step; the failure state claims no success; the slug field warns it is permanent |
 | `photographs-landing.test.tsx` | Status text labels present; `Derivatives incomplete` + Retry only on incomplete rows; **delete is refused for a photo with `order_items`**; the empty state |
@@ -492,8 +511,9 @@ The four `§11.7` items this slice closes (q3, q4, q5, crop) are marked resolved
    upload dies at the very end with an opaque error — **after** the whole transfer has been waited
    through, which is the worst possible place for it. Record the configured limit here; it becomes
    `validate.ts`'s size cap so the rejection happens **before** the upload instead of after.
-3. **Non-blocking: Lightroom's export colour space.** sRGB makes §6's conversion free insurance;
-   Adobe RGB or P3 makes it load-bearing.
+3. ~~**Lightroom's export colour space.**~~ **Answered by measurement** (§6): the archive is
+   already sRGB, so §6's conversion is insurance rather than a fix. Re-check only if the export
+   preset changes.
 4. **Non-blocking: confirm the §5 quality ladder** (AVIF q45/q62, WebP q72/q82).
 
 ### 12.2 After build — manual
