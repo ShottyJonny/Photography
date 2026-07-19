@@ -50,7 +50,7 @@ Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR 
 | lint | `npm run lint` | 0 errors/warnings |
 | typecheck | `npm run typecheck` | 0 errors |
 | build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
-| test | `npm test` | all green (**1623** tests as of slice 4a) |
+| test | `npm test` | all green (**1683** tests as of slice 4b) |
 
 Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
@@ -80,7 +80,7 @@ app/
     sign-in/page.tsx           # public sign-in
     (protected)/               # everything here is guarded
       layout.tsx               # force-dynamic; requireAdmin()
-      page.tsx                 # /admin — placeholder (slice 4b: §11.4-A dashboard)
+      page.tsx                 # /admin — §11.4-A dashboard on live counts
 lib/
   pricing.ts                   # VERBATIM port of the 4 pricing functions (money authority)
   checkout/{build,schema}.ts   # pure checkout core + zod request contract
@@ -89,6 +89,8 @@ lib/
   supabase/{admin,server,client}.ts  # service-key / anon-server / browser clients
   supabase/{auth-server,auth-proxy}.ts # cookie-bound authenticated clients (slice 4a)
   admin/{require-admin,auth-actions,auth-state}.ts  # requireAdmin() boundary + sign-in/out
+  admin/{dashboard,dates}.ts   # pure summarize() + guarded read; zone-explicit formatters
+  format/price.ts              # priceForSize / priceRangeLabel / formatPrice (shared)
   stripe.ts                    # lazy, server-only Stripe client
 components/{cart,theme}/        # CartContext/AddToCart, ThemeProvider
 test/                          # Vitest; test/fixtures/legacy-pricing.cjs is the pricing reference
@@ -165,7 +167,8 @@ The rebuild is sliced; each slice is a spec → plan → subagent-driven build u
 
 - **Slice 1 — Foundation + Money path: DONE** (on `develop`). Scaffold, tokens/type, clients/env, `lib/pricing.ts`, `/api/checkout`, webhook, order persistence.
 - **Slice 2 — Storefront read-path:** specced (`docs/superpowers/specs/2026-07-17-storefront-read-path-design.md`) and adversarially reviewed (21 findings to apply first — chiefly the CropGuide: native-aspect plate, landscape via `aspect_ratio`). Home / Prints / Collection / Product / Contact + the shared header/shell.
-- Slices 3–9 (planned in the specs / `product.md`): cart+checkout final visual, admin foundation (auth), ingest + derivatives, collections + literature, orders queue + Nations lab export, home feature, and the undesigned surfaces (About / Contact / legal / footer — blocked on design, `product.md §4`).
+- **Slice 4 — Admin foundation: DONE.** 4a shipped auth (`proxy.ts`, `requireAdmin()` in the DAL, sign-in, the `[data-admin]` token scope); 4b shipped the `§11.3` shell and the `§11.4-A` dashboard on live counts. Ingest is slice 5, collections slice 6, orders + lab export slice 7.
+- Slices 3, 5–9 (planned in the specs / `product.md`): cart+checkout final visual, ingest + derivatives, collections + literature, orders queue + Nations lab export, home feature, and the undesigned surfaces (About / Contact / legal / footer — blocked on design, `product.md §4`).
 
 **Carried forward from slice 1** (do before they bite): the `ThemeProvider` theme-flash (fix with a pre-hydration inline script when the theme toggle ships in slice 2); typed Supabase `Database` clients (codegen once a live project is at hand). Full list of follow-ups: `.superpowers/sdd/progress.md`.
 
