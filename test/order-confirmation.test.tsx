@@ -63,6 +63,14 @@ describe('OrderConfirmation', () => {
     expect(container.textContent).not.toContain('made to order')
   })
 
+  it('does not present a total-as-charged for amount_mismatch — points to Stripe instead', async () => {
+    state.order = { ...ORDER, status: 'amount_mismatch', total_cents: 9999 }; state.items = ITEMS
+    const { container } = await renderConfirm()
+    expect(container.querySelector('.confirm-totals')).toBeNull() // no Subtotal/Shipping/Tax/Total block
+    expect(container.textContent).toContain('payment is being reviewed')
+    expect(container.textContent).not.toContain('$99.99') // the un-charged total is never shown
+  })
+
   it('shows an update heading and no ship-window for a cancelled order', async () => {
     state.order = { ...ORDER, status: 'cancelled' }; state.items = ITEMS
     const { container } = await renderConfirm()

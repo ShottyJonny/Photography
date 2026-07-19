@@ -84,12 +84,19 @@ export default async function OrderConfirmation({ params }: { params: Promise<{ 
               </li>
             ))}
           </ul>
-          <dl className="confirm-totals">
-            <div><dt>Subtotal</dt><dd>{formatPrice(o.subtotal_cents)}</dd></div>
-            <div><dt>Shipping</dt><dd>{formatPrice(o.shipping_cents)}</dd></div>
-            <div><dt>Tax</dt><dd>{formatPrice(o.tax_cents)}</dd></div>
-            <div className="confirm-total"><dt>Total</dt><dd>{formatPrice(o.total_cents)}</dd></div>
-          </dl>
+          {o.status === 'amount_mismatch' ? (
+            // A quarantined order was charged an amount that differs from total_cents, so we do NOT
+            // present total_cents as the total — that would be a total-as-charged the customer may
+            // not have paid (product.md §1). The Stripe receipt is the source of truth here.
+            <p className="confirm-review">Your payment is being reviewed. Your Stripe receipt reflects the amount charged.</p>
+          ) : (
+            <dl className="confirm-totals">
+              <div><dt>Subtotal</dt><dd>{formatPrice(o.subtotal_cents)}</dd></div>
+              <div><dt>Shipping</dt><dd>{formatPrice(o.shipping_cents)}</dd></div>
+              <div><dt>Tax</dt><dd>{formatPrice(o.tax_cents)}</dd></div>
+              <div className="confirm-total"><dt>Total</dt><dd>{formatPrice(o.total_cents)}</dd></div>
+            </dl>
+          )}
         </section>
       </div>
     </main>

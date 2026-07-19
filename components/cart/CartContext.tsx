@@ -1,5 +1,5 @@
 'use client'
-import { createContext, useContext, useEffect, useState } from 'react'
+import { createContext, useContext, useEffect, useRef, useState } from 'react'
 
 export type CartLine = {
   photoId: string
@@ -66,12 +66,19 @@ const Ctx = createContext<CartValue | null>(null)
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [lines, setLines] = useState<CartLine[]>([])
   const [isOpen, setIsOpen] = useState(false)
+  const firstPersist = useRef(true)
 
   // Read localStorage after mount so the first client render matches the SSR (empty) markup — no
   // hydration mismatch.
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setLines(parseStored(localStorage.getItem(STORAGE_KEY))) }, [])
-  useEffect(() => { localStorage.setItem(STORAGE_KEY, JSON.stringify(lines)) }, [lines])
+  // Skip the very first persist (the mount pass, when `lines` is still the empty initial state):
+  // writing then would blank a stored cart in the window before rehydrate lands, which a second
+  // tab could read. Every real mutation after that persists normally.
+  useEffect(() => {
+    if (firstPersist.current) { firstPersist.current = false; return }
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(lines))
+  }, [lines])
 
   function add(line: CartLine) {
     const key = lineKey(line)

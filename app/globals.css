@@ -113,3 +113,4 @@ body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(
 .confirm-totals div { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.8125rem; padding: 0.2rem 0; }
 .confirm-totals dt, .confirm-totals dd { margin: 0; }
 .confirm-totals .confirm-total { font-family: var(--font-playfair); font-size: 1.0625rem; border-top: 1px solid var(--hair); margin-top: 0.4rem; padding-top: 0.4rem; }
+.confirm-review { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dim); line-height: 1.5; }
