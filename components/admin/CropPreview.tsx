@@ -7,20 +7,11 @@ const SIZES = Object.keys(SIZE_ASPECT)
 
 function toSafePreviewSrc(src: string): string | null {
   try {
-    if (src.startsWith('blob:')) {
-      const parsed = new URL(src)
-      return parsed.protocol === 'blob:' ? src : null
-    }
-
-    if (src.startsWith('data:')) {
-      const match = /^data:(image\/[a-z0-9.+-]+)(;[^,]*)?,/i.exec(src)
-      return match ? src : null
-    }
+    const parsed = new URL(src)
+    return parsed.protocol === 'blob:' ? src : null
   } catch {
     return null
   }
-
-  return null
 }
 
 /**
