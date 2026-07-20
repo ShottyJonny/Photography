@@ -5,6 +5,12 @@ import { cropGuide, SIZE_ASPECT } from '@/lib/product/crop'
 
 const SIZES = Object.keys(SIZE_ASPECT)
 
+function toSafePreviewSrc(src: string): string | null {
+  if (src.startsWith('blob:')) return src
+  if (src.startsWith('data:image/')) return src
+  return null
+}
+
 /**
  * The SAME cropGuide() the product page uses (components/product/ProductInteractive.tsx),
  * so what Jon sees at ingest and what the customer is promised cannot drift.
@@ -19,12 +25,13 @@ const SIZES = Object.keys(SIZE_ASPECT)
  */
 export function CropPreview({ src, aspectRatio }: { src: string; aspectRatio: number | null }) {
   const [size, setSize] = useState<string>('8x10')
+  const safeSrc = toSafePreviewSrc(src)
 
   if (aspectRatio === null) {
     return (
       <>
         {/* eslint-disable-next-line @next/next/no-img-element -- see below */}
-        <img src={src} alt="" style={{ width: '100%', display: 'block' }} />
+        {safeSrc ? <img src={safeSrc} alt="" style={{ width: '100%', display: 'block' }} /> : null}
         <p className="admin-crop-caption">Crop guides appear once the dimensions are measured.</p>
       </>
     )
@@ -40,7 +47,7 @@ export function CropPreview({ src, aspectRatio }: { src: string; aspectRatio: nu
             local File. next/image cannot optimise it, and spec §1 keeps
             remotePatterns empty; components/store/Plate.tsx sets the raw-<img>
             precedent for this repo. */}
-        <img src={src} alt="" style={{ width: '100%', display: 'block', aspectRatio: String(aspectRatio) }} />
+        {safeSrc ? <img src={safeSrc} alt="" style={{ width: '100%', display: 'block', aspectRatio: String(aspectRatio) }} /> : null}
         {top > 0 && <span className="admin-crop-shade" style={{ top: 0, left: 0, right: 0, height: `${top}%` }} />}
         {bottom > 0 && <span className="admin-crop-shade" style={{ bottom: 0, left: 0, right: 0, height: `${bottom}%` }} />}
         {left > 0 && <span className="admin-crop-shade" style={{ top: `${top}%`, bottom: `${bottom}%`, left: 0, width: `${left}%` }} />}
