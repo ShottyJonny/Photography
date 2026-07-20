@@ -6,8 +6,20 @@ import { cropGuide, SIZE_ASPECT } from '@/lib/product/crop'
 const SIZES = Object.keys(SIZE_ASPECT)
 
 function toSafePreviewSrc(src: string): string | null {
-  if (src.startsWith('blob:')) return src
-  if (src.startsWith('data:image/')) return src
+  try {
+    if (src.startsWith('blob:')) {
+      const parsed = new URL(src)
+      return parsed.protocol === 'blob:' ? src : null
+    }
+
+    if (src.startsWith('data:')) {
+      const match = /^data:(image\/[a-z0-9.+-]+)(;[^,]*)?,/i.exec(src)
+      return match ? src : null
+    }
+  } catch {
+    return null
+  }
+
   return null
 }
 
