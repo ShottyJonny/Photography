@@ -94,11 +94,11 @@ create table if not exists photos (
   caption         text,                     -- Newsreader. The short line on the card.
   description     text,                     -- Newsreader. The print's own page.
   alt_text        text,                     -- Describes the image. Accessibility only.
-  aspect_ratio    numeric(6,4),             -- measured once, at ingest
+  aspect_ratio    numeric(6,4),             -- measured once, at ingest (slice 5a writes it)
   width_px        integer,
   height_px       integer,
   aura            jsonb,                    -- SPECULATIVE -- see note below
-  published       boolean not null default false,  -- false = unlisted (§8 q4)
+  published       boolean not null default false,  -- false = draft (§8 q4 CLOSED)
   has_bw_variant  boolean not null default false,
   original_key    text,                     -- key in the PRIVATE `originals` bucket
   original_bw_key text,
@@ -113,6 +113,21 @@ create table if not exists photos (
     check (not published or (alt_text is not null and length(btrim(alt_text)) > 0))
 );
 
+-- product.md §3.2 / slice 5a. The sibling of alt_text_required_when_published,
+-- and it exists for the same reason: Postgres refusing the bad state beats
+-- trusting the UI to prevent it.
+--
+-- components/store/Plate.tsx emits all six srcset widths in BOTH formats
+-- unconditionally. A published photo with a half-built ladder is therefore a
+-- srcset of 404s -- a broken gallery, live, with nothing logging an error.
+-- derivatives_ready is set only after finishIngest verifies every expected
+-- object actually exists in the bucket.
+alter table photos add column if not exists derivatives_ready boolean not null default false;
+
+alter table photos drop constraint if exists derivatives_required_when_published;
+alter table photos add constraint derivatives_required_when_published
+  check (not published or derivatives_ready);
+
 -- `aura` is SPECULATIVE, not a feature (design.md §10 q3, product.md §3).
 -- design.md §12.1 rejected borrowed colour, which was this column's entire
 -- justification. Nothing on the storefront reads it; the hero's colour bleed is a
@@ -121,6 +136,11 @@ create table if not exists photos (
 -- jsonb because the shape is unsettled and nobody has reconciled it:
 -- src/utils/color.ts averageColor() returns ONE {r,g,b}; design.md §11.4-C draws
 -- THREE swatches. Do not build UI implying this is live.
+-- RESOLVED 2026-07-19 (design.md §10 q3, slice 5a): the column IS written at
+-- ingest, as the single {r,g,b} sharp's stats().dominant returns -- which is
+-- also the shape legacy averageColor() returned, so the mock's THREE swatches
+-- are reconciled by dropping them, not by inventing two more. Nothing reads it,
+-- deliberately, and design.md §11.4-C's "Aura -- computed" tile is NOT built.
 
 -- ---------------------------------------------------------------------------
 -- collections
