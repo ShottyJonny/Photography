@@ -50,7 +50,7 @@ Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR 
 | lint | `npm run lint` | 0 errors/warnings |
 | typecheck | `npm run typecheck` | 0 errors |
 | build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
-| test | `npm test` | all green (**1683** tests as of slice 4b) |
+| test | `npm test` | all green (**1768** tests as of slice 5a) |
 
 Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
@@ -81,10 +81,12 @@ app/
     (protected)/               # everything here is guarded
       layout.tsx               # force-dynamic; requireAdmin()
       page.tsx                 # /admin — §11.4-A dashboard on live counts
+      photographs/{page,new/page}.tsx    # library landing + Surface C ingest
 lib/
   pricing.ts                   # VERBATIM port of the 4 pricing functions (money authority)
   checkout/{build,schema}.ts   # pure checkout core + zod request contract
   orders/reconcile.ts          # pure amount reconciliation
+  ingest/{slug,keys,plan,validate,process,actions}.ts  # the ingest pipeline (slice 5a)
   env.ts                       # typed, validated env (throws loud on missing)
   supabase/{admin,server,client}.ts  # service-key / anon-server / browser clients
   supabase/{auth-server,auth-proxy}.ts # cookie-bound authenticated clients (slice 4a)
@@ -101,7 +103,7 @@ design/*.dc.html               # design prototypes (reference, not production co
 
 proxy.ts                       # session refresh + redirect for /admin/:path*
 
-The **admin half** is partly built. Slice 4a shipped auth: the route shape is `app/admin/` with a `(protected)` group — **not** an `(admin)` route group, which would add no URL segment. `app/admin/page.tsx` must never exist (it collides with `(protected)/page.tsx`). Ingest, collections, the orders queue and the lab export are slices 5–7.
+The **admin half** is partly built. Slice 4a shipped auth; slice 4b shipped the dashboard shell; slice 5a shipped ingest (Surface C + a plain Photographs landing). Collections, the orders queue and the lab export are slices 6–7.
 
 **Admin surfaces read as the logged-in user** through `lib/supabase/auth-server.ts` under RLS, so `schema.sql`'s `authenticated` policies are exercised rather than decorative. The service key stays confined to the three sessionless paths (`/api/checkout`, `/api/stripe-webhook`, `/order/[id]`). **Authorization is `requireAdmin()` in the data-access layer, never a layout** — Next layouts do not re-render on client-side navigation, so a layout check stops running on route changes. Every admin read, write, and Server Action calls it first.
 
@@ -148,7 +150,7 @@ The most dangerous code in the project.
 
 ## Data model
 
-`supabase/schema.sql` is applied and live on a new Supabase project: five tables (`photos`, `collections`, `collection_photos`, `orders`, `order_items`), RLS on all five, `orders`/`order_items` closed to anon (reads go through the service key). Buckets: `originals` private, `derivatives` public. Public signups disabled. Two honest-function invariants are enforced by Postgres: can't publish a photo without alt text; can't store a tracking number without a shipment. The SQL is authoritative over prose in `product.md`.
+`supabase/schema.sql` is applied and live on a new Supabase project: five tables (`photos`, `collections`, `collection_photos`, `orders`, `order_items`), RLS on all five, `orders`/`order_items` closed to anon (reads go through the service key). Buckets: `originals` private, `derivatives` public. Public signups disabled. Three honest-function invariants are enforced by Postgres: can't publish a photo without alt text; can't publish without `derivatives_ready`; can't store a tracking number without a shipment. The SQL is authoritative over prose in `product.md`.
 
 **Before the store can take money (cutover checklist, `product.md §1.5`):** upgrade Supabase off the free tier (the free-tier pause is how the last database died); re-register the Stripe webhook at the deploy URL; point env at the right project; swap Stripe to live mode **last**.
 
@@ -167,8 +169,9 @@ The rebuild is sliced; each slice is a spec → plan → subagent-driven build u
 
 - **Slice 1 — Foundation + Money path: DONE** (on `develop`). Scaffold, tokens/type, clients/env, `lib/pricing.ts`, `/api/checkout`, webhook, order persistence.
 - **Slice 2 — Storefront read-path:** specced (`docs/superpowers/specs/2026-07-17-storefront-read-path-design.md`) and adversarially reviewed (21 findings to apply first — chiefly the CropGuide: native-aspect plate, landscape via `aspect_ratio`). Home / Prints / Collection / Product / Contact + the shared header/shell.
-- **Slice 4 — Admin foundation: DONE.** 4a shipped auth (`proxy.ts`, `requireAdmin()` in the DAL, sign-in, the `[data-admin]` token scope); 4b shipped the `§11.3` shell and the `§11.4-A` dashboard on live counts. Ingest is slice 5, collections slice 6, orders + lab export slice 7.
-- Slices 3, 5–9 (planned in the specs / `product.md`): cart+checkout final visual, ingest + derivatives, collections + literature, orders queue + Nations lab export, home feature, and the undesigned surfaces (About / Contact / legal / footer — blocked on design, `product.md §4`).
+- **Slice 4 — Admin foundation: DONE.** 4a shipped auth (`proxy.ts`, `requireAdmin()` in the DAL, sign-in, the `[data-admin]` token scope); 4b shipped the `§11.3` shell and the `§11.4-A` dashboard on live counts.
+- **Slice 5a — Admin ingest: DONE.** Browser → signed upload URL → Supabase Storage; staged derivative generation; Surface C (`/admin/photographs/new`); plain Photographs landing (`/admin/photographs`). **Slice 5b** (`§11.4-B` work-card grid) is next.
+- Slices 3, 5b–9 (planned in the specs / `product.md`): cart+checkout final visual, collections + literature, orders queue + Nations lab export, home feature, and the undesigned surfaces (About / Contact / legal / footer — blocked on design, `product.md §4`).
 
 **Carried forward from slice 1** (do before they bite): the `ThemeProvider` theme-flash (fix with a pre-hydration inline script when the theme toggle ships in slice 2); typed Supabase `Database` clients (codegen once a live project is at hand). Full list of follow-ups: `.superpowers/sdd/progress.md`.
 

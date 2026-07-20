@@ -254,7 +254,7 @@ This section used to say "this document describes no target" and promised to tra
 
 1. **There is no way home.** The storefront nav is Prints / Collections / About / Contact / Cart — there is no Home item anywhere in the prototype (`grep -c '>Home<'` → 0) — and §12.2 binds the cloud mark to the theme (`title="Switch light / dark"`, `alt="Jon Hoffman — switch theme"`). So from any interior surface there is no route back to the landing page, and the one element every visitor would click for it does something else instead. The mark is not *dishonest* — its label says exactly what it does (`product.md §1`) — but the navigation has a hole. Three ways out: add an index/Home item to the nav; let the mark go home and move the toggle to its own control; or decide the landing plate is an entrance and not a destination, and say so. **Blocks §12.5's nav.**
 2. ✓ **Focus states — answered 2026-07-19, specified in §11.5.** The hairline ink ring was the obvious candidate and it is now the specified one: **1px `--ink` outline at 2px offset via `:focus-visible`**, 16.4:1 on `--paper`, declared globally and inherited into the admin. Settled while building slice 4a — the first keyboard-reachable admin surface — which is precisely the deadline this question set. **§12 remains unstated:** the rule is global so the storefront inherits it, but §12 should say so explicitly rather than rely on inheritance.
-3. **The aura's future.** `averageColor()` lost its justification when §12.1 rejected borrowed colour, and is retained at ingest as **speculative** (§1, `product.md §3`). It is cheap at ingest and expensive to backfill, which is why it stays — but nothing reads it. Decide what it is for, or delete it before it becomes another `sendOrderNotification()`: written, never called, permanent.
+3. ✓ **The aura's future — resolved 2026-07-19.** Computed and stored at ingest as a single `{r,g,b}` from `sharp.stats().dominant`; nothing reads it, deliberately, and no UI implies otherwise. The `§11.4-C` tile is not built. See `product.md §3`.
 
 `product.md §8` owns the questions that are about behaviour rather than appearance — per-photo pricing, `unlisted`, storefront freshness, and how the ordered crop reaches the lab.
 
@@ -365,6 +365,20 @@ Two columns. **Left**: dashed dropzone holding the 4:5 preview with a "Replace �
 
 > **Correction — the aura is speculative, not a feature.** The handoff presents the "Aura — computed" tile as live, citing `product.md §3`. That justification died: §12.1 rejected borrowed colour, so **nothing on the storefront reads an aura.** It is retained at ingest because it is cheap with the file in hand and expensive to backfill — not because anything consumes it. Do not build a surface that implies otherwise. See §10 q3.
 
+> **Slice 5a deviations (D16–D24).** The built surface differs from the handoff above. Six are handoff defects (D16, D18, D19, D20, D23, D24); D17 applies a defect §11.7 already documented; D21/D22 fill gaps §11.4-C never had.
+>
+> | # | Deviation | Why |
+> |---|---|---|
+> | **D16** | The "Aura — computed" tile is **not built** | §11.4-C's own correction; the column is still written |
+> | **D17** | Base price select **deleted** | §11.7's dead field; `schema.sql` has no price column |
+> | **D18** | Size chips → a read-only ladder line | Two prototype sizes do not exist; no price on the row is real |
+> | **D19** | A **second dropzone** for silver; its toggle moves to the left column | Silver is a distinct hand-converted file, not a server-side desaturation |
+> | **D20** | Native-aspect plate + crop overlay, replacing hardcoded `4/5` + `object-fit:cover` | Same defect slice 2's review forced on the storefront |
+> | **D21** | A **Slug** field is added | Storage is slug-keyed; the slug must be visible before it is frozen |
+> | **D22** | Progress and failure states added | A thirty-second pipeline that claims nothing, or claims success early, is `product.md §1`'s founding defect |
+> | **D23** | **"Draft"** replaces "Unlisted" throughout | `product.md §8 q4`; RLS forbids what "unlisted" promised |
+> | **D24** | The Detected tile renders only what has been measured | The prototype hardcoded `6048 × 7560 · 41 MB` |
+
 #### D · Orders (the work queue — `product.md §6.4`)
 Playfair "Orders" → **tabs** (Queue · N / Needs attention · N / Shipped / All; active tab underlined ink) + search-by-id/email. A mono column-header row, then order rows on a `120px 1.4fr 130px 90px auto auto` grid: order id + date, customer (name, email, and a **"⧉ Name + address"** copy button that copies clean multi-line text), a **thumbnail group with a ⌄ caret**, Playfair total, PAID chip, and "Open →". **Rows expand on click** (caret rotates 180°) into a sub-grid listing each work: thumb · name (Playfair) · size · register (Colour / Silver B&W) · price. The **mismatch row** is quarantined: alert wash, 2px left `--alert` rule, "paid $X · expected $Y", pulsing MISMATCH chip, "Review" action — and a standalone alert banner sits under the table. It is **not** in the queue tab count.
 
@@ -397,7 +411,7 @@ Copyable as plain text (chosen format, `product.md §6.2`). `finish` is a settab
 
 > **Correction — a NOTES line was removed because it was false.** The handoff's NOTES carried a third line: `Match crop to 4:5 as delivered.` **Deleted.** Only `8x10` and `16x20` of the seven sizes in `ALL_SIZES` are 4:5 — `4x6` and `20x30` are 2:3, `12x16` is 3:4, and `5x7` and `11x14` are neither. Instructing a lab to match a 2:3 print to a 4:5 crop mis-prints five of seven sizes, and this is a sheet a human pastes into a real order form: the failure mode is a reprint, at cost, on Jon.
 >
-> **How the ordered crop reaches Nations is genuinely open** (`product.md §8`). The sheet links `<slug>_orig.tif` — the untouched original — which does not carry the ordered aspect, while the storefront's crop guide (§12.5-D) has already promised the customer a specific crop. Something has to reconcile those and nothing currently does. Until it is decided, the export **says nothing about crop rather than guessing** (`product.md §1`).
+> **Resolved 2026-07-19 — Nations' own site does the crop** (`product.md §8 q7`). The export links `<slug>_orig.tif`, the untouched original. Jon crops on Nations' order form when placing the order. The storefront's `cropGuide()` shows a **centre** crop — that is the convention; Nations permits any crop, and centre-cropping there keeps the promise the customer was shown. The drift risk (Nations deviates from the centre crop) is carried forward to slice 7 rather than rediscovered.
 
 #### F · Collections (`product.md §5.3`)
 Left = collection list (cover thumb, Playfair name, mono status; Relics carries a `--ok` "Featured" tag). Right = editor: title + "Featured on home" tag + Playfair "Save collection"; a 2-col body — **Works** (drag rows: ⠿ handle, thumb, Playfair name, cover ★ toggle in `--warn`; "＋ Add works" dashed) and **The literature** (a `--panel2` Newsreader editor with title, italic dek, essay body, and a word-count + B/i/quote/¶ toolbar). A mono note restates the §1 thesis: *this is where the voice lives; if it stops sounding like the essay, it's wrong.*
@@ -435,10 +449,10 @@ Extends §8; does not replace it.
 
 - **Sizes — resolved 2026-07-16: all seven stay.** `ALL_SIZES` is unchanged (`4x6, 5x7, 8x10, 11x14, 12x16, 16x20, 20x30`) and `PRICE_BY_SIZE` is untouched. The handoff's "all 4:5" (§12.5-D) was loose wording, not a product decision.
 - **The mock's "$150 base" is not fiction — it is a dead field, which is worse.** Surface C shows a "$150 base." That number is real: `src/data/products.ts` carries `price: 15000` on all 24 rows. It is also **dead** — `PricingContext` overrides it at runtime with `PRICE_BY_SIZE`, every `ProductCard` caller passes the re-priced product, and no customer has ever seen it. The real ladder is `$5.00 → $65.00`, keyed only by size (`netlify/functions/lib/pricing.js`). A field that nothing reads cannot be wrong loudly enough to get fixed, so it sat there until a designer copied it onto a mockup and it nearly became spec. **Money comes from the ported pure functions, never from the mock** (`product.md §1.5`), and `products.ts:price` does not survive the rebuild — `supabase/schema.sql` deliberately has no price column on `photos`.
-- **Per-photo pricing** (`product.md §8 q3`): still open. Today price is keyed **only** by size; product identity does not affect it. If per-photo pricing lands, surface C's size chips become per-photo and `netlify/functions/lib/pricing.js` must move in lockstep — it is a hand-maintained mirror with no test enforcing it.
-- **`unlisted`** (`product.md §8 q4`): surfaced as a real status in B/C; confirm it is a kept feature and not a leftover.
-- **Storefront freshness** (`product.md §8 q5`): surface G's "publishes without redeploy" copy **assumes** on-demand revalidation. That is a promise printed in the UI — confirm it before shipping it, or the copy lies (`product.md §1`).
-- **How the ordered crop reaches the lab**: open. See §11.4-E.
+- **Per-photo pricing** (`product.md §8 q3`): **deferred, not declined — its own slice after 5b** (2026-07-19). Size-only pricing survives slice 5a; Jon wants per-photo prices for new releases, which needs an edit surface first. That slice inherits three findings: the equivalence lock survives (photos with no override must still price identically to the frozen legacy module); blast radius is seven call sites (four in the money path); and `app/(store)/prints/page.tsx`'s module-scope `FROM_PRICE` bakes "from $5" at import — the first photo carrying an override makes it silently wrong permanently.
+- ✓ **`unlisted`** (`product.md §8 q4`) — **resolved 2026-07-19: a leftover.** The state is **Draft**: `published=false` means invisible to everyone, which is what RLS already enforces.
+- ✓ **Storefront freshness** (`product.md §8 q5`) — **resolved 2026-07-19: on-demand revalidation.** Every ingest write path calls `revalidateTag`; the 3600s TTL stays as a self-healing backstop. Asserted in `test/ingest-actions.test.ts`.
+- ✓ **How the ordered crop reaches the lab** — **resolved 2026-07-19: Nations' own site crops.** Centre-crop convention recorded; drift risk carried to slice 7. See §11.4-E.
 - **Nations' vocabulary**: confirm their exact surface/paper terms so the `finish` enum and the NOTES block match their real order form.
 - ✓ **Focus states — resolved 2026-07-19.** Specified in §11.5 and closed at §10 q2. Slice 4a asserts it in `test/admin-tokens.test.ts`, which also fails if any admin rule sets `outline:none`.
 
