@@ -253,8 +253,8 @@ This section used to say "this document describes no target" and promised to tra
 **All six of this section's original questions are answered** — aesthetic direction, portfolio-vs-store, the theme model, typography, and light/dark are recorded as decisions in §1 and specified in §11–§12; `product.md` exists, which answers the sixth. What remains is new, and all three came out of reading the handoff against the code.
 
 1. **There is no way home.** The storefront nav is Prints / Collections / About / Contact / Cart — there is no Home item anywhere in the prototype (`grep -c '>Home<'` → 0) — and §12.2 binds the cloud mark to the theme (`title="Switch light / dark"`, `alt="Jon Hoffman — switch theme"`). So from any interior surface there is no route back to the landing page, and the one element every visitor would click for it does something else instead. The mark is not *dishonest* — its label says exactly what it does (`product.md §1`) — but the navigation has a hole. Three ways out: add an index/Home item to the nav; let the mark go home and move the toggle to its own control; or decide the landing plate is an entrance and not a destination, and say so. **Blocks §12.5's nav.**
-2. **Focus states are unspecified.** §8 requires a visible focus indicator on every interactive element and the current site fails it. §11 and §12 never say what focus *looks like* in this ink-on-paper system, and neither prototype has a `:focus` rule. Needs a specified treatment — a hairline ink ring is the obvious candidate — before anyone builds a keyboard-reachable surface.
-3. **The aura's future.** `averageColor()` lost its justification when §12.1 rejected borrowed colour, and is retained at ingest as **speculative** (§1, `product.md §3`). It is cheap at ingest and expensive to backfill, which is why it stays — but nothing reads it. Decide what it is for, or delete it before it becomes another `sendOrderNotification()`: written, never called, permanent.
+2. ✓ **Focus states — answered 2026-07-19, specified in §11.5.** The hairline ink ring was the obvious candidate and it is now the specified one: **1px `--ink` outline at 2px offset via `:focus-visible`**, 16.4:1 on `--paper`, declared globally and inherited into the admin. Settled while building slice 4a — the first keyboard-reachable admin surface — which is precisely the deadline this question set. **§12 remains unstated:** the rule is global so the storefront inherits it, but §12 should say so explicitly rather than rely on inheritance.
+3. ✓ **The aura's future — resolved 2026-07-19.** Computed and stored at ingest as a single `{r,g,b}` from `sharp.stats().dominant`; nothing reads it, deliberately, and no UI implies otherwise. The `§11.4-C` tile is not built. See `product.md §3`.
 
 `product.md §8` owns the questions that are about behaviour rather than appearance — per-photo pricing, `unlisted`, storefront freshness, and how the ordered crop reaches the lab.
 
@@ -271,6 +271,10 @@ This section used to say "this document describes no target" and promised to tra
 ## 11. Admin (Studio Admin)
 
 > **STATUS: Specified.** The admin's appearance and behaviour, as settled fact. Visual/motion companion to `product.md §2, §5, §6`. Source of truth for the pixels: `design/Jon Hoffman Admin.dc.html` (surfaces A–H, one canvas). Where this section and the prototype disagree, this section wins; where it is silent, the prototype does.
+>
+> **Measurements live in the prototype's *inline styles*, not in this section's prose** (learned building slice 4, 2026-07-19). The prototype's `<style>` block holds only a handful of classes; the sidebar width, tile padding, queue-row grid, chip lockup and header band are all inline `style=` attributes. This section is therefore silent on most numbers **by construction** — extract them from the file rather than inferring them from the prose here. Four things slice 4b had inferred from this prose turned out to contradict the prototype: the signed-in chip, the queue-row grid, the `PAID` chip, and the ghost-button border.
+>
+> **Slice 4 wrote back into this section** what it had to decide while building: the sign-in surface (new, §11.4-0), the sign-out control (§11.3), `--nb` (§11.1), the `--faint` / `--hairform` contrast corrections (§11.1), the focus treatment (§11.5, closing §10 q2), the `softpulse` rework (§11.5), and the nav-radius contradiction (§11.5).
 
 The admin is the site's second half (`product.md §2`): authenticated, stateful, utilitarian. It shares the storefront's visual language (§12 — black paper, warm-paper ink, hairline chrome, Playfair / IBM Plex Mono / Newsreader) but runs **denser** — it is a console, not a gallery. Its falsifiable test is `product.md §2`'s: **if it is slower than editing `products.ts` and checking Stripe by hand, it has failed.** Restraint still applies; reverence never did here.
 
@@ -285,10 +289,12 @@ Dark is the only admin theme (the storefront's light/dark toggle does not travel
 | `--panel2` | `#131313` | Code/export blocks, literature editor field |
 | `--ink` | `#efeae0` | Primary text, primary-button ground |
 | `--dim` | `rgba(239,234,224,.62)` | Secondary text, labels |
-| `--faint` | `rgba(239,234,224,.42)` | Tertiary text, meta, placeholder |
-| `--hair` | `rgba(239,234,224,.15)` | Standard 1px divider / input border |
+| `--faint` | `rgba(239,234,224,.50)` | Tertiary text, meta, placeholder. **Raised from `.42` in slice 4a:** `.42` computes to **3.58:1** on `--paper` and fails AA for body text — and this token carries real copy (stat-tile subs, the `NOT BUILT` marker). `.50` is 4.63:1 |
+| `--hair` | `rgba(239,234,224,.15)` | Standard 1px divider **between content**. Decorative, so SC 1.4.11's 3:1 does not apply |
+| `--hairform` | `rgba(239,234,224,.37)` | **Control** boundaries — inputs, ghost buttons. **Added in slice 4a:** `--hair` as a control border is **1.42:1** and fails SC 1.4.11's 3:1 for non-text UI, leaving a field with no perceivable edge. `.37` is the first passing value (3.02:1) |
 | `--hairsoft` | `rgba(239,234,224,.08)` | Soft divider between list rows |
 | `--btnbg` / `--btnink` | `#efeae0` / `#0b0b0b` | Primary button ground / label |
+| `--nb` | `var(--ink)` | Nav-item leading dot. §11.3 used this token without this table ever defining it; resolved in slice 4a |
 
 **Status colours** (muted, desaturated — they read as ink stains, not dashboard candy):
 
@@ -300,6 +306,10 @@ Dark is the only admin theme (the storefront's light/dark toggle does not travel
 | `--info` | `#8a9db0` (slate) | links to originals, secondary metadata links |
 
 Status is **never** carried by colour alone — every state also has a text label (PAID, MISMATCH, Live, Unlisted) so it survives colour-blindness and greyscale. This is the `product.md §1` honest-function rule at the pixel level.
+
+> **Contrast is a constraint on these values, not a suggestion.** `--alert` is **4.70:1** on `--paper` but **4.44:1** on `--panel2` — it passes as body text on the page ground and *fails* on the raised one, so alert-coloured copy belongs on `--paper`. Slice 4a locks `--faint`, `--dim`, `--hairform` and `--alert` with computed assertions in `test/admin-tokens.test.ts`; a failure there means a token drifted, not that the test is wrong.
+>
+> **Scoping.** The admin's tokens are declared on a `[data-admin]` wrapper, never `:root`. The storefront's theme toggle stamps `data-theme` on `<html>` for **every** route, so an unscoped admin renders on light paper the moment someone toggles the storefront. Custom properties resolve per element, which makes the toggle structurally unable to reach the admin. `color-scheme: dark` rides along on the same wrapper — it is not a custom property, and without it Chrome's autofill paints a light ground over the password field.
 
 ### 11.2 Type roles
 
@@ -316,12 +326,33 @@ Labels are `10px/500`, letter-spacing `.16–.24em`, `text-transform:uppercase`,
 
 Every desktop surface is a **242px fixed sidebar + fluid main**, inside a card (`border-radius:6px`, one soft drop shadow; interior elements are square).
 
-- **Sidebar** (`--panel`, right `--hair` border, `padding:26px 18px 24px`): cloud mark + "Jon Hoffman / Studio Admin" lockup → hairline → nav → footer pinned bottom (`margin-top:auto`) with "View live site ↗" and the signed-in chip (32px circle avatar "JH").
+- **Sidebar** (`--panel`, right `--hair` border, `padding:26px 18px 24px`): cloud mark + "Jon Hoffman / Studio Admin" lockup → hairline → nav → footer pinned bottom (`margin-top:auto`) with "View live site ↗", **"Sign out"**, and the signed-in chip.
+
+  **Sign out** — added in slice 4a, because this section specified a chip and a live-site link but no way *out* of the console. A second mono link beside "View live site ↗". It is a `<button>` inside a POST `<form>`, never an `<a>`: a GET sign-out is CSRF-able and gets fired by link prefetching.
+
+  **The signed-in chip** is the 32px circle avatar ("JH") **beside a visible two-line lockup** — name in `--ink` at 11px, signed-in email in `--faint` at 10px. It is *not* an avatar carrying a hidden label: `aria-label` on a generic element is inconsistently exposed and, where it is, *replaces* the visible text rather than supplementing it. The email overflows 242px, so it takes ellipsis plus a `title` with the full address.
 - **Nav item**: `10px 13px`, radius 7px, mono 13px, a 5px leading dot (`--nb`, opacity .35 → 1 when active). Active = `background rgba(239,234,224,.09)`, ink text. Hover = `rgba(239,234,224,.05)`. The **Orders** item carries a right-aligned amber count pill (`--warn` ground, `#1a1200` text, 999px).
 - **Main header band**: mono kicker (date/breadcrumb) over a Playfair H1 (`44px`), primary action button top-right.
 - **Primary button**: `--btnbg` ground, `--btnink` text, mono 11px `.14em` uppercase, `14px 22px`, square. Hover drops opacity to .88; active nudges 1px down. Secondary button = same type, transparent ground, `1px --hair` border.
 
 ### 11.4 Surfaces
+
+#### 0 · Sign in (`product.md §5.1`)
+
+**Added in slice 4a.** This surface existed neither in this section nor in the prototype — a case-insensitive search for "sign in" / "sign out" across `design/Jon Hoffman Admin.dc.html` returns **zero matches** — so it was built from §11.1/§11.2 vocabulary only, inventing nothing.
+
+Centred on `--paper`, with no card and no shadow (§11.5 allows exactly one shadow, on the shell card, and this surface has no shell): the sidebar's cloud mark + "Jon Hoffman / Studio Admin" lockup, then two fields and the primary button. Labels are mono `10px/500`, `.16em`, uppercase, `--dim`. Inputs are `--panel2` ground with a `1px --hairform` border, square, `min-height:44px`, carrying `autocomplete="email"` / `"current-password"`.
+
+**Error copy is classified by cause, because the causes are different facts (`product.md §1`):**
+
+| Cause | Copy |
+|---|---|
+| Wrong email or wrong password | "Those credentials didn't work." — deliberately generic; never reveals whether an address exists |
+| Rate-limited (HTTP 429) | "Too many attempts. Wait a minute and try again." |
+| Transport failure or 5xx | "Sign-in isn't working right now. Not your password." |
+| Anything else | "Sign-in failed." — claims no cause |
+
+A single "couldn't reach the service" bucket was rejected: Supabase **returns** its auth errors rather than throwing, so a rate-limit lockout and an unconfirmed email would both have rendered as network failures — the one message telling Jon he is locked out would have told him to check his internet. The error region is `role="alert"` and is present in the DOM while empty, since a live region must pre-exist in order to announce.
 
 #### A · Dashboard
 Header "Good evening, Jon." → row of **4 stat tiles** (`1px --hair`, `22px 20px`: mono uppercase label, Playfair 42px number, faint sub). The **Needs-attention** tile is bordered `--alert` on a `rgba(200,91,61,.06)` wash. Below, a 2-col split: left = **fulfillment queue** (oldest first) as compact rows each with a "Copy for lab" ghost button; the mismatch row sits on the alert wash with a pulsing MISMATCH chip. Right rail = **home focal point** card (cover image, gradient scrim, Playfair collection name, "Change what leads home →") + a 3-up **recent uploads** grid.
@@ -333,6 +364,20 @@ Header + count + "＋ Post a photo". **Filter chips** row (All / Published / Unl
 Two columns. **Left**: dashed dropzone holding the 4:5 preview with a "Replace ↺" chip; below it two info tiles — **Detected** (aspect, pixel dims, MB) and **Aura — computed** (three swatches; the stored `averageColor()` from `product.md §3`); then a mono note describing the ingest pass (original stored privately · derivatives generated once · aura written). **Right**: the form — **Title** (Playfair field), **Caption** (Newsreader, "short line on the card"), **Description** (Newsreader, "the print's page"), **Alt text** (Hanken, labelled in `--ok` "describes the image — accessibility"). These are the three distinct jobs from `product.md §5.2`'s open question, resolved as three fields plus alt. Then **Collection** + **Base price** selects, **Sizes offered** as priced chips (selected = ink ground), and two labelled **toggles**: "Offer a silver (B&W) variant" (on) and "Publish now" (off = unlisted). Footer: "Save & publish" / "Save as draft".
 
 > **Correction — the aura is speculative, not a feature.** The handoff presents the "Aura — computed" tile as live, citing `product.md §3`. That justification died: §12.1 rejected borrowed colour, so **nothing on the storefront reads an aura.** It is retained at ingest because it is cheap with the file in hand and expensive to backfill — not because anything consumes it. Do not build a surface that implies otherwise. See §10 q3.
+
+> **Slice 5a deviations (D16–D24).** The built surface differs from the handoff above. Six are handoff defects (D16, D18, D19, D20, D23, D24); D17 applies a defect §11.7 already documented; D21/D22 fill gaps §11.4-C never had.
+>
+> | # | Deviation | Why |
+> |---|---|---|
+> | **D16** | The "Aura — computed" tile is **not built** | §11.4-C's own correction; the column is still written |
+> | **D17** | Base price select **deleted** | §11.7's dead field; `schema.sql` has no price column |
+> | **D18** | Size chips → a read-only ladder line | Two prototype sizes do not exist; no price on the row is real |
+> | **D19** | A **second dropzone** for silver; its toggle moves to the left column | Silver is a distinct hand-converted file, not a server-side desaturation |
+> | **D20** | Native-aspect plate + crop overlay, replacing hardcoded `4/5` + `object-fit:cover` | Same defect slice 2's review forced on the storefront |
+> | **D21** | A **Slug** field is added | Storage is slug-keyed; the slug must be visible before it is frozen |
+> | **D22** | Progress and failure states added | A thirty-second pipeline that claims nothing, or claims success early, is `product.md §1`'s founding defect |
+> | **D23** | **"Draft"** replaces "Unlisted" throughout | `product.md §8 q4`; RLS forbids what "unlisted" promised |
+> | **D24** | The Detected tile renders only what has been measured | The prototype hardcoded `6048 × 7560 · 41 MB` |
 
 #### D · Orders (the work queue — `product.md §6.4`)
 Playfair "Orders" → **tabs** (Queue · N / Needs attention · N / Shipped / All; active tab underlined ink) + search-by-id/email. A mono column-header row, then order rows on a `120px 1.4fr 130px 90px auto auto` grid: order id + date, customer (name, email, and a **"⧉ Name + address"** copy button that copies clean multi-line text), a **thumbnail group with a ⌄ caret**, Playfair total, PAID chip, and "Open →". **Rows expand on click** (caret rotates 180°) into a sub-grid listing each work: thumb · name (Playfair) · size · register (Colour / Silver B&W) · price. The **mismatch row** is quarantined: alert wash, 2px left `--alert` rule, "paid $X · expected $Y", pulsing MISMATCH chip, "Review" action — and a standalone alert banner sits under the table. It is **not** in the queue tab count.
@@ -366,7 +411,7 @@ Copyable as plain text (chosen format, `product.md §6.2`). `finish` is a settab
 
 > **Correction — a NOTES line was removed because it was false.** The handoff's NOTES carried a third line: `Match crop to 4:5 as delivered.` **Deleted.** Only `8x10` and `16x20` of the seven sizes in `ALL_SIZES` are 4:5 — `4x6` and `20x30` are 2:3, `12x16` is 3:4, and `5x7` and `11x14` are neither. Instructing a lab to match a 2:3 print to a 4:5 crop mis-prints five of seven sizes, and this is a sheet a human pastes into a real order form: the failure mode is a reprint, at cost, on Jon.
 >
-> **How the ordered crop reaches Nations is genuinely open** (`product.md §8`). The sheet links `<slug>_orig.tif` — the untouched original — which does not carry the ordered aspect, while the storefront's crop guide (§12.5-D) has already promised the customer a specific crop. Something has to reconcile those and nothing currently does. Until it is decided, the export **says nothing about crop rather than guessing** (`product.md §1`).
+> **Resolved 2026-07-19 — Nations' own site does the crop** (`product.md §8 q7`). The export links `<slug>_orig.tif`, the untouched original. Jon crops on Nations' order form when placing the order. The storefront's `cropGuide()` shows a **centre** crop — that is the convention; Nations permits any crop, and centre-cropping there keeps the promise the customer was shown. The drift risk (Nations deviates from the centre crop) is carried forward to slice 7 rather than rediscovered.
 
 #### F · Collections (`product.md §5.3`)
 Left = collection list (cover thumb, Playfair name, mono status; Relics carries a `--ok` "Featured" tag). Right = editor: title + "Featured on home" tag + Playfair "Save collection"; a 2-col body — **Works** (drag rows: ⠿ handle, thumb, Playfair name, cover ★ toggle in `--warn`; "＋ Add works" dashed) and **The literature** (a `--panel2` Newsreader editor with title, italic dek, essay body, and a word-count + B/i/quote/¶ toolbar). A mono note restates the §1 thesis: *this is where the voice lives; if it stops sounding like the essay, it's wrong.*
@@ -379,9 +424,12 @@ Three 376×812 phones: **Dashboard** (stat pair, queue, "＋ Post a photo" pinne
 
 ### 11.5 Shape, elevation, motion
 
-- **Radius:** 0 everywhere except the outer card (6px), pills (badge count, toggle track — 999px), and the avatar (50%). Sharp corners are the admin's tell vs the softer storefront cards.
-- **Elevation:** exactly one soft shadow on the outer card. Interior depth is **hairlines + subtle bg tints** (`rgba(239,234,224,.02–.09)`), never nested shadows.
-- **Motion:** state changes `.16–.2s`; button press `translateY(1px)`; caret rotate `.18s`; toggle knob `.2s`. The alert chip uses `softpulse` (2.2s ease-in-out, opacity .5↔1) — the **only** looping animation, reserved for a quarantined order. Everything else is discrete. Gate any motion behind `prefers-reduced-motion` (§8; the prototype does not — see §9).
+- **Radius:** 0 everywhere except the outer card (6px), pills (badge count, toggle track — 999px), the avatar (50%), and **the nav item (7px)**. Sharp corners are the admin's tell vs the softer storefront cards. *(The nav item was a contradiction inside this section — §11.3 specifies `border-radius:7px` explicitly while this line said "0 everywhere except…". Resolved in slice 4b toward §11.3's explicit measurement, and recorded here rather than left to be rediscovered.)*
+- **Elevation:** exactly one soft shadow on the outer card (`0 30px 70px -34px rgba(0,0,0,.6)`). Interior depth is **hairlines + subtle bg tints** (`rgba(239,234,224,.02–.09)`), never nested shadows.
+- **Focus — specified in slice 4a, closing §10 q2.** A **1px `--ink` outline at 2px offset**, via `:focus-visible`, on every interactive element. It computes to **16.4:1** on `--paper`, and the offset is what keeps the ring visible against the near-white `--btnbg` primary button. It is declared globally and inherited into `[data-admin]`, where it resolves against the admin `--ink` — admin surfaces rely on it rather than re-declaring it, and **no admin rule may set `outline:none`**. §8 calls the focus row "the one accessibility rule the handoff dropped… It does not get to fail twice."
+- **Motion:** state changes `.16–.2s`; button press `translateY(1px)`; caret rotate `.18s`; toggle knob `.2s`. The `MISMATCH` chip uses `softpulse` (2.2s ease-in-out) — the **only** looping animation, reserved for a quarantined order. Everything else is discrete. Gate any motion behind `prefers-reduced-motion` (§8; the prototype does not — see §9).
+  - **`softpulse` animates the chip's *ground*, not its text opacity** — corrected in slice 4b. The prototype pulses `opacity .5↔1`, which puts `--alert` text at **1.99:1** at the trough: the system's most safety-critical status would be illegible for half of every 2.2s cycle. The chip is now `--ink` text on an `--alert`-tinted ground pulsing `rgba(200,91,61,.16↔.40)`, so contrast stays constant while the alert colour still carries the signal — paired with the literal word `MISMATCH`, per §11.1.
+  - **Known gap:** WCAG SC 2.2.2 wants a *mechanism* to pause looping motion, and `prefers-reduced-motion` is a user preference rather than a mechanism. Accepted for a single-user private console where the animation is a slow ground tint on one row. Revisit if the admin ever gains a second user.
 
 ### 11.6 Do / Don't (admin)
 
@@ -401,12 +449,12 @@ Extends §8; does not replace it.
 
 - **Sizes — resolved 2026-07-16: all seven stay.** `ALL_SIZES` is unchanged (`4x6, 5x7, 8x10, 11x14, 12x16, 16x20, 20x30`) and `PRICE_BY_SIZE` is untouched. The handoff's "all 4:5" (§12.5-D) was loose wording, not a product decision.
 - **The mock's "$150 base" is not fiction — it is a dead field, which is worse.** Surface C shows a "$150 base." That number is real: `src/data/products.ts` carries `price: 15000` on all 24 rows. It is also **dead** — `PricingContext` overrides it at runtime with `PRICE_BY_SIZE`, every `ProductCard` caller passes the re-priced product, and no customer has ever seen it. The real ladder is `$5.00 → $65.00`, keyed only by size (`netlify/functions/lib/pricing.js`). A field that nothing reads cannot be wrong loudly enough to get fixed, so it sat there until a designer copied it onto a mockup and it nearly became spec. **Money comes from the ported pure functions, never from the mock** (`product.md §1.5`), and `products.ts:price` does not survive the rebuild — `supabase/schema.sql` deliberately has no price column on `photos`.
-- **Per-photo pricing** (`product.md §8 q3`): still open. Today price is keyed **only** by size; product identity does not affect it. If per-photo pricing lands, surface C's size chips become per-photo and `netlify/functions/lib/pricing.js` must move in lockstep — it is a hand-maintained mirror with no test enforcing it.
-- **`unlisted`** (`product.md §8 q4`): surfaced as a real status in B/C; confirm it is a kept feature and not a leftover.
-- **Storefront freshness** (`product.md §8 q5`): surface G's "publishes without redeploy" copy **assumes** on-demand revalidation. That is a promise printed in the UI — confirm it before shipping it, or the copy lies (`product.md §1`).
-- **How the ordered crop reaches the lab**: open. See §11.4-E.
+- **Per-photo pricing** (`product.md §8 q3`): **deferred, not declined — its own slice after 5b** (2026-07-19). Size-only pricing survives slice 5a; Jon wants per-photo prices for new releases, which needs an edit surface first. That slice inherits three findings: the equivalence lock survives (photos with no override must still price identically to the frozen legacy module); blast radius is seven call sites (four in the money path); and `app/(store)/prints/page.tsx`'s module-scope `FROM_PRICE` bakes "from $5" at import — the first photo carrying an override makes it silently wrong permanently.
+- ✓ **`unlisted`** (`product.md §8 q4`) — **resolved 2026-07-19: a leftover.** The state is **Draft**: `published=false` means invisible to everyone, which is what RLS already enforces.
+- ✓ **Storefront freshness** (`product.md §8 q5`) — **resolved 2026-07-19: on-demand revalidation.** Every ingest write path calls `revalidateTag`; the 3600s TTL stays as a self-healing backstop. Asserted in `test/ingest-actions.test.ts`.
+- ✓ **How the ordered crop reaches the lab** — **resolved 2026-07-19: Nations' own site crops.** Centre-crop convention recorded; drift risk carried to slice 7. See §11.4-E.
 - **Nations' vocabulary**: confirm their exact surface/paper terms so the `finish` enum and the NOTES block match their real order form.
-- **Focus states**: unspecified here and in §12. §8's rule applies regardless. See §10 q2.
+- ✓ **Focus states — resolved 2026-07-19.** Specified in §11.5 and closed at §10 q2. Slice 4a asserts it in `test/admin-tokens.test.ts`, which also fails if any admin rule sets `outline:none`.
 
 ---
 

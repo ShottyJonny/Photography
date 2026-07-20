@@ -1,0 +1,445 @@
+:root {
+  --paper: #0b0b0b;
+  --ink: #efeae0;
+  --dim: rgba(239, 234, 224, 0.62);
+  --faint: rgba(239, 234, 224, 0.45);
+  --hair: rgba(239, 234, 224, 0.18);
+  --btnbg: #efeae0;
+  --btnink: #0b0b0b;
+}
+:root[data-theme='light'] {
+  --paper: #f2efe8;
+  --ink: #1c1a17;
+  --dim: rgba(28, 26, 23, 0.66);
+  --faint: rgba(28, 26, 23, 0.42);
+  --hair: rgba(28, 26, 23, 0.18);
+  --btnbg: #1c1a17;
+  --btnink: #f2efe8;
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(--font-hanken), system-ui, sans-serif; }
+
+:focus-visible {
+  outline: 1px solid var(--ink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* --- Cart drawer (§12.5-F) --- */
+.drawer-root { position: fixed; inset: 0; z-index: 50; }
+.drawer-backdrop { position: absolute; inset: 0; background: rgba(0, 0, 0, 0.5); backdrop-filter: blur(2px); }
+.drawer-panel {
+  position: absolute; top: 0; right: 0; height: 100%;
+  width: min(456px, 100vw);
+  background: var(--paper); color: var(--ink);
+  border-left: 1px solid var(--hair);
+  box-shadow: -8px 0 40px rgba(0, 0, 0, 0.35);
+  display: flex; flex-direction: column;
+  animation: drawer-in 0.2s ease;
+}
+@keyframes drawer-in { from { transform: translateX(100%); } to { transform: translateX(0); } }
+.drawer-head { display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--hair); }
+.drawer-title { font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--dim); }
+.drawer-close { min-width: 44px; min-height: 44px; background: transparent; border: none; color: var(--ink); font-size: 1rem; cursor: pointer; }
+.drawer-empty { padding: 2rem 1.5rem; font-family: var(--font-newsreader); color: var(--dim); }
+.drawer-list { list-style: none; margin: 0; padding: 0; overflow-y: auto; flex: 1; }
+.drawer-row { display: grid; grid-template-columns: 76px 1fr auto; gap: 1rem; padding: 1rem 1.5rem; border-bottom: 1px solid var(--hair); }
+.drawer-thumb { width: 76px; }
+.drawer-thumb img { width: 76px; height: auto; display: block; }
+.drawer-row-title { font-family: var(--font-playfair); font-size: 1rem; margin: 0; }
+.drawer-row-sub { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--dim); margin: 0.25rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.drawer-stepper { display: inline-flex; align-items: center; gap: 0.25rem; border: 1px solid var(--hair); border-radius: 2px; }
+.drawer-stepper button { min-width: 44px; min-height: 44px; background: transparent; border: none; color: var(--ink); cursor: pointer; font-size: 1rem; }
+.drawer-stepper span { min-width: 1.5rem; text-align: center; font-family: var(--font-mono); }
+.drawer-line-right { display: flex; flex-direction: column; align-items: flex-end; justify-content: space-between; }
+.drawer-price { font-family: var(--font-mono); }
+.drawer-remove { background: transparent; border: none; color: var(--dim); cursor: pointer; font-family: var(--font-mono); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.04em; padding: 0.25rem 0; }
+.drawer-foot { padding: 1.25rem 1.5rem; border-top: 1px solid var(--hair); }
+.drawer-subtotal { display: flex; justify-content: space-between; font-family: var(--font-playfair); font-size: 1.125rem; }
+.drawer-note { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--dim); margin: 0.5rem 0 1rem; }
+.drawer-checkout {
+  display: block; text-align: center; text-decoration: none;
+  background: var(--btnbg); color: var(--btnink);
+  padding: 0.875rem; border-radius: 5px;
+  font-family: var(--font-mono); font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase;
+}
+
+/* --- Checkout (§12.5-G) --- */
+.checkout { max-width: 1000px; margin: 0 auto; padding: 2rem 1.5rem; }
+.checkout-h1 { font-family: var(--font-playfair); font-weight: 400; }
+.checkout-cols { display: grid; grid-template-columns: 1fr; gap: 2rem; }
+@media (min-width: 720px) { .checkout-cols { grid-template-columns: 1.4fr 1fr; align-items: start; } }
+.checkout-field-group { border: 1px solid var(--hair); border-radius: 5px; padding: 1.25rem; margin: 0 0 1.5rem; }
+.checkout-field-group legend { font-family: var(--font-mono); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); padding: 0 0.5rem; }
+.field { display: block; margin: 0 0 0.875rem; }
+.field span { display: block; font-family: var(--font-mono); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--dim); margin-bottom: 0.375rem; }
+.field input, .field select { width: 100%; min-height: 44px; padding: 0.625rem 0.75rem; background: var(--paper); color: var(--ink); border: 1px solid var(--hair); border-radius: 3px; font-family: var(--font-hanken), system-ui, sans-serif; font-size: 1rem; }
+.field-error { color: var(--ink); background: rgba(200, 60, 60, 0.12); font-family: var(--font-mono); font-size: 0.6875rem; padding: 0.375rem 0.5rem; margin: -0.5rem 0 0.875rem; border-radius: 3px; }
+.checkout-summary { border: 1px solid var(--hair); border-radius: 5px; padding: 1.25rem; position: sticky; top: 1rem; }
+.summary-lines { list-style: none; margin: 0 0 1rem; padding: 0; }
+.summary-lines li { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--font-mono); font-size: 0.8125rem; padding: 0.375rem 0; border-bottom: 1px solid var(--hair); }
+.summary-totals { margin: 0; }
+.summary-totals div { display: flex; justify-content: space-between; padding: 0.25rem 0; font-family: var(--font-mono); font-size: 0.875rem; }
+.summary-totals dt, .summary-totals dd { margin: 0; }
+.summary-totals .summary-total { font-family: var(--font-playfair); font-size: 1.125rem; border-top: 1px solid var(--hair); margin-top: 0.5rem; padding-top: 0.5rem; }
+.summary-note { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--dim); }
+.checkout-pay { display: block; width: 100%; margin-top: 1rem; padding: 0.875rem; background: var(--btnbg); color: var(--btnink); border: none; border-radius: 5px; font-family: var(--font-mono); font-size: 0.8125rem; letter-spacing: 0.04em; text-transform: uppercase; cursor: pointer; }
+.checkout-pay:disabled { opacity: 0.45; cursor: not-allowed; }
+.checkout-secure { font-family: var(--font-mono); font-size: 0.625rem; color: var(--dim); text-align: center; margin: 0.75rem 0 0; }
+.checkout-error { color: var(--ink); background: rgba(200, 60, 60, 0.12); font-family: var(--font-mono); font-size: 0.75rem; padding: 0.5rem; border-radius: 3px; }
+
+/* --- Confirmation (§12.5-H) --- */
+.confirm { max-width: 720px; margin: 0 auto; padding: 3rem 1.5rem; text-align: center; }
+.confirm-id { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--dim); letter-spacing: 0.06em; }
+.confirm-h1 { font-family: var(--font-playfair); font-weight: 400; font-size: clamp(2.5rem, 8vw, 4.75rem); margin: 0.5rem 0 1rem; }
+.confirm-note { font-family: var(--font-newsreader); font-size: 1.0625rem; color: var(--ink); max-width: 34rem; margin: 0 auto 2.5rem; }
+.confirm-notfound { font-family: var(--font-newsreader); }
+.confirm-cells { display: grid; grid-template-columns: 1fr; gap: 1.5rem; text-align: left; }
+@media (min-width: 640px) { .confirm-cells { grid-template-columns: 1fr 1fr; } }
+.confirm-cell { border: 1px solid var(--hair); border-radius: 5px; padding: 1.25rem; }
+.confirm-cell-h { font-family: var(--font-mono); font-size: 0.6875rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--dim); margin: 0 0 0.75rem; }
+.confirm-address { font-style: normal; font-family: var(--font-newsreader); }
+.confirm-address span { display: block; }
+.confirm-works { list-style: none; margin: 0 0 1rem; padding: 0; }
+.confirm-works li { display: flex; justify-content: space-between; gap: 1rem; font-family: var(--font-mono); font-size: 0.8125rem; padding: 0.375rem 0; border-bottom: 1px solid var(--hair); }
+.confirm-totals div { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 0.8125rem; padding: 0.2rem 0; }
+.confirm-totals dt, .confirm-totals dd { margin: 0; }
+.confirm-totals .confirm-total { font-family: var(--font-playfair); font-size: 1.0625rem; border-top: 1px solid var(--hair); margin-top: 0.4rem; padding-top: 0.4rem; }
+.confirm-review { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dim); line-height: 1.5; }
+
+/* ===================================================================
+   Admin (design.md §11) — dark only, and structurally unreachable by
+   the storefront theme toggle.
+
+   Tokens are declared on the [data-admin] wrapper, never :root. Custom
+   properties resolve per element, so this beats the value inherited
+   from :root[data-theme='light'] regardless of selector specificity.
+
+   --faint (.50) and --hairform (.37) deviate from §11.1 deliberately:
+   §11.1's .42 computes to 3.58:1 and fails AA, and --hair as a control
+   border is 1.42:1 and fails SC 1.4.11. See spec D10 / D11. Locked by
+   contrast assertions in test/admin-tokens.test.ts — do not "correct".
+   =================================================================== */
+[data-admin] {
+  --paper: #0b0b0b;
+  --panel: #0e0e0e;
+  --panel2: #131313;
+  --ink: #efeae0;
+  --dim: rgba(239, 234, 224, 0.62);
+  --faint: rgba(239, 234, 224, 0.50);
+  --hair: rgba(239, 234, 224, 0.15);
+  --hairform: rgba(239, 234, 224, 0.37);
+  --hairsoft: rgba(239, 234, 224, 0.08);
+  --btnbg: #efeae0;
+  --btnink: #0b0b0b;
+  --ok: #8fae8b;
+  --warn: #cf934f;
+  --alert: #c85b3d;
+  --info: #8a9db0;
+  --nb: var(--ink);
+
+  background: var(--paper);
+  color: var(--ink);
+  min-height: 100dvh;
+  /* Not a custom property, so the block above does not cover it. Without it
+     Chrome's autofill paints a light ground over the password field — on the
+     saved-credentials path, which is the normal path for the only user. */
+  color-scheme: dark;
+}
+
+/* body { background: var(--paper) } still resolves --paper from :root, so a
+   light body box survives behind the wrapper. */
+html:has([data-admin]) { background: #0b0b0b; color-scheme: dark; }
+html:has([data-admin]) body { background: #0b0b0b; }
+
+.admin-sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  padding: 0; margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* --- Sign-in (spec §6.1, D1) --- */
+.admin-signin { min-height: 100dvh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2rem; padding: 2rem 1.5rem; }
+.admin-signin-lockup { display: flex; align-items: center; gap: 0.875rem; color: var(--ink); }
+.admin-signin-name { margin: 0; font-family: var(--font-playfair); font-size: 1.375rem; line-height: 1.2; }
+.admin-signin-kicker { margin: 0.125rem 0 0; font-family: var(--font-mono); font-size: 0.625rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--dim); }
+.admin-signin-form { width: min(22rem, 100%); display: flex; flex-direction: column; gap: 0.875rem; }
+.admin-field { display: block; }
+.admin-field > span { display: block; font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-bottom: 0.375rem; }
+.admin-field input { width: 100%; min-height: 44px; padding: 0.625rem 0.75rem; background: var(--panel2); color: var(--ink); border: 1px solid var(--hairform); border-radius: 0; font-family: var(--font-hanken), system-ui, sans-serif; font-size: 1rem; }
+.admin-field-error { margin: -0.375rem 0 0; font-family: var(--font-mono); font-size: 0.6875rem; color: var(--alert); }
+.admin-alert { min-height: 1.25rem; margin: 0; font-family: var(--font-mono); font-size: 0.75rem; color: var(--ink); }
+.admin-btn { min-height: 44px; padding: 14px 22px; background: var(--btnbg); color: var(--btnink); border: none; border-radius: 0; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+.admin-btn:hover { opacity: 0.88; }
+.admin-btn:active { transform: translateY(1px); }
+.admin-btn:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* --- Placeholder landing (spec §6.3; replaced wholesale in slice 4b) --- */
+.admin-landing { padding: 3rem 1.5rem; display: flex; flex-direction: column; gap: 1rem; align-items: flex-start; }
+.admin-h1 { margin: 0; font-family: var(--font-playfair); font-weight: 400; font-size: 2.75rem; }
+.admin-meta { margin: 0; font-family: var(--font-mono); font-size: 0.75rem; letter-spacing: 0.06em; color: var(--dim); }
+.admin-linkbtn { min-height: 44px; padding: 0; background: transparent; border: none; color: var(--ink); font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+/* ===================================================================
+   Admin shell + dashboard (design.md §11.3, §11.4-A).
+   Measurements extracted from design/Jon Hoffman Admin.dc.html, where
+   most of the admin is inline-styled rather than in its <style> block.
+   =================================================================== */
+
+.admin-wrap { padding: 24px; }
+.admin-card {
+  display: flex;
+  min-height: calc(100dvh - 48px);
+  background: var(--paper); color: var(--ink);
+  border-radius: 6px; overflow: hidden;
+  box-shadow: 0 30px 70px -34px rgba(0, 0, 0, 0.6);
+}
+
+/* --- Sidebar --- */
+.admin-sidebar {
+  width: 242px; flex: none;
+  background: var(--panel);
+  border-right: 1px solid var(--hair);
+  display: flex; flex-direction: column;
+  padding: 26px 18px 24px;
+}
+.admin-lockup { display: flex; align-items: center; gap: 11px; padding: 0 8px; }
+.admin-lockup-name { margin: 0; font-family: var(--font-playfair); font-size: 18px; line-height: 1; }
+.admin-lockup-kicker { margin: 4px 0 0; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.28em; text-transform: uppercase; color: var(--faint); }
+.admin-rule { height: 1px; background: var(--hair); margin: 22px 8px 18px; }
+.admin-nav { display: flex; flex-direction: column; gap: 3px; list-style: none; margin: 0; padding: 0; }
+.admin-navitem {
+  display: flex; align-items: center; gap: 11px;
+  padding: 10px 13px; border-radius: 7px;
+  color: var(--dim); text-decoration: none;
+  font-family: var(--font-mono); font-weight: 500; font-size: 13px; line-height: 1;
+  letter-spacing: 0.01em;
+  transition: background 0.16s, color 0.16s;
+}
+a.admin-navitem:hover { background: rgba(239, 234, 224, 0.05); color: var(--ink); }
+.admin-navitem.is-active { background: rgba(239, 234, 224, 0.09); color: var(--ink); }
+.admin-nb { width: 5px; height: 5px; border-radius: 50%; background: var(--nb); opacity: 0.35; flex: none; }
+.admin-navitem.is-active .admin-nb { opacity: 1; }
+
+.admin-sidefoot { margin-top: auto; padding: 0 8px; }
+.admin-livesite {
+  display: flex; align-items: center; justify-content: space-between;
+  font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.06em;
+  color: var(--dim); text-decoration: none;
+  padding: 11px 0; border-top: 1px solid var(--hairsoft);
+}
+.admin-livesite:hover { color: var(--ink); }
+.admin-chip { display: flex; align-items: center; gap: 10px; padding-top: 12px; border-top: 1px solid var(--hairsoft); }
+.admin-chip-avatar {
+  width: 32px; height: 32px; flex: none; border-radius: 50%;
+  background: #2a2a28; display: grid; place-items: center;
+  font-family: var(--font-mono); font-weight: 600; font-size: 12px; color: var(--ink);
+}
+.admin-chip-text { font-size: 11px; line-height: 1.4; min-width: 0; }
+.admin-chip-name { color: var(--ink); }
+.admin-chip-email { color: var(--faint); font-size: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* --- Main --- */
+.admin-main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+.admin-band {
+  display: flex; align-items: flex-end; justify-content: space-between; gap: 24px;
+  padding: 34px 40px 26px; border-bottom: 1px solid var(--hair);
+}
+.admin-band-kicker { margin: 0 0 12px; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.3em; text-transform: uppercase; color: var(--dim); }
+.admin-band-h1 { margin: 0; font-family: var(--font-playfair); font-weight: 400; font-size: 44px; line-height: 1; }
+
+/* --- Marked controls (spec §6.1.1) --- */
+.admin-marked { display: inline-flex; align-items: center; gap: 8px; }
+.admin-mark { font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--faint); }
+/* The marker inherits --faint, tuned against --paper. On the primary button's
+   near-white --btnbg ground that composites to 1.00:1 — invisible, on the one
+   control the eye goes to first. The marker IS the honest-function payload
+   (spec §6.1.1), so it takes a ground-appropriate ink. */
+.admin-btn .admin-mark { color: rgba(11, 11, 11, 0.62); }
+/* No group opacity: it multiplies through to the marker AND the border, taking
+   --faint to 2.92:1 and --hairform to 2.10:1 — silently reverting D10 and D11.
+   "Not yet wired" is carried by the marker text, which is what D4 decided. */
+button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disabled='true'] { cursor: not-allowed; }
+/* A control that depresses under the finger and then does nothing is the
+   affordance-level version of a label that lies (product.md §1). */
+.admin-btn[aria-disabled='true']:active, .admin-ghost[aria-disabled='true']:active { transform: none; }
+
+/* --- Buttons --- */
+.admin-ghost {
+  display: inline-flex; align-items: center; gap: 8px;
+  min-height: 44px; padding: 7px 12px;
+  background: transparent; color: var(--ink);
+  /* Prototype says --hair; that is 1.42:1 and fails SC 1.4.11 (D11). */
+  border: 1px solid var(--hairform); border-radius: 0;
+  font-family: var(--font-mono); font-weight: 500; font-size: 10px;
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+
+/* --- Stat tiles --- */
+.admin-tiles { padding: 30px 40px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
+.admin-tile { border: 1px solid var(--hair); padding: 22px 20px; }
+.admin-tile.is-alert { border-color: var(--alert); background: rgba(200, 91, 61, 0.06); }
+.admin-tile-label { margin: 0 0 16px; font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+.admin-tile.is-alert .admin-tile-label { color: var(--alert); }
+.admin-tile-number { margin: 0; font-family: var(--font-playfair); font-weight: 400; font-size: 42px; line-height: 1; color: var(--ink); }
+.admin-tile-sub { margin: 8px 0 0; font-size: 11px; color: var(--faint); }
+.admin-tile.is-alert .admin-tile-sub { color: var(--alert); }
+
+/* --- Columns, queue, rail --- */
+.admin-cols { padding: 0 40px 40px; display: grid; grid-template-columns: 1.55fr 1fr; gap: 32px; align-items: start; }
+.admin-sectionhead { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin: 0 0 6px; font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--dim); }
+.admin-queue { list-style: none; margin: 0 0 28px; padding: 0; }
+.admin-queue-row { display: grid; grid-template-columns: 118px 1fr auto auto; gap: 16px; align-items: center; padding: 14px 10px; border-bottom: 1px solid var(--hairsoft); }
+.admin-row-id { font-family: var(--font-mono); font-weight: 500; font-size: 12px; color: var(--ink); }
+.admin-row-name { font-size: 13px; color: var(--ink); }
+.admin-row-sub { font-size: 11px; color: var(--faint); }
+.admin-paid { font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--ok); border: 1px solid var(--ok); padding: 4px 9px; white-space: nowrap; }
+.admin-empty { margin: 0; padding: 14px 10px; font-size: 12px; color: var(--faint); }
+
+/* --- Quarantine (D12/D15) --- */
+.admin-held { background: rgba(200, 91, 61, 0.06); border-left: 2px solid var(--alert); }
+.admin-held-line { font-family: var(--font-mono); font-size: 11px; color: var(--ink); }
+.admin-mismatch {
+  font-family: var(--font-mono); font-weight: 500; font-size: 11px;
+  /* D12: text is --ink on a tinted ground. The prototype's opacity pulse puts
+     --alert text at 1.99:1 at the trough — illegible for half of every cycle,
+     on the one status that must never be missed. */
+  color: var(--ink);
+  background: rgba(200, 91, 61, 0.28);
+  border: 1px solid var(--alert);
+  padding: 4px 9px; white-space: nowrap;
+  animation: softpulse 2.2s ease-in-out infinite;
+}
+/* The ONLY looping animation in the system (§11.5), and it moves the ground. */
+@keyframes softpulse {
+  0%, 100% { background: rgba(200, 91, 61, 0.16); }
+  50%      { background: rgba(200, 91, 61, 0.40); }
+}
+
+/* --- Right rail --- */
+.admin-rail { display: flex; flex-direction: column; gap: 24px; }
+.admin-railcard { border: 1px solid var(--hair); padding: 18px; }
+.admin-railcard-name { margin: 0; font-family: var(--font-playfair); font-size: 20px; line-height: 1.2; }
+.admin-uploads { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin: 0; padding: 0; list-style: none; }
+.admin-upload { border: 1px solid var(--hairsoft); aspect-ratio: 4 / 5; display: grid; place-items: center; padding: 8px; font-size: 10px; color: var(--faint); text-align: center; }
+
+/* --- Responsive fallback (D9) — §11.4-H supersedes this later --- */
+@media (max-width: 900px) {
+  .admin-wrap { padding: 0; }
+  .admin-card { flex-direction: column; min-height: 100dvh; border-radius: 0; box-shadow: none; }
+  .admin-sidebar { width: 100%; border-right: none; border-bottom: 1px solid var(--hair); }
+  .admin-nav { flex-direction: row; flex-wrap: wrap; }
+  .admin-sidefoot { margin-top: 16px; }
+  .admin-tiles { grid-template-columns: repeat(2, 1fr); padding: 20px; }
+  .admin-cols { grid-template-columns: 1fr; padding: 0 20px 20px; }
+  .admin-band { padding: 20px; }
+  .admin-queue-row { grid-template-columns: 1fr auto; row-gap: 6px; }
+}
+
+/* --------------------------------------------------------------------------
+   Slice 5a — ingest (design.md §11.4-C) and the Photographs landing.
+   Measurements from design/Jon Hoffman Admin.dc.html, Surface C.
+   -------------------------------------------------------------------------- */
+
+.admin-crumb { display: flex; align-items: center; gap: 12px; padding: 28px 40px 22px; border-bottom: 1px solid var(--hair); font-family: var(--font-mono); font-weight: 500; font-size: 11px; }
+.admin-crumb a { color: var(--dim); }
+.admin-crumb a:hover { color: var(--ink); }
+.admin-crumb-sep { color: var(--faint); }
+.admin-crumb-here { color: var(--ink); }
+
+.admin-ingest { padding: 34px 40px 40px; display: grid; grid-template-columns: 480px 1fr; gap: 44px; align-items: start; }
+@media (max-width: 900px) { .admin-ingest { grid-template-columns: 1fr; gap: 28px; } }
+
+.admin-drop { border: 1.5px dashed var(--hairform); position: relative; display: block; width: 100%; transition: border-color 0.2s, background 0.2s; }
+.admin-drop:hover, .admin-drop.is-over { border-color: var(--dim); background: rgba(239, 234, 224, 0.03); }
+.admin-drop img { width: 100%; height: auto; display: block; }
+.admin-drop-choose { display: block; width: 100%; min-height: 44px; border: none; border-top: 1px solid var(--hairsoft); background: transparent; color: var(--ink); font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; padding: 12px; }
+.admin-drop-choose:hover { background: rgba(239, 234, 224, 0.05); }
+.admin-drop-choose:disabled { opacity: 0.45; cursor: not-allowed; }
+.admin-drop-empty { min-height: 240px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 32px; text-align: center; }
+.admin-drop-empty strong { font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.admin-drop-empty span { font-size: 12px; color: var(--faint); }
+.admin-drop-file { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+.admin-crop { position: relative; }
+.admin-crop-shade { position: absolute; background: rgba(0, 0, 0, 0.35); pointer-events: none; }
+.admin-crop-rule { position: absolute; background: var(--ink); opacity: 0.6; pointer-events: none; }
+.admin-crop-sizes { display: flex; gap: 9px; flex-wrap: wrap; margin-top: 12px; }
+.admin-crop-size { min-height: 44px; padding: 10px 15px; border: 1px solid var(--hairform); background: transparent; color: var(--dim); font-family: var(--font-mono); font-weight: 500; font-size: 12px; cursor: pointer; border-radius: 0; }
+.admin-crop-size.is-active { background: var(--btnbg); border-color: var(--btnbg); color: var(--btnink); }
+.admin-crop-caption { margin: 10px 0 0; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.06em; color: var(--faint); }
+
+.admin-detected { border: 1px solid var(--hair); padding: 13px 15px; margin-top: 16px; }
+.admin-detected-label { margin: 0 0 7px; font-family: var(--font-mono); font-weight: 500; font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--faint); }
+.admin-detected-line { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; color: var(--ink); }
+.admin-detected-sub { margin: 3px 0 0; font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--faint); }
+
+.admin-ingest-note { margin: 14px 0 0; font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.06em; line-height: 1.7; color: var(--faint); }
+
+.admin-form { display: flex; flex-direction: column; gap: 26px; }
+.admin-formfield > label { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); margin-bottom: 9px; }
+.admin-formhint { text-transform: none; letter-spacing: 0; font-size: 10px; color: var(--faint); }
+.admin-formhint.is-a11y { color: var(--ok); }
+.admin-input { width: 100%; min-height: 44px; border: 1px solid var(--hairform); border-radius: 0; background: transparent; color: var(--ink); padding: 15px 16px; }
+.admin-input.is-title { font-family: var(--font-playfair); font-size: 22px; }
+.admin-input.is-slug { font-family: var(--font-mono); font-size: 13px; padding: 14px 16px; }
+.admin-input.is-prose { font-family: var(--font-newsreader), serif; font-size: 16px; padding: 14px 16px; }
+.admin-input.is-prose-long { font-family: var(--font-newsreader), serif; font-size: 16px; line-height: 1.6; min-height: 74px; padding: 14px 16px; }
+.admin-input.is-alt { font-size: 14px; line-height: 1.55; padding: 14px 16px; }
+.admin-input:disabled { opacity: 0.5; }
+.admin-select { width: 100%; min-height: 44px; border: 1px solid var(--hairform); border-radius: 0; background: transparent; color: var(--ink); padding: 14px 16px; font-size: 14px; }
+.admin-slugnote { margin: 6px 0 0; font-size: 11px; color: var(--faint); }
+
+.admin-ladder { margin: 0; font-family: var(--font-mono); font-weight: 500; font-size: 12px; line-height: 1.6; color: var(--dim); }
+
+.admin-toggles { display: flex; flex-direction: column; border-top: 1px solid var(--hair); border-bottom: 1px solid var(--hair); }
+.admin-toggle { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 2px; }
+.admin-toggle + .admin-toggle { border-top: 1px solid var(--hairsoft); }
+.admin-toggle-copy strong { display: block; font-size: 14px; font-weight: 400; color: var(--ink); }
+.admin-toggle-copy span { display: block; font-size: 12px; color: var(--faint); margin-top: 3px; }
+.admin-switch { flex: none; width: 40px; height: 44px; min-height: 44px; background-clip: content-box; padding: 11px 0; border-radius: 999px; border: none; background: rgba(239, 234, 224, 0.16); position: relative; cursor: pointer; transition: background 0.2s; border-radius: 999px; }
+.admin-switch::after { content: ''; position: absolute; top: 13px; left: 2px; width: 18px; height: 18px; border-radius: 50%; background: #efeae0; transition: transform 0.2s; }
+.admin-switch[aria-checked='true'] { background: var(--ok); }
+.admin-switch[aria-checked='true']::after { transform: translateX(18px); }
+
+.admin-actions { display: flex; gap: 12px; padding-top: 4px; flex-wrap: wrap; }
+.admin-btn.is-wide { padding: 15px 30px; }
+/* 4b's .admin-btn was written for <button>. The landing's primary action is a
+   next/link <a>, where padding alone will not honour min-height. Additive --
+   4b's rule is not modified. */
+a.admin-btn { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
+.admin-btn2 { min-height: 44px; padding: 15px 24px; background: transparent; color: var(--ink); border: 1px solid var(--hairform); border-radius: 0; font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; cursor: pointer; }
+.admin-btn2:hover { opacity: 0.88; }
+.admin-btn2:active { transform: translateY(1px); }
+.admin-btn2:disabled { opacity: 0.45; cursor: not-allowed; }
+
+.admin-progress { margin-top: 20px; border: 1px solid var(--hair); padding: 16px 18px; }
+.admin-progress-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
+.admin-progress-step { display: flex; align-items: center; gap: 10px; font-family: var(--font-mono); font-size: 11px; color: var(--faint); }
+.admin-progress-step.is-active { color: var(--ink); }
+.admin-progress-step.is-done { color: var(--ok); }
+.admin-progress-step.is-failed { color: var(--alert); }
+.admin-progress-message { margin: 12px 0 0; font-size: 12px; line-height: 1.5; color: var(--ink); }
+.admin-progress-message.is-failed { color: var(--alert); }
+
+.admin-photolist { list-style: none; margin: 0; padding: 0 40px 40px; }
+.admin-photorow { display: grid; grid-template-columns: 1fr auto auto auto; gap: 16px; align-items: center; padding: 14px 10px; border-bottom: 1px solid var(--hairsoft); }
+.admin-photorow-title { font-family: var(--font-playfair); font-size: 18px; color: var(--ink); }
+.admin-photorow-sub { font-family: var(--font-mono); font-size: 11px; color: var(--faint); margin-top: 3px; }
+.admin-status { font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.06em; padding: 4px 9px; border: 1px solid currentColor; }
+.admin-status.is-live { color: var(--ok); }
+.admin-status.is-draft { color: var(--faint); }
+.admin-status.is-incomplete { color: var(--alert); }
+.admin-empty { padding: 0 40px 40px; font-size: 13px; color: var(--faint); }

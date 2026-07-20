@@ -136,7 +136,7 @@ Derived 2026-07-16 by measuring every place a photograph is rendered in `design/
 
 **Format:** AVIF with a WebP fallback. Keep no JPEG derivatives — every browser this site targets (`README` § Browser Support: current Chrome/Firefox/Safari/Edge) has supported WebP since 2020 and AVIF since 2024. The **original** stays whatever it arrived as, untouched, in the private bucket.
 
-**Keys:** `derivatives/<photo-slug>/<register>/<width>.avif` (and `.webp`), where `register` is `colour` | `silver` — matching the `print_register` enum in `supabase/schema.sql`. Originals: `originals/<photo-slug>/<register>.<ext>`. These are the `original_key` / `original_bw_key` columns.
+**Keys:** `derivatives/<photo-slug>/<register>/<width>.avif` (and `.webp`), where `register` is `colour` | `silver` — matching the `print_register` enum in `supabase/schema.sql`. Originals: `originals/<photo-slug>/<register>.<ext>`. These are the `original_key` / `original_bw_key` columns. The ladder is implemented in `lib/ingest/plan.ts` and locked to `lib/images/derivatives.ts` by `test/ingest-core.test.ts`.
 
 **Cost:** 6 widths × 2 formats × 2 registers = 24 files per photo. At 24 photos that is ~576 objects, and — being ~1800px AVIFs rather than 12–32MB JPEGs — the whole public tier lands in the low tens of MB against Supabase's 1GB free bucket. **The 369MB is originals**, and originals go private and are never served to a browser.
 
@@ -144,7 +144,7 @@ Derived 2026-07-16 by measuring every place a photograph is rendered in `design/
 
 `averageColor()` (`src/utils/color.ts`) becomes a **stored column**, computed once on upload. Today it fetches full-resolution images in a `useEffect`, which is why `loading="lazy"` is a no-op site-wide — killing that runtime fetch is worth doing on its own terms.
 
-> **Superseded 2026-07-16 — the aura is speculative now, not a feature.** This paragraph used to justify the column with *"design.md §1 names borrowed colour as the preferred direction; this is what makes it free instead of a liability."* **`design.md §12.1` rejected borrowed colour.** Nothing on the storefront reads an aura — the hero's colour bleed is a blur of the *actual plate*, not a computed average, so it does not rescue the justification. The column is retained because it is cheap with the file in hand at ingest and expensive to backfill later — **not** because anything consumes it. Do not build UI implying otherwise (`design.md §11.4-C`). Decide its fate before it becomes another `sendOrderNotification()`: written, never called, permanent. Tracked at `design.md §10 q3`.
+> **Resolved 2026-07-19 — the column is written at ingest and still read by nothing, deliberately.** `sharp.stats().dominant` produces a single `{r,g,b}` stored in the `aura` column. Nothing on the storefront reads it — the hero's colour bleed is a blur of the *actual plate*, not a computed average. The `§11.4-C` tile is not built. See `design.md §10 q3`.
 
 ---
 
@@ -199,7 +199,7 @@ Designed as `design.md §11.4-C` (surface C, "Post a photo").
 
 The alt field is the one that fixes a real defect: the a11y audit found every image uses the product's *title* as alt text, so a blind customer cannot learn what a print depicts. A title is not a description — "Deterioration" tells you nothing about the photograph. Alt is now a field a human fills in, which is the only thing that could ever have fixed it.
 
-Also per photo: aspect, price/size availability, published/unlisted, optional B&W (Silver) variant.
+Also per photo: aspect, price/size availability (size-only today — see §8 q3), published/draft, optional B&W (Silver) variant uploaded as a **separately uploaded file**, never a server-side desaturation.
 
 ### 5.3 Collections + literature ✓ specified
 Create a collection, add photos, **order them** (sequence is editorial — it is how a collection reads), set a cover, write the literature.
@@ -239,7 +239,7 @@ The reason this beats the current workflow. For an order, produce everything nee
 
 **Resolved 2026-07-16 — the lab is Nations Photo Lab.** This was q1 in §8 and "the single highest-value unknown here." It is answered, and the answer costs less than feared: **Nations offers no integration to hook into, which confirms the manual model above rather than threatening it.** There is no API to build against, no unknown consumer, and no generic exporter — the export is a plain-text block a human copies into Nations' own order form. Format specified at `design.md §11.4-E`; the surface is `design.md §11.4-E` (surface E). `finish` is a settable field, default **Lustre**.
 
-**Still open — how the ordered crop reaches Nations.** The export links `<slug>_orig.tif`, the untouched original, which carries the plate's native aspect and *not* the ordered one. But only `8x10` and `16x20` of the seven sizes in `ALL_SIZES` are 4:5; the other five crop. Meanwhile the storefront's crop guide (`design.md §12.5-D`) has already shown the customer exactly what their size cuts — a promise nothing currently keeps on the fulfillment side. Someone or something must produce the print-ready, correctly-cropped file, and the design does not yet say who. Until it does, the export **says nothing about crop rather than guessing** (§1). The handoff's draft NOTES line, `Match crop to 4:5 as delivered`, was removed for exactly this reason: it would mis-print five of seven sizes.
+**Resolved 2026-07-19 — Nations' own site does the crop** (`product.md §8 q7`). The export links `<slug>_orig.tif`, the untouched original. Jon crops on Nations' order form when placing the order. The storefront's `cropGuide()` shows a **centre** crop — that is the convention; the drift risk if Nations deviates is carried to slice 7.
 
 **Confirm before building:** Nations' exact surface/paper vocabulary, so the `finish` enum and the NOTES block match their real order form.
 
@@ -282,10 +282,10 @@ Not chores — consequences of building it right:
 
 1. ✓ **Which lab? — answered 2026-07-16: Nations Photo Lab.** It offers no way to integrate, which **confirms** the manual model in §6 rather than threatening it: there is no API to build, no unknown consumer, no generic exporter. This was "the single highest-value unknown here" and it unblocked §6.2 at a cost of nothing. See §6.2.
 2. ✓ **Caption vs description vs alt — answered 2026-07-16: four fields.** Title, Caption, Description, Alt (§5.2). Three jobs crammed into one field became four fields doing four jobs. Alt is the one that fixes a real defect.
-3. ▢ **Do prices stay size-only?** — **open.** `PRICE_BY_SIZE` is keyed *only* by size today; product identity does not affect price. An admin invites per-photo pricing. If that changes, `netlify/functions/lib/pricing.js` must change with it — it is a hand-maintained mirror with no test enforcing it. Note the design mock shows a "$150 base" that is pure fiction: the real ladder is `$5.00 → $65.00`.
-4. ▢ **What happens to `unlisted`?** — **open.** Currently a `products.ts` boolean for direct-link-only prints. `design.md §11.4-B/C` surface it as a real, first-class status, which leans hard toward "kept" — but leaning is not deciding. Confirm it is a feature and not a leftover being cemented by a mockup.
-5. ▢ **Does the storefront read the DB at request time, or build-time static?** — **open, and now printed in the UI.** Decides whether publishing a photo needs a redeploy. A Next.js question specifically (§1.5): static generation with on-demand revalidation, or server components reading Supabase per request. Leaning revalidation. **Raised urgency:** `design.md §11.4-G` puts "publishing needs no redeploy" on screen as copy. Until this is confirmed, that copy is a promise the system may not keep — a §1 violation waiting to ship.
+3. ▢ **Do prices stay size-only?** — **deferred, not declined — its own slice after 5b** (2026-07-19). Size-only pricing survives slice 5a. Jon wants per-photo prices for new releases, which needs an edit surface first. That slice inherits: the equivalence lock survives (photos with no override must still price identically); blast radius is seven call sites (four in the money path); and `app/(store)/prints/page.tsx`'s module-scope `FROM_PRICE` bakes "from $5" at import. See `design.md §11.7`.
+4. ✓ **What happens to `unlisted`?** — **resolved 2026-07-19: a leftover.** The state is **Draft**: `published=false` means invisible to everyone, which is what RLS already enforces.
+5. ✓ **Does the storefront read the DB at request time, or build-time static?** — **resolved 2026-07-19: on-demand revalidation.** Every ingest write path calls `revalidateTag`; the 3600s TTL stays as a self-healing backstop. Asserted in `test/ingest-actions.test.ts`.
 6. ✓ **Portfolio-vs-store — answered 2026-07-16: portfolio that sells.** The layout decided it before any prose did; it is now recorded in `design.md §1`. Home is an index of works, the shop is titled "Prints," title leads and price recedes.
-7. ▢ **How does the ordered crop reach Nations?** — **new, open.** The export links the untouched original; five of seven sizes crop; the storefront's crop guide has already promised the customer a specific crop. Nothing currently produces the print-ready file. See §6.2.
+7. ✓ **How does the ordered crop reach Nations?** — **resolved 2026-07-19: Nations' own site crops.** The export links the untouched original; Jon crops on Nations' order form. The storefront's centre-crop convention is recorded; drift risk carried to slice 7. See §6.2.
 
 **Resolved without ever being a question here:** the print size list. `ALL_SIZES` keeps all seven (`4x6, 5x7, 8x10, 11x14, 12x16, 16x20, 20x30`) and `PRICE_BY_SIZE` is untouched (decided 2026-07-16). The handoff's "all 4:5" was loose wording, not a proposal — but it is recorded because it nearly became one silently, and it would have landed in the money code. See `design.md §12.5-D`.
