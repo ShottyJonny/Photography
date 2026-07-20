@@ -34,7 +34,18 @@ export function Dropzone({
 
   function take(list: FileList | null) {
     const next = list?.[0] ?? null
-    if (next) onFile(next)
+    if (!next) {
+      onFile(null)
+      return
+    }
+
+    const allowedTypes = new Set(['image/jpeg', 'image/png', 'image/tiff', 'image/webp'])
+    if (!allowedTypes.has(next.type)) {
+      onFile(null)
+      return
+    }
+
+    onFile(next)
   }
 
   return (
