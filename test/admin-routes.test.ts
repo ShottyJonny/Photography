@@ -38,6 +38,7 @@ describe("every 'use server' export guards itself", () => {
     // actions inside components, not only in lib/admin.
     const files = [
       ...walk(resolve(ROOT, 'lib/admin')),
+      ...walk(resolve(ROOT, 'lib/ingest')),
       ...walk(resolve(ROOT, 'app/admin')),
       ...walk(resolve(ROOT, 'components/admin')),
     ].filter((f) => /\.tsx?$/.test(f))
@@ -60,5 +61,16 @@ describe("every 'use server' export guards itself", () => {
     }
 
     expect(offenders, `server actions missing requireAdmin: ${offenders.join(', ')}`).toEqual([])
+  })
+
+  it('actually inspects the server-action modules', () => {
+    const serverModules = [
+      ...walk(resolve(ROOT, 'lib/admin')),
+      ...walk(resolve(ROOT, 'lib/ingest')),
+      ...walk(resolve(ROOT, 'app/admin')),
+      ...walk(resolve(ROOT, 'components/admin')),
+    ].filter((f) => /\.tsx?$/.test(f) && /['"]use server['"]/.test(readFileSync(f, 'utf8')))
+    // lib/admin/auth-actions.ts + lib/ingest/actions.ts at minimum.
+    expect(serverModules.length).toBeGreaterThanOrEqual(2)
   })
 })

@@ -20,18 +20,24 @@ describe('AdminNav', () => {
     expect(labels).toEqual(['Dashboard', 'Photographs', 'Collections', 'Orders', 'Home feature'])
   })
 
-  it('makes exactly one item a link, and it is Dashboard', async () => {
+  it('has two live links now: Dashboard and Photographs', async () => {
     const { container } = await renderNav()
-    const links = container.querySelectorAll('a.admin-navitem')
-    expect(links.length).toBe(1)
-    expect(links[0].getAttribute('href')).toBe('/admin')
-    expect(links[0].textContent).toContain('Dashboard')
+    const links = [...container.querySelectorAll('a')]
+    expect(links.map((a) => a.textContent?.trim())).toEqual(['Dashboard', 'Photographs'])
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/admin', '/admin/photographs'])
   })
 
-  it('renders the four unbuilt items as non-interactive text carrying the marker', async () => {
+  it('marks the three remaining unbuilt items', async () => {
+    const { container } = await renderNav()
+    const marks = [...container.querySelectorAll('.admin-mark')]
+    expect(marks).toHaveLength(3)
+    expect(marks.every((m) => m.textContent === 'NOT BUILT')).toBe(true)
+  })
+
+  it('renders the three unbuilt items as non-interactive text carrying the marker', async () => {
     const { container } = await renderNav()
     const marked = [...container.querySelectorAll('span.admin-navitem')]
-    expect(marked.length).toBe(4)
+    expect(marked.length).toBe(3)
     for (const el of marked) {
       expect(el.textContent).toContain('NOT BUILT')
       expect(el.hasAttribute('href')).toBe(false)
