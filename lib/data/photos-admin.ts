@@ -46,3 +46,27 @@ export async function listCollections(): Promise<AdminCollection[] | null> {
   }
   return (data ?? []) as AdminCollection[]
 }
+
+export interface EditablePhoto {
+  id: string
+  slug: string
+  title: string
+  caption: string | null
+  description: string | null
+  alt_text: string | null
+  published: boolean
+}
+
+const EDIT_COLS = 'id, slug, title, caption, description, alt_text, published'
+
+/** null on a missing row OR a read error. The page treats both as not-editable. */
+export async function getPhotoForEdit(id: string): Promise<EditablePhoto | null> {
+  await requireAdmin()
+  const db = await createAuthServerClient()
+  const { data, error } = await db.from('photos').select(EDIT_COLS).eq('id', id).maybeSingle()
+  if (error) {
+    console.error('[admin] getPhotoForEdit failed', error)
+    return null
+  }
+  return (data as EditablePhoto | null) ?? null
+}
