@@ -424,6 +424,7 @@ a.admin-btn { display: inline-flex; align-items: center; justify-content: center
 .admin-btn2:hover { opacity: 0.88; }
 .admin-btn2:active { transform: translateY(1px); }
 .admin-btn2:disabled { opacity: 0.45; cursor: not-allowed; }
+a.admin-btn2 { display: inline-flex; align-items: center; justify-content: center; text-decoration: none; }
 
 .admin-progress { margin-top: 20px; border: 1px solid var(--hair); padding: 16px 18px; }
 .admin-progress-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; }
@@ -435,7 +436,7 @@ a.admin-btn { display: inline-flex; align-items: center; justify-content: center
 .admin-progress-message.is-failed { color: var(--alert); }
 
 .admin-photolist { list-style: none; margin: 0; padding: 0 40px 40px; }
-.admin-photorow { display: grid; grid-template-columns: 1fr auto auto auto; gap: 16px; align-items: center; padding: 14px 10px; border-bottom: 1px solid var(--hairsoft); }
+.admin-photorow { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 16px; align-items: center; padding: 14px 10px; border-bottom: 1px solid var(--hairsoft); }
 .admin-photorow-title { font-family: var(--font-playfair); font-size: 18px; color: var(--ink); }
 .admin-photorow-sub { font-family: var(--font-mono); font-size: 11px; color: var(--faint); margin-top: 3px; }
 .admin-status { font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.06em; padding: 4px 9px; border: 1px solid currentColor; }
