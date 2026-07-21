@@ -60,4 +60,11 @@ describe('PhotoList', () => {
     const live = render(<PhotoList photos={[base]} />)
     expect([...live.container.querySelectorAll('button')].some((b) => b.textContent === 'Delete')).toBe(false)
   })
+
+  it('offers an Edit link per row pointing at the edit page', () => {
+    const { container } = render(<PhotoList photos={[base]} />)
+    const edit = [...container.querySelectorAll('a')].find((a) => a.textContent === 'Edit')
+    expect(edit, 'no Edit link').toBeTruthy()
+    expect(edit!.getAttribute('href')).toBe('/admin/photographs/p1/edit')
+  })
 })

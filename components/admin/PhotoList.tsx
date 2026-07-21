@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { generateRegister, finishIngest, setPublished, deletePhoto } from '@/lib/ingest/actions'
 import type { AdminPhoto } from '@/lib/data/photos-admin'
 
@@ -98,6 +99,7 @@ export function PhotoList({ photos }: { photos: AdminPhoto[] | null }) {
                 {photo.has_bw_variant ? ' · colour + silver' : ' · colour'}
               </div>
             </div>
+            <Link className="admin-btn2" href={`/admin/photographs/${photo.id}/edit`}>Edit</Link>
             {photo.derivatives_ready ? (
               <span className={`admin-status ${photo.published ? 'is-live' : 'is-draft'}`}>
                 {photo.published ? 'Published' : 'Draft'}
