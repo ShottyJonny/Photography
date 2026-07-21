@@ -47,8 +47,11 @@ Phase A — app code (branch off develop)
   test/photographs-landing.test.tsx    MODIFY  assert the Edit link
 
 Phase B — run-once script (NOT part of the app build)
-  scripts/neutralize-server-only.mjs   NEW  loader stubbing server-only
+  package.json                          MODIFY  + tsx devDependency
   lib/import/plan.ts                    NEW  pure planImports() (testable)
+  scripts/neutralize-server-only.mjs   NEW  loader registering the resolver
+  scripts/server-only-resolver.mjs     NEW  resolver: server-only -> empty stub
+  scripts/server-only-stub.mjs          NEW  the empty stub (plain JS, no transpile)
   scripts/bulk-import.mts               NEW  the runner
   test/import-plan.test.ts              NEW  covers planImports
 ```
@@ -326,13 +329,18 @@ export async function updatePhoto(input: UpdatePhotoInput): Promise<UpdateResult
     return { ok: false, message: 'A published photograph needs alt text. Unpublish it first to clear it.' }
   }
 
+  // Trim every field, and normalise blank optionals to null. updatePhoto is a
+  // public POST endpoint, so a raw caller can send untrimmed values the form
+  // would have cleaned.
+  const clean = (v: string | null): string | null => (blank(v) ? null : v!.trim())
+
   const { error } = await db
     .from('photos')
     .update({
       title: input.title.trim(),
-      caption: input.caption,
-      description: input.description,
-      alt_text: blank(input.altText) ? null : input.altText,
+      caption: clean(input.caption),
+      description: clean(input.description),
+      alt_text: clean(input.altText),
     })
     .eq('id', input.photoId)
   if (error) {
@@ -778,33 +786,47 @@ export function planImports(files: SourceFile[], existingSlugs: Set<string>): Im
 Run: `npx vitest run test/import-plan.test.ts`
 Expected: PASS, 4 tests.
 
-- [ ] **Step 5: Write the server-only loader**
+- [ ] **Step 5: Install `tsx` and write the server-only loader**
 
-Create `scripts/neutralize-server-only.mjs` — maps both `server-only` imports (in `process.ts` and `admin.ts`) to the existing test stub:
+The runner is TypeScript using `@/…` path aliases. Native Node type-stripping strips types but does **not** resolve `@/` aliases, so `tsx` (which reads `tsconfig` `paths`) is load-bearing. Install it:
 
-```js
-// Run the bulk import under: node --import ./scripts/neutralize-server-only.mjs ...
-// lib/ingest/process.ts and lib/supabase/admin.ts both `import 'server-only'`,
-// which throws outside a Next server bundle. Point it at the existing stub so
-// the script imports the REAL modules (byte-identical derivatives), not copies.
-import { register } from 'node:module'
-import { pathToFileURL } from 'node:url'
-
-register('./scripts/server-only-resolver.mjs', pathToFileURL('./').href)
+```bash
+npm install --save-dev tsx
 ```
 
-Create `scripts/server-only-resolver.mjs`:
+Create **three** small files. First, `scripts/server-only-stub.mjs` — a **plain-JS** empty module (not the `.ts` test stub, so the loader chain never has to transpile the stub itself):
+
+```js
+// Empty. lib/ingest/process.ts and lib/supabase/admin.ts `import 'server-only'`,
+// which throws outside a Next server bundle. The resolver points that import here.
+export {}
+```
+
+Then `scripts/server-only-resolver.mjs` — a resolve hook mapping the bare specifier to that stub:
 
 ```js
 import { pathToFileURL } from 'node:url'
 import { resolve as resolvePath } from 'node:path'
 
-const STUB = pathToFileURL(resolvePath('test/stubs/server-only.ts')).href
+const STUB = pathToFileURL(resolvePath('scripts/server-only-stub.mjs')).href
 
 export async function resolve(specifier, context, next) {
+  // Delegate everything else (including tsx's own resolution) down the chain.
   if (specifier === 'server-only') return { url: STUB, shortCircuit: true }
   return next(specifier, context)
 }
+```
+
+Then `scripts/neutralize-server-only.mjs` — registers the resolver:
+
+```js
+// Run the bulk import under: node --import ./scripts/neutralize-server-only.mjs --import tsx ...
+// This --import comes BEFORE tsx so the server-only mapping is in the hook chain;
+// tsx delegates the bare `server-only` specifier down to our resolver via next().
+import { register } from 'node:module'
+import { pathToFileURL } from 'node:url'
+
+register('./scripts/server-only-resolver.mjs', pathToFileURL('./').href)
 ```
 
 - [ ] **Step 6: Write the runner**
@@ -827,14 +849,17 @@ Create `scripts/bulk-import.mts`. **This is not covered by unit tests — its ve
  * byte-identical. Imports as DRAFTS (legacy data has no alt; Postgres forbids
  * publishing without it). Skips slugs already in the DB. Idempotent.
  */
-import { readdirSync, existsSync, readFileSync, statSync } from 'node:fs'
+import { readdirSync, existsSync, readFileSync } from 'node:fs'
 import { join, basename, extname } from 'node:path'
-import { planImports, type SourceFile } from '@/lib/import/plan'
+import { planImports, type SourceFile, type ImportDecision } from '@/lib/import/plan'
 import { measure, encodeLadder } from '@/lib/ingest/process'
 import { originalKey, ORIGINALS_BUCKET, DERIVATIVES_BUCKET } from '@/lib/ingest/keys'
 import { expectedObjects } from '@/lib/ingest/plan'
 import { validateUpload, validateDimensions, extensionFor } from '@/lib/ingest/validate'
 import { supabaseAdmin } from '@/lib/supabase/admin'
+
+// The legacy catalogue is all JPG. If that ever changes, derive per file instead.
+const JPEG = 'image/jpeg'
 
 const args = process.argv.slice(2)
 const write = args.includes('--write')
@@ -861,37 +886,37 @@ async function existingSlugs(): Promise<Set<string>> {
   return new Set((data ?? []).map((r: { slug: string }) => r.slug))
 }
 
-function mime(path: string): string {
-  return 'image/jpeg' // legacy catalogue is all JPG
-}
-
-async function importOne(d: ReturnType<typeof planImports>[number]): Promise<void> {
+async function importOne(d: ImportDecision): Promise<void> {
   const db = supabaseAdmin()
   const colour = readFileSync(d.colourPath)
-  const upCheck = validateUpload({ mime: mime(d.colourPath), bytes: colour.length })
+  const upCheck = validateUpload({ mime: JPEG, bytes: colour.length })
   if (!upCheck.ok) throw new Error(`${d.slug}: ${upCheck.message}`)
 
   const measured = await measure(colour)
   const dimCheck = validateDimensions(measured.widthPx)
   if (!dimCheck.ok) throw new Error(`${d.slug}: ${dimCheck.message}`)
 
-  const colourExt = extensionFor(mime(d.colourPath))
-  const colourKey = originalKey(d.slug, 'colour', colourExt)
-  await db.storage.from(ORIGINALS_BUCKET).upload(colourKey, colour, { contentType: mime(d.colourPath), upsert: true })
+  // Supabase RETURNS errors, it does not throw them — main's try/catch would
+  // miss them, printing "created" over a broken row. Check and throw on every one.
+  async function put(bucket: string, key: string, body: Buffer, contentType: string): Promise<void> {
+    const { error } = await db.storage.from(bucket).upload(key, body, { contentType, upsert: true })
+    if (error) throw new Error(`upload ${key}: ${error.message}`)
+  }
+
+  const colourKey = originalKey(d.slug, 'colour', extensionFor(JPEG))
+  await put(ORIGINALS_BUCKET, colourKey, colour, JPEG)
 
   let silverKey: string | null = null
   if (d.hasSilver && d.silverPath) {
     const silver = readFileSync(d.silverPath)
-    silverKey = originalKey(d.slug, 'silver', extensionFor('image/jpeg'))
-    await db.storage.from(ORIGINALS_BUCKET).upload(silverKey, silver, { contentType: 'image/jpeg', upsert: true })
+    silverKey = originalKey(d.slug, 'silver', extensionFor(JPEG))
+    await put(ORIGINALS_BUCKET, silverKey, silver, JPEG)
   }
 
   for (const register of d.hasSilver ? (['colour', 'silver'] as const) : (['colour'] as const)) {
     const src = register === 'colour' ? colour : readFileSync(d.silverPath!)
     const objects = await encodeLadder(src, d.slug, register)
-    for (const o of objects) {
-      await db.storage.from(DERIVATIVES_BUCKET).upload(o.key, o.body, { contentType: o.contentType, upsert: true })
-    }
+    for (const o of objects) await put(DERIVATIVES_BUCKET, o.key, o.body, o.contentType)
   }
 
   // Verify the manifest before marking ready (what finishIngest does).
@@ -903,7 +928,7 @@ async function importOne(d: ReturnType<typeof planImports>[number]): Promise<voi
   }
   const ready = expected.every((k) => present.has(k))
 
-  await db.from('photos').insert({
+  const { error: insErr } = await db.from('photos').insert({
     slug: d.slug,
     title: d.title,
     caption: null,
@@ -919,6 +944,7 @@ async function importOne(d: ReturnType<typeof planImports>[number]): Promise<voi
     original_key: colourKey,
     original_bw_key: silverKey,
   })
+  if (insErr) throw new Error(`insert row: ${insErr.message}`)
 }
 
 async function main() {
@@ -971,12 +997,16 @@ node --env-file=.env.local --import ./scripts/neutralize-server-only.mjs --impor
   scripts/bulk-import.mts --source "C:/Users/Shott/Photography-main/public/images"
 ```
 
-Expected: `25 source files · 23 create · 2 skip` (among-giants, deterioration skipped as `exists`), nothing written. Confirm the counts against the file list before proceeding.
+Expected: `25 source files · 23 create · 2 skip` (among-giants, deterioration skipped as `exists`), nothing written.
+
+**This run is also the proof the server-only loader works** — the runner imports `lib/ingest/process.ts` and `lib/supabase/admin.ts`, both of which `import 'server-only'`. If the loader chain is wrong, this command throws `This module cannot be imported from a Client Component` (or similar) at import time, before any output. Clean output *is* the check.
+
+**Note on `too-small`:** the dry run only decides create-vs-skip-exists; dimension validation runs under `--write` (a too-small file would surface there as `FAILED <slug>`). All 25 legacy files clear 1800px (verified in the spec brainstorm), so none is expected to fail — but the dry run does not pre-flight dimensions.
 
 - [ ] **Step 9: Commit the script (dry-run verified)**
 
 ```bash
-git add lib/import/plan.ts scripts/neutralize-server-only.mjs scripts/server-only-resolver.mjs scripts/bulk-import.mts test/import-plan.test.ts tsconfig.json
+git add lib/import/plan.ts scripts/neutralize-server-only.mjs scripts/server-only-resolver.mjs scripts/server-only-stub.mjs scripts/bulk-import.mts test/import-plan.test.ts tsconfig.json package.json package-lock.json
 git commit -m "feat: one-time legacy catalogue bulk import
 
 Loops slice 5a's ingest core (slug/keys/plan/validate/process) over the legacy
