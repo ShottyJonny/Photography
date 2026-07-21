@@ -39,7 +39,7 @@ npm run typecheck  # tsc --noEmit
 npm test           # vitest run
 ```
 
-Node **20.9+** (`.nvmrc` is `20`). `next dev` / `next build` use **Turbopack** by default (Next 16).
+Node **22** (`.nvmrc` is `22`; Active LTS). Local, CI (`node-version-file: .nvmrc`), and Vercel (Node.js Version) are all pinned to 22, so the runtime that's tested is the runtime that ships. `next dev` / `next build` use **Turbopack** by default (Next 16).
 
 ## Verification — the gate
 
