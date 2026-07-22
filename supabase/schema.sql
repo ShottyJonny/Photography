@@ -178,6 +178,22 @@ create table if not exists collection_photos (
 create unique index if not exists collection_photos_position
   on collection_photos (collection_id, position);
 
+-- product.md §5.3: editorial order. Rewrites every position for a collection from an ordered
+-- array of photo ids, in ONE transaction. Two-phase offset (n is always << 1000000) so the
+-- source and target position ranges never overlap and unique(collection_id, position) cannot
+-- collide mid-update, even though the index is not deferrable.
+create or replace function reorder_collection_photos(p_collection uuid, p_ordered uuid[])
+returns void language plpgsql security invoker as $$
+begin
+  update collection_photos set position = position + 1000000 where collection_id = p_collection;
+  update collection_photos cp
+    set position = ord.i - 1
+    from (select unnest(p_ordered) as pid, generate_subscripts(p_ordered, 1) as i) ord
+    where cp.collection_id = p_collection and cp.photo_id = ord.pid;
+end $$;
+
+grant execute on function reorder_collection_photos(uuid, uuid[]) to authenticated;
+
 -- ---------------------------------------------------------------------------
 -- orders
 -- ---------------------------------------------------------------------------

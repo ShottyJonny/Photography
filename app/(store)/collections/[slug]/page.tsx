@@ -4,6 +4,19 @@ import type { Metadata } from 'next'
 import { Plate } from '@/components/store/Plate'
 import { getCollectionBySlug } from '@/lib/data/collections'
 
+export function LiteratureBody({ text }: { text: string }) {
+  const paras = text.split(/\n\s*\n/).map((p) => p.trim()).filter(Boolean)
+  return (
+    <>
+      {paras.map((para, i) => (
+        <p key={i} className={i === 0 ? 'collection-literature-body is-first' : 'collection-literature-body'}>
+          {para}
+        </p>
+      ))}
+    </>
+  )
+}
+
 export const dynamic = 'force-dynamic'
 
 export async function generateMetadata({
@@ -49,7 +62,7 @@ export default async function CollectionDetailPage({
           <h2 id="collection-literature-heading" className="visually-hidden">
             Essay
           </h2>
-          <div className="collection-literature-body">{detail.literature}</div>
+          <LiteratureBody text={detail.literature} />
           <p className="collection-literature-signature">Jon Hoffman</p>
         </section>
       ) : null}
@@ -147,10 +160,9 @@ export default async function CollectionDetailPage({
           font-size: 1.125rem;
           line-height: 1.75;
           color: var(--ink);
-          white-space: pre-wrap;
+          margin: 0 0 1.25rem;
         }
-
-        .collection-literature-body::first-letter {
+        .collection-literature-body.is-first::first-letter {
           float: left;
           margin: 0.05em 0.12em 0 0;
           font-family: var(--font-playfair);
