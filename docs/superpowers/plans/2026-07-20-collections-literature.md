@@ -387,9 +387,10 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 - [ ] **Step 1: Write the failing test**
 
-`test/collection-actions.test.ts` (Task 5 appends). Fake client supports `select().eq().maybeSingle()`, `insert().select().single()`, `update().eq()`, `delete().eq()`:
+`test/collection-actions.test.ts`. This file's COMPLETE fake client is defined here (Task 4 appends only *test cases*, never touches the fake). It supports every chain both tasks' actions build: `select().eq().maybeSingle()`, `select().order().limit().maybeSingle()`, `select().eq().order()` (list), `insert(row).select().single()`, `insert(rows[])` awaited, `update().eq()` (one predicate) awaited, `delete().eq()` and `delete().eq().eq()` (two predicates) awaited, and `rpc()`. Predicates accumulate on `.eq()`; terminals are **lazy thenables** (`then` runs only on await, so `.eq().eq()` never double-applies).
 
 ```ts
+/* eslint-disable @typescript-eslint/no-explicit-any -- dynamic Supabase query-builder mock */
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 
 const requireAdmin = vi.fn(async () => ({ id: 'admin' }))
@@ -403,26 +404,44 @@ let rpcCalls: { fn: string; args: unknown }[] = []
 function fake() {
   return {
     from(table: string) {
-      const rows = (db as any)[table] as any[]
+      const rows = () => (db as any)[table] as any[]
       return {
         select() {
+          const preds: [string, any][] = []
+          const match = (r: any) => preds.every(([c, v]) => r[c] === v)
+          const chain: any = {
+            eq(c: string, v: any) { preds.push([c, v]); return chain },
+            order() { return chain },
+            limit() { return chain },
+            maybeSingle: async () => ({ data: rows().find(match) ?? null, error: null }),
+            then: (res: any) => res({ data: preds.length ? rows().filter(match) : rows(), error: null }),
+          }
+          return chain
+        },
+        insert(rowOrRows: any) {
+          const list = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows]
+          list.forEach((r) => { if (!r.id) r.id = 'c-new'; rows().push(r) })
           return {
-            eq(_c: string, val: string) {
-              return {
-                maybeSingle: async () => ({ data: rows.find((r) => r.id === val || r.slug === val) ?? null, error: null }),
-                order: () => ({ then: (res: any) => res({ data: rows.filter((r) => r.collection_id === val), error: null }) }),
-                then: (res: any) => res({ data: rows.filter((r) => r.collection_id === val || r.id === val), error: null }),
-              }
-            },
-            order: () => ({ then: (res: any) => res({ data: rows, error: null }) }),
-            then: (res: any) => res({ data: rows, error: null }),
+            select: () => ({ single: async () => ({ data: rows()[rows().length - 1], error: null }) }),
+            then: (res: any) => res({ error: null }),   // insert(array) awaited directly
           }
         },
-        insert(row: any) {
-          return { select: () => ({ single: async () => { const created = { id: 'c-new', ...row }; rows.push(created); return { data: created, error: null } } }) }
+        update(patch: any) {
+          const preds: [string, any][] = []
+          const chain: any = {
+            eq(c: string, v: any) { preds.push([c, v]); return chain },
+            then(res: any) { rows().filter((r: any) => preds.every(([c, v]) => r[c] === v)).forEach((r: any) => Object.assign(r, patch)); res({ error: null }) },
+          }
+          return chain
         },
-        update(patch: any) { return { eq: async (_c: string, id: string) => { const r = rows.find((x) => x.id === id); if (r) Object.assign(r, patch); return { error: null } } } },
-        delete() { return { eq: async (_c: string, id: string) => { (db as any)[table] = rows.filter((r) => r.id !== id); return { error: null } } } },
+        delete() {
+          const preds: [string, any][] = []
+          const chain: any = {
+            eq(c: string, v: any) { preds.push([c, v]); return chain },
+            then(res: any) { (db as any)[table] = rows().filter((r: any) => !preds.every(([c, v]) => r[c] === v)); res({ error: null }) },
+          }
+          return chain
+        },
       }
     },
     rpc: async (fn: string, args: unknown) => { rpcCalls.push({ fn, args }); return { error: null } },
@@ -636,11 +655,14 @@ describe('reorderPhotos', () => {
     expect(r.ok).toBe(true)
     expect(rpcCalls).toContainEqual({ fn: 'reorder_collection_photos', args: { p_collection: 'c1', p_ordered: ['b', 'a'] } })
   })
-  it('rejects an id set that adds or drops a member', async () => {
+  it('rejects an id set that adds, drops, or duplicates a member', async () => {
     const added = await reorderPhotos({ collectionId: 'c1', orderedPhotoIds: ['a', 'b', 'c'] })
     expect(added.ok).toBe(false)
     const dropped = await reorderPhotos({ collectionId: 'c1', orderedPhotoIds: ['a'] })
     expect(dropped.ok).toBe(false)
+    // Same Set as {a,b} but a duplicate 'a' — would join two RPC rows. Rejected by the length check.
+    const dup = await reorderPhotos({ collectionId: 'c1', orderedPhotoIds: ['a', 'b', 'a'] })
+    expect(dup.ok).toBe(false)
     expect(rpcCalls).toHaveLength(0)
   })
 })
@@ -665,22 +687,7 @@ describe('setCover / removePhoto', () => {
 })
 ```
 
-> The fake client needs `insert` on `collection_photos` and a `delete().eq().eq()` chain. Extend `fake()`'s `insert` to push array rows, and add a two-`eq` delete. Add to `fake()`:
-> ```ts
-> insert(rowOrRows: any) {
->   const list = Array.isArray(rowOrRows) ? rowOrRows : [rowOrRows]
->   list.forEach((r) => rows.push(r))
->   return { select: () => ({ single: async () => { const c = { id: 'c-new', ...list[0] }; return { data: c, error: null } } }), then: (res: any) => res({ error: null }) }
-> },
-> ```
-> and make `delete()` support chained `.eq().eq()`:
-> ```ts
-> delete() {
->   const preds: [string, string][] = []
->   const chain: any = { eq(c: string, v: string) { preds.push([c, v]); return chain }, then(res: any) { (db as any)[table] = rows.filter((r) => !preds.every(([c, v]) => r[c] === v)); res({ error: null }) } }
->   return chain
-> },
-> ```
+> **The Task 3 fake already supports all of this** (`insert(array)`, `delete().eq().eq()`, `rpc`) — do NOT modify `fake()`. Task 4 appends only the test cases below.
 
 - [ ] **Step 2: Run to verify fails** → the four new exports unresolved.
 
@@ -727,7 +734,9 @@ export async function reorderPhotos(input: { collectionId: string; orderedPhotoI
   const { data: members } = await db.from('collection_photos').select('photo_id').eq('collection_id', input.collectionId)
   const current = new Set(((members as { photo_id: string }[]) ?? []).map((m) => m.photo_id))
   const given = new Set(input.orderedPhotoIds)
-  if (current.size !== given.size || [...current].some((id) => !given.has(id))) {
+  // Array length too, not just Set membership — a payload like [a,b,a] has the
+  // same Set as {a,b} but its duplicate would join two rows in the RPC's unnest.
+  if (input.orderedPhotoIds.length !== current.size || current.size !== given.size || [...current].some((id) => !given.has(id))) {
     return { ok: false, message: 'The order doesn’t match the collection’s works.' }
   }
   const { error } = await db.rpc('reorder_collection_photos', { p_collection: input.collectionId, p_ordered: input.orderedPhotoIds })
@@ -1009,7 +1018,9 @@ import type { AddablePhoto } from '@/lib/data/collections-admin'
 export function PhotoPicker({ options, onAdd, onClose }: { options: AddablePhoto[]; onAdd: (ids: string[]) => void; onClose: () => void }) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   function toggle(id: string) {
-    setSelected((prev) => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next })
+    // if/else, not a ternary-for-side-effect: the ternary trips
+    // @typescript-eslint/no-unused-expressions (a 0-warning gate failure).
+    setSelected((prev) => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next })
   }
   return (
     <div className="admin-col-picker" role="dialog" aria-label="Add works">
