@@ -20,24 +20,24 @@ describe('AdminNav', () => {
     expect(labels).toEqual(['Dashboard', 'Photographs', 'Collections', 'Orders', 'Home feature'])
   })
 
-  it('has two live links now: Dashboard and Photographs', async () => {
+  it('has three live links now: Dashboard, Photographs, and Collections', async () => {
     const { container } = await renderNav()
     const links = [...container.querySelectorAll('a')]
-    expect(links.map((a) => a.textContent?.trim())).toEqual(['Dashboard', 'Photographs'])
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/admin', '/admin/photographs'])
+    expect(links.map((a) => a.textContent?.trim())).toEqual(['Dashboard', 'Photographs', 'Collections'])
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/admin', '/admin/photographs', '/admin/collections'])
   })
 
-  it('marks the three remaining unbuilt items', async () => {
+  it('marks the two remaining unbuilt items', async () => {
     const { container } = await renderNav()
     const marks = [...container.querySelectorAll('.admin-mark')]
-    expect(marks).toHaveLength(3)
+    expect(marks).toHaveLength(2)
     expect(marks.every((m) => m.textContent === 'NOT BUILT')).toBe(true)
   })
 
-  it('renders the three unbuilt items as non-interactive text carrying the marker', async () => {
+  it('renders the two unbuilt items as non-interactive text carrying the marker', async () => {
     const { container } = await renderNav()
     const marked = [...container.querySelectorAll('span.admin-navitem')]
-    expect(marked.length).toBe(3)
+    expect(marked.length).toBe(2)
     for (const el of marked) {
       expect(el.textContent).toContain('NOT BUILT')
       expect(el.hasAttribute('href')).toBe(false)
