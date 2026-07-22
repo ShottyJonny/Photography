@@ -76,3 +76,63 @@ export async function deleteCollection(input: { id: string }): Promise<Result> {
   revalidateCollections()
   return { ok: true }
 }
+
+export async function addPhotos(input: { collectionId: string; photoIds: string[] }): Promise<Result> {
+  await requireAdmin()
+  if (input.photoIds.length === 0) return { ok: true }
+  const db = await createAuthServerClient()
+  const { data: last } = await db
+    .from('collection_photos')
+    .select('position')
+    .eq('collection_id', input.collectionId)
+    .order('position', { ascending: false })
+    .limit(1)
+    .maybeSingle()
+  let position = (((last as { position?: number } | null)?.position) ?? -1) + 1
+  const rows = input.photoIds.map((photo_id) => ({ collection_id: input.collectionId, photo_id, position: position++ }))
+  const { error } = await db.from('collection_photos').insert(rows)
+  if (error) return { ok: false, message: 'Couldn’t add the works.' }
+  revalidateCollections()
+  return { ok: true }
+}
+
+export async function removePhoto(input: { collectionId: string; photoId: string }): Promise<Result> {
+  await requireAdmin()
+  const db = await createAuthServerClient()
+  const { error } = await db.from('collection_photos').delete().eq('collection_id', input.collectionId).eq('photo_id', input.photoId)
+  if (error) return { ok: false, message: 'Couldn’t remove the work.' }
+  // If it was the cover, clear the cover.
+  const { data: col } = await db.from('collections').select('cover_photo_id').eq('id', input.collectionId).maybeSingle()
+  if ((col as { cover_photo_id?: string } | null)?.cover_photo_id === input.photoId) {
+    await db.from('collections').update({ cover_photo_id: null }).eq('id', input.collectionId)
+  }
+  revalidateCollections()
+  return { ok: true }
+}
+
+export async function reorderPhotos(input: { collectionId: string; orderedPhotoIds: string[] }): Promise<Result> {
+  await requireAdmin()
+  const db = await createAuthServerClient()
+  // The ordered set must be EXACTLY the current membership — no adds/drops smuggled in.
+  const { data: members } = await db.from('collection_photos').select('photo_id').eq('collection_id', input.collectionId)
+  const current = new Set(((members as { photo_id: string }[]) ?? []).map((m) => m.photo_id))
+  const given = new Set(input.orderedPhotoIds)
+  // Array length too, not just Set membership — a payload like [a,b,a] has the
+  // same Set as {a,b} but its duplicate would join two rows in the RPC's unnest.
+  if (input.orderedPhotoIds.length !== current.size || current.size !== given.size || [...current].some((id) => !given.has(id))) {
+    return { ok: false, message: 'The order doesn’t match the collection’s works.' }
+  }
+  const { error } = await db.rpc('reorder_collection_photos', { p_collection: input.collectionId, p_ordered: input.orderedPhotoIds })
+  if (error) return { ok: false, message: 'Couldn’t save the order.' }
+  revalidateCollections()
+  return { ok: true }
+}
+
+export async function setCover(input: { collectionId: string; photoId: string | null }): Promise<Result> {
+  await requireAdmin()
+  const db = await createAuthServerClient()
+  const { error } = await db.from('collections').update({ cover_photo_id: input.photoId }).eq('id', input.collectionId)
+  if (error) return { ok: false, message: 'Couldn’t set the cover.' }
+  revalidateCollections()
+  return { ok: true }
+}

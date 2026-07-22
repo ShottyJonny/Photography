@@ -117,3 +117,60 @@ describe('deleteCollection', () => {
     expect(db.collections).toHaveLength(0)
   })
 })
+
+import { addPhotos, removePhoto, reorderPhotos, setCover } from '@/lib/admin/collection-actions'
+
+describe('addPhotos', () => {
+  it('appends at max(position)+1 and revalidates', async () => {
+    db.collections.push({ id: 'c1', slug: 'relics', name: 'Relics' })
+    db.collection_photos.push({ collection_id: 'c1', photo_id: 'p0', position: 0 })
+    const r = await addPhotos({ collectionId: 'c1', photoIds: ['p1', 'p2'] })
+    expect(r.ok).toBe(true)
+    const added = db.collection_photos.filter((j) => j.collection_id === 'c1')
+    expect(added.map((j) => j.photo_id)).toEqual(['p0', 'p1', 'p2'])
+    expect(added.map((j) => j.position)).toEqual([0, 1, 2])
+    expect(revalidateTag).toHaveBeenCalledWith('collections', 'max')
+  })
+})
+
+describe('reorderPhotos', () => {
+  beforeEach(() => {
+    db.collections.push({ id: 'c1', slug: 'relics', name: 'Relics' })
+    db.collection_photos.push({ collection_id: 'c1', photo_id: 'a', position: 0 })
+    db.collection_photos.push({ collection_id: 'c1', photo_id: 'b', position: 1 })
+  })
+  it('calls the RPC with the ordered ids', async () => {
+    const r = await reorderPhotos({ collectionId: 'c1', orderedPhotoIds: ['b', 'a'] })
+    expect(r.ok).toBe(true)
+    expect(rpcCalls).toContainEqual({ fn: 'reorder_collection_photos', args: { p_collection: 'c1', p_ordered: ['b', 'a'] } })
+  })
+  it('rejects an id set that adds, drops, or duplicates a member', async () => {
+    const added = await reorderPhotos({ collectionId: 'c1', orderedPhotoIds: ['a', 'b', 'c'] })
+    expect(added.ok).toBe(false)
+    const dropped = await reorderPhotos({ collectionId: 'c1', orderedPhotoIds: ['a'] })
+    expect(dropped.ok).toBe(false)
+    // Same Set as {a,b} but a duplicate 'a' — would join two RPC rows. Rejected by the length check.
+    const dup = await reorderPhotos({ collectionId: 'c1', orderedPhotoIds: ['a', 'b', 'a'] })
+    expect(dup.ok).toBe(false)
+    expect(rpcCalls).toHaveLength(0)
+  })
+})
+
+describe('setCover / removePhoto', () => {
+  beforeEach(() => {
+    db.collections.push({ id: 'c1', slug: 'relics', name: 'Relics', cover_photo_id: null })
+    db.collection_photos.push({ collection_id: 'c1', photo_id: 'p1', position: 0 })
+  })
+  it('sets and clears the cover', async () => {
+    await setCover({ collectionId: 'c1', photoId: 'p1' })
+    expect(db.collections[0].cover_photo_id).toBe('p1')
+    await setCover({ collectionId: 'c1', photoId: null })
+    expect(db.collections[0].cover_photo_id).toBeNull()
+  })
+  it('removePhoto clears the cover when it removed the cover', async () => {
+    db.collections[0].cover_photo_id = 'p1'
+    await removePhoto({ collectionId: 'c1', photoId: 'p1' })
+    expect(db.collection_photos.filter((j) => j.collection_id === 'c1')).toHaveLength(0)
+    expect(db.collections[0].cover_photo_id).toBeNull()
+  })
+})
