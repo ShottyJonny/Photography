@@ -437,6 +437,7 @@ a.admin-btn2 { display: inline-flex; align-items: center; justify-content: cente
 
 .admin-photolist { list-style: none; margin: 0; padding: 0 40px 40px; }
 .admin-photorow { display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 16px; align-items: center; padding: 14px 10px; border-bottom: 1px solid var(--hairsoft); }
+.admin-photorow-actions { display: flex; gap: 8px; }
 .admin-photorow-title { font-family: var(--font-playfair); font-size: 18px; color: var(--ink); }
 .admin-photorow-sub { font-family: var(--font-mono); font-size: 11px; color: var(--faint); margin-top: 3px; }
 .admin-status { font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.06em; padding: 4px 9px; border: 1px solid currentColor; }

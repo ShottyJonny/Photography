@@ -67,4 +67,23 @@ describe('PhotoList', () => {
     expect(edit, 'no Edit link').toBeTruthy()
     expect(edit!.getAttribute('href')).toBe('/admin/photographs/p1/edit')
   })
+
+  it('offers Publish on a ready draft, but not on a published photo', () => {
+    // The gap this fixes: a draft had no way to become published from the UI.
+    const draft = render(<PhotoList photos={[{ ...base, published: false }]} />)
+    expect([...draft.container.querySelectorAll('button')].some((b) => b.textContent === 'Publish')).toBe(true)
+    cleanup()
+    const live = render(<PhotoList photos={[base]} />)
+    expect([...live.container.querySelectorAll('button')].some((b) => b.textContent === 'Publish')).toBe(false)
+    // published shows Unpublish instead
+    expect([...live.container.querySelectorAll('button')].some((b) => b.textContent === 'Unpublish')).toBe(true)
+  })
+
+  it('does not offer Publish on a draft whose ladder is incomplete', () => {
+    // Publishing requires complete derivatives; without them the row shows Retry,
+    // not Publish (product.md §1: no control that would only refuse).
+    const { container } = render(<PhotoList photos={[{ ...base, published: false, derivatives_ready: false }]} />)
+    expect([...container.querySelectorAll('button')].some((b) => b.textContent === 'Publish')).toBe(false)
+    expect([...container.querySelectorAll('button')].some((b) => b.textContent === 'Retry')).toBe(true)
+  })
 })
