@@ -16,7 +16,7 @@ import { MarkedLink } from '@/components/admin/MarkedControl'
 const ITEMS: { label: string; href: string | null }[] = [
   { label: 'Dashboard', href: '/admin' },
   { label: 'Photographs', href: '/admin/photographs' },
-  { label: 'Collections', href: null },   // slice 6
+  { label: 'Collections', href: '/admin/collections' },
   { label: 'Orders', href: null },        // slice 7
   { label: 'Home feature', href: null },  // slice 6
 ]
