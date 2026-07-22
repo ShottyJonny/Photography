@@ -114,18 +114,30 @@ export function PhotoList({ photos }: { photos: AdminPhoto[] | null }) {
                 Retry
               </button>
             )}
-            {photo.published ? (
-              // Unpublish exists BECAUSE deletePhoto's refusal says "Unpublish
-              // it first" -- error copy may not name an action the system does
-              // not offer (product.md §1).
-              <button type="button" className="admin-btn2" disabled={pending} onClick={() => publish(photo, false)}>
-                Unpublish
-              </button>
-            ) : (
-              <button type="button" className="admin-btn2" disabled={pending} onClick={() => remove(photo)}>
-                Delete
-              </button>
-            )}
+            <span className="admin-photorow-actions">
+              {photo.published ? (
+                // Unpublish exists BECAUSE deletePhoto's refusal says "Unpublish
+                // it first" -- error copy may not name an action the system does
+                // not offer (product.md §1).
+                <button type="button" className="admin-btn2" disabled={pending} onClick={() => publish(photo, false)}>
+                  Unpublish
+                </button>
+              ) : (
+                <>
+                  {/* Publish only when the ladder is complete -- a control that would
+                      only ever refuse should not appear (product.md §1). The alt-text
+                      requirement is enforced by setPublished, surfaced as a notice. */}
+                  {photo.derivatives_ready ? (
+                    <button type="button" className="admin-btn" disabled={pending} onClick={() => publish(photo, true)}>
+                      Publish
+                    </button>
+                  ) : null}
+                  <button type="button" className="admin-btn2" disabled={pending} onClick={() => remove(photo)}>
+                    Delete
+                  </button>
+                </>
+              )}
+            </span>
           </li>
         ))}
       </ul>
