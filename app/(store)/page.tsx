@@ -1,18 +1,10 @@
 import Link from 'next/link'
 import { Plate } from '@/components/store/Plate'
+import { pullQuote } from '@/lib/collections/pull-quote'
 import { getFeaturedCollection } from '@/lib/data/collections'
 import { derivativeSrc } from '@/lib/images/derivatives'
 
 export const dynamic = 'force-dynamic'
-
-function pullQuote(dek: string | null, literature: string | null): string {
-  if (dek) return dek
-  if (!literature) return ''
-  const trimmed = literature.trim()
-  const sentence = trimmed.match(/^[^.!?]+[.!?]/)?.[0]
-  if (sentence && sentence.length <= 200) return sentence
-  return trimmed.length > 160 ? `${trimmed.slice(0, 157)}…` : trimmed
-}
 
 function EmptyHome() {
   return (
