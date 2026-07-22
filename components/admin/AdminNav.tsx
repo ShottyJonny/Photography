@@ -18,7 +18,7 @@ const ITEMS: { label: string; href: string | null }[] = [
   { label: 'Photographs', href: '/admin/photographs' },
   { label: 'Collections', href: '/admin/collections' },
   { label: 'Orders', href: null },        // slice 7
-  { label: 'Home feature', href: null },  // slice 6
+  { label: 'Home feature', href: '/admin/home-feature' },
 ]
 
 export function AdminNav() {

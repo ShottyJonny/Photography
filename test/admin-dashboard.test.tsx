@@ -140,6 +140,8 @@ describe('the dashboard', () => {
     expect(container.textContent).toContain('＋ Post a photo')
     expect(container.textContent).toContain('All orders →')
     expect(container.textContent).toContain('Change what leads home →')
+    const focal = container.querySelector('a[href="/admin/home-feature"]')
+    expect(focal?.textContent).toContain('Change what leads home →')
     // Every button on the surface is marked; none is live.
     const buttons = [...container.querySelectorAll('button')]
     expect(buttons.length).toBeGreaterThan(0)

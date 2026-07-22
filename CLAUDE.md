@@ -50,7 +50,7 @@ Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR 
 | lint | `npm run lint` | 0 errors/warnings |
 | typecheck | `npm run typecheck` | 0 errors |
 | build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
-| test | `npm test` | all green (**1822** tests as of slice 6a) |
+| test | `npm test` | all green (**1840** tests as of slice 6b) |
 
 Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
@@ -83,22 +83,24 @@ app/
       page.tsx                 # /admin — §11.4-A dashboard on live counts
       photographs/{page,new/page}.tsx    # library landing + Surface C ingest
       collections/{page,new/page,[id]/page}.tsx  # collections admin (slice 6a)
+      home-feature/page.tsx        # home focal point picker (slice 6b)
 lib/
   pricing.ts                   # VERBATIM port of the 4 pricing functions (money authority)
   checkout/{build,schema}.ts   # pure checkout core + zod request contract
   orders/reconcile.ts          # pure amount reconciliation
   reorder.ts                   # pure applyReorder for @dnd-kit drop (slice 6a)
+  collections/pull-quote.ts    # shared pullQuote for home hero + admin preview (slice 6b)
   ingest/{slug,keys,plan,validate,process,actions}.ts  # the ingest pipeline (slice 5a)
-  data/collections-admin.ts    # admin collection reads (slice 6a)
+  data/collections-admin.ts    # admin collection reads + listCollectionsForFeature (slice 6a/6b)
   env.ts                       # typed, validated env (throws loud on missing)
   supabase/{admin,server,client}.ts  # service-key / anon-server / browser clients
   supabase/{auth-server,auth-proxy}.ts # cookie-bound authenticated clients (slice 4a)
   admin/{require-admin,auth-actions,auth-state}.ts  # requireAdmin() boundary + sign-in/out
-  admin/{dashboard,dates,collection-actions}.ts  # dashboard reads + collection actions (slice 6a)
+  admin/{dashboard,dates,collection-actions,home-feature-actions}.ts  # dashboard + collection + home feature actions
   format/price.ts              # priceForSize / priceRangeLabel / formatPrice (shared)
   stripe.ts                    # lazy, server-only Stripe client
 components/{cart,theme}/        # CartContext/AddToCart, ThemeProvider
-components/admin/               # CollectionList, CollectionEditor, WorksList, LiteratureEditor, PhotoPicker (slice 6a)
+components/admin/               # CollectionList, CollectionEditor, WorksList, LiteratureEditor, PhotoPicker (slice 6a); HomeFeaturePicker, HomeHeroPreview (slice 6b)
 test/                          # Vitest; test/fixtures/legacy-pricing.cjs is the pricing reference
 supabase/schema.sql            # the applied data model (5 tables, RLS)
 docs/superpowers/{specs,plans}/  # the rebuild's design + implementation docs, one per slice
@@ -107,7 +109,7 @@ design/*.dc.html               # design prototypes (reference, not production co
 
 proxy.ts                       # session refresh + redirect for /admin/:path*
 
-The **admin half** is partly built. Slice 4a shipped auth; slice 4b shipped the dashboard shell; slice 5a shipped ingest (Surface C + a plain Photographs landing); slice 6a shipped collections admin (create/edit, add photos, drag-reorder, cover, literature). The orders queue and lab export are slice 7.
+The **admin half** is partly built. Slice 4a shipped auth; slice 4b shipped the dashboard shell; slice 5a shipped ingest (Surface C + a plain Photographs landing); slice 6a shipped collections admin (create/edit, add photos, drag-reorder, cover, literature); slice 6b shipped the home-feature picker (`/admin/home-feature`). The admin nav has **four live items** (Dashboard, Photographs, Collections, Home feature); **Orders** is the last marked item (slice 7). The orders queue and lab export are slice 7.
 
 **Admin surfaces read as the logged-in user** through `lib/supabase/auth-server.ts` under RLS, so `schema.sql`'s `authenticated` policies are exercised rather than decorative. The service key stays confined to the three sessionless paths (`/api/checkout`, `/api/stripe-webhook`, `/order/[id]`). **Authorization is `requireAdmin()` in the data-access layer, never a layout** — Next layouts do not re-render on client-side navigation, so a layout check stops running on route changes. Every admin read, write, and Server Action calls it first.
 
@@ -175,8 +177,9 @@ The rebuild is sliced; each slice is a spec → plan → subagent-driven build u
 - **Slice 2 — Storefront read-path:** specced (`docs/superpowers/specs/2026-07-17-storefront-read-path-design.md`) and adversarially reviewed (21 findings to apply first — chiefly the CropGuide: native-aspect plate, landscape via `aspect_ratio`). Home / Prints / Collection / Product / Contact + the shared header/shell.
 - **Slice 4 — Admin foundation: DONE.** 4a shipped auth (`proxy.ts`, `requireAdmin()` in the DAL, sign-in, the `[data-admin]` token scope); 4b shipped the `§11.3` shell and the `§11.4-A` dashboard on live counts.
 - **Slice 5a — Admin ingest: DONE.** Browser → signed upload URL → Supabase Storage; staged derivative generation; Surface C (`/admin/photographs/new`); plain Photographs landing (`/admin/photographs`). **Slice 5b** (`§11.4-B` work-card grid) is next.
-- **Slice 6a — Collections + literature: DONE.** Admin write surface for collections — create/edit, add photos, drag-reorder, set cover, write literature. Storefront literature renders as semantic `<p>` paragraphs. **Slice 6b** (home-feature picker) is next.
-- Slices 3, 5b, 6b–9 (planned in the specs / `product.md`): cart+checkout final visual, orders queue + Nations lab export, home feature, and the undesigned surfaces (About / Contact / legal / footer — blocked on design, `product.md §4`).
+- **Slice 6a — Collections + literature: DONE.** Admin write surface for collections — create/edit, add photos, drag-reorder, set cover, write literature. Storefront literature renders as semantic `<p>` paragraphs.
+- **Slice 6b — Home feature: DONE.** Admin write surface for the home focal point — picker with live preview, clear-then-set of `featured_on_home`, shared `pullQuote` with the storefront home.
+- Slices 3, 5b, 7–9 (planned in the specs / `product.md`): cart+checkout final visual, orders queue + Nations lab export, and the undesigned surfaces (About / Contact / legal / footer — blocked on design, `product.md §4`).
 
 **Carried forward from slice 1** (do before they bite): the `ThemeProvider` theme-flash (fix with a pre-hydration inline script when the theme toggle ships in slice 2); typed Supabase `Database` clients (codegen once a live project is at hand). Full list of follow-ups: `.superpowers/sdd/progress.md`.
 
