@@ -53,6 +53,9 @@ export function Header() {
           <Link href="/collections" style={styles.navLink}>
             Collections
           </Link>
+          <Link href="/about" style={styles.navLink}>
+            About
+          </Link>
           <Link href="/contact" style={styles.navLink}>
             Contact
           </Link>
