@@ -5,7 +5,7 @@ import { previewQuote } from '@/lib/format/quote'
 import { formatPrice, priceForSize } from '@/lib/format/price'
 
 const COUNTRIES: [string, string][] = [
-  ['US', 'United States'], ['CA', 'Canada'], ['GB', 'United Kingdom'], ['DE', 'Germany'],
+  ['US', 'United States'],
 ]
 
 function emailValid(e: string): boolean { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e) }
