@@ -20,30 +20,31 @@ describe('AdminNav', () => {
     expect(labels).toEqual(['Dashboard', 'Photographs', 'Collections', 'Orders', 'Home feature'])
   })
 
-  it('has three live links now: Dashboard, Photographs, and Collections', async () => {
+  it('has four live links now: Dashboard, Photographs, Collections, and Home feature', async () => {
     const { container } = await renderNav()
     const links = [...container.querySelectorAll('a')]
-    expect(links.map((a) => a.textContent?.trim())).toEqual(['Dashboard', 'Photographs', 'Collections'])
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/admin', '/admin/photographs', '/admin/collections'])
+    expect(links.map((a) => a.textContent?.trim())).toEqual(['Dashboard', 'Photographs', 'Collections', 'Home feature'])
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/admin', '/admin/photographs', '/admin/collections', '/admin/home-feature'])
   })
 
-  it('marks the two remaining unbuilt items', async () => {
+  it('marks the one remaining unbuilt item', async () => {
     const { container } = await renderNav()
     const marks = [...container.querySelectorAll('.admin-mark')]
-    expect(marks).toHaveLength(2)
+    expect(marks).toHaveLength(1)
     expect(marks.every((m) => m.textContent === 'NOT BUILT')).toBe(true)
   })
 
-  it('renders the two unbuilt items as non-interactive text carrying the marker', async () => {
+  it('renders the one unbuilt item as non-interactive text carrying the marker', async () => {
     const { container } = await renderNav()
     const marked = [...container.querySelectorAll('span.admin-navitem')]
-    expect(marked.length).toBe(2)
+    expect(marked.length).toBe(1)
     for (const el of marked) {
       expect(el.textContent).toContain('NOT BUILT')
       expect(el.hasAttribute('href')).toBe(false)
       expect(el.hasAttribute('tabindex')).toBe(false)
       expect(el.getAttribute('role')).toBeNull()
     }
+    expect(marked[0].textContent).toContain('Orders')
   })
 
   it('marks the active item and only the active item', async () => {
