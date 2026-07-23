@@ -19,9 +19,12 @@ Nothing here touches the money path, the schema, or the admin.
 Every claim on these pages must be true. In particular:
 
 - **Shipping/Refund/Privacy describe real fulfillment.** Nations Photo Lab (NPL) prints and
-  ships; US only; shipping is included in the price; damage is handled by NPL; there is no
-  change-of-mind return because prints are made to order. The pages state exactly this — no
-  invented timelines beyond the ranges below, no promises NPL will not honor.
+  ships; US only (**the checkout country list is trimmed to the US in this slice** so the claim is
+  true — see below); a **flat $9.95 shipping charge per order** regardless of item count
+  (`lib/pricing.ts` `estimateShipping` → `995`, added to the total — it is *not* free or included);
+  damage is handled by NPL; there is no change-of-mind return because prints are made to order. The
+  pages state exactly this — no invented timelines beyond the ranges below, no promises NPL will not
+  honor.
 - **Privacy discloses the real data flow**, including that the buyer's name and shipping address
   are **shared with NPL to fulfill the order**, and that payment is handled by Stripe (the seller
   never sees card details).
@@ -74,6 +77,7 @@ New top-level routes under `(store)`, matching the existing `/contact` pattern:
 | `app/(store)/terms/page.tsx` | **new** — Terms of sale via `Prose` |
 | `app/(store)/contact/page.tsx` | **edit** — refold onto `Prose` (same copy, dedupe inline styles) |
 | `components/store/Header.tsx` | **edit** — add the `About` nav link between Collections and Contact |
+| `app/(store)/checkout/page.tsx` | **edit** — trim the country `<select>` to US-only, so "United States only" is honest (added after the plan review found checkout accepts CA/GB/DE) |
 | `app/globals.css` | add any shared `.prose` / `.site-footer` classes if not done via inline style (follow the file's existing convention) |
 
 Each page exports `metadata = { title: '<Page> — Jon Hoffman Photography' }`.
@@ -134,7 +138,8 @@ through `Prose` instead of bespoke inline styles.
 States, plainly:
 - Prints are made to order and produced by a professional photographic lab (Nations Photo Lab),
   which ships directly.
-- **Shipping is included in the price** — there is no separate shipping charge.
+- **A flat $9.95 shipping charge per order** — the same whether one print or several, added at
+  checkout (not free, not included in the item price).
 - Typical timing: about **3–5 business days to print** and **2–5 business days in transit**.
 - **United States only** for now.
 
@@ -158,7 +163,8 @@ States, plainly, in short sub-sections:
 
 ### Terms (`/terms`)
 States, plainly:
-- Prices are in **US dollars**; the price shown at checkout is the total (shipping included).
+- Prices are in **US dollars**; a flat $9.95 shipping charge is added at checkout, and the total
+  shown there is the amount paid.
 - Prints are **made to order** and shipped within the **United States** only.
 - All photographs and their copyright remain the property of Jon Hoffman; purchase of a print
   conveys no license to reproduce the image.

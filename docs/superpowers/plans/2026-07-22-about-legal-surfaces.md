@@ -14,14 +14,14 @@
 - **Server Components only** for every new page and component — no `'use client'`. These render as static HTML with zero client JS.
 - **Design tokens only** — `--ink`, `--dim`, `--paper`, `--hair`, `--font-playfair`, `--font-newsreader`, `--font-mono`. No new tokens, no hardcoded colors. Styling via inline `style={}` objects and/or a scoped `<style>{...}` block (the pattern `EmptyHome` in `app/(store)/page.tsx` already uses).
 - **Honest function (`product.md §1`) — copy states only these true facts, and nothing more:**
-  - Nations Photo Lab (NPL) prints and ships; **US only**; **shipping is included in the price**.
+  - Nations Photo Lab (NPL) prints and ships; **US only** (checkout is restricted to the US in Task 8); a **flat $9.95 shipping charge per order** — the same no matter how many prints (`lib/pricing.ts:42` `estimateShipping` → `995`, added to the total; do not describe it as free or included).
   - Timing ≈ **3–5 business days to print + 2–5 in transit**.
   - Prints are **made to order** → **no change-of-mind returns**; **damage/defect** is replaced via email within **30 days** of delivery.
   - Payment is **handled by Stripe**; the site never sees or stores card details.
   - Name + shipping address are **shared with NPL to fulfill**; nothing else shared, nothing sold.
   - **No analytics, no advertising, no mailing list.** Cart + theme live in the browser (`localStorage`) only.
   - Register: legal pages terse and factual; About/Contact quiet and first-person.
-- **Do NOT touch the pre-launch `noindex`.** Leave `app/layout.tsx` (`robots: { index: false, follow: false }`), `app/robots.ts`, and `test/noindex.test.ts` exactly as they are. Lifting the noindex is a separate go-live step. `test/noindex.test.ts` must stay green.
+- **Do NOT touch the pre-launch `noindex`.** Leave `app/layout.tsx` (`robots: { index: false, follow: false }`), `app/robots.ts`, and `test/noindex.test.ts` exactly as they are. Lifting the noindex is a separate go-live step. `test/noindex.test.ts` must stay green. **Ignore the "remove/delete when About, Contact and the legal pages ship" comments inside `app/robots.ts` and `test/noindex.test.ts`** — you are building exactly those pages, but lifting the noindex is NOT part of this slice. Leave all three artifacts untouched.
 - **Tests:** page/component tests are `.tsx` (so Vitest runs them in jsdom). Import with the `@/` alias. `afterEach(cleanup)`. Assert on stable facts (headings, key factual lines, link hrefs) — never on full prose, so copy edits don't break tests. No `@testing-library/jest-dom` is installed — use `.getAttribute()` and `.textContent`, not `toHaveAttribute`.
 - **Git:** already on branch `slice-about-legal` (off `develop`). Never commit to `main`/`develop`. Every commit ends with the trailer `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>` (shown below as a second `-m` so it works in any shell).
 - **Gate stays green** after every task: `npm run lint` · `npm run typecheck` · `npm run build` · `npm test` (currently 1840 tests).
@@ -44,6 +44,7 @@
 | `app/(store)/terms/page.tsx` | Terms of sale via `Prose`. |
 | `app/(store)/contact/page.tsx` | Refold existing copy onto `Prose`. |
 | `components/store/Header.tsx` | Add `About` nav link between Collections and Contact. |
+| `app/(store)/checkout/page.tsx` | Restrict the country `<select>` to US-only (Task 8), so "United States only" is true. |
 
 ---
 
@@ -170,10 +171,10 @@ describe('Contact page', () => {
 })
 ```
 
-- [ ] **Step 6: Run it and confirm it fails**
+- [ ] **Step 6: Run it against the current page — Expected: PASS (refactor guard)**
 
 Run: `npx vitest run test/contact.test.tsx`
-Expected: PASS on the heading but the test as a whole should be run against the CURRENT contact page — it may already pass (current page has an `h1` "Contact" and the mailto). If it already passes, that is fine; it becomes the guard that the refold preserves behavior. Proceed to refold and keep it green.
+Expected: PASS. This is a characterization test for a refactor, not a red-first test — the current contact page already has an `h1` "Contact" and the mailto link, so it passes now and must keep passing after the refold. If it does NOT pass now, stop and investigate before refolding.
 
 - [ ] **Step 7: Refold `app/(store)/contact/page.tsx` onto `Prose`** (replace the whole file — same copy)
 
@@ -208,7 +209,7 @@ Expected: PASS.
 - [ ] **Step 9: Commit**
 
 ```
-git add components/store/Prose.tsx test/prose.test.tsx app/(store)/contact/page.tsx test/contact.test.tsx
+git add components/store/Prose.tsx test/prose.test.tsx 'app/(store)/contact/page.tsx' test/contact.test.tsx
 git commit -m "feat(store): shared Prose layout; refold Contact onto it" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
@@ -274,7 +275,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```
-git add app/(store)/about/page.tsx test/about.test.tsx
+git add 'app/(store)/about/page.tsx' test/about.test.tsx
 git commit -m "feat(store): About page (minimal, draft copy)" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
@@ -299,11 +300,11 @@ import ShippingPage from '@/app/(store)/shipping/page'
 afterEach(cleanup)
 
 describe('Shipping page', () => {
-  it('states US-only and that shipping is included', () => {
+  it('states US-only and the flat $9.95 shipping charge', () => {
     render(<ShippingPage />)
     expect(screen.getByRole('heading', { level: 1, name: 'Shipping' })).toBeTruthy()
     expect(screen.getByText(/United States only/)).toBeTruthy()
-    expect(screen.getByText(/included in the price/)).toBeTruthy()
+    expect(screen.getByText(/\$9\.95/)).toBeTruthy()
   })
 })
 ```
@@ -327,7 +328,10 @@ export default function ShippingPage() {
         Every print is made to order and produced by a professional photographic lab, which ships
         it directly to you.
       </p>
-      <p>Shipping is included in the price — there is no separate charge at checkout.</p>
+      <p>
+        Shipping is a flat $9.95 per order — the same whether you order one print or several. It is
+        added at checkout.
+      </p>
       <p>
         Most orders take about three to five business days to print, and two to five business days
         in transit.
@@ -346,7 +350,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```
-git add app/(store)/shipping/page.tsx test/shipping.test.tsx
+git add 'app/(store)/shipping/page.tsx' test/shipping.test.tsx
 git commit -m "feat(store): Shipping policy page" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
@@ -419,7 +423,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```
-git add app/(store)/refunds/page.tsx test/refunds.test.tsx
+git add 'app/(store)/refunds/page.tsx' test/refunds.test.tsx
 git commit -m "feat(store): Refunds policy page" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
@@ -517,7 +521,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```
-git add app/(store)/privacy/page.tsx test/privacy.test.tsx
+git add 'app/(store)/privacy/page.tsx' test/privacy.test.tsx
 git commit -m "feat(store): Privacy page with honest data disclosures" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
@@ -567,7 +571,8 @@ export default function TermsPage() {
   return (
     <Prose title="Terms">
       <p>
-        Prices are shown in US dollars. The price at checkout is the total — shipping is included.
+        Prices are shown in US dollars. A flat $9.95 shipping charge is added at checkout; the total
+        shown there is the amount you pay.
       </p>
       <p>Prints are made to order and ship within the United States only.</p>
       <p>
@@ -587,7 +592,7 @@ Expected: PASS.
 - [ ] **Step 5: Commit**
 
 ```
-git add app/(store)/terms/page.tsx test/terms.test.tsx
+git add 'app/(store)/terms/page.tsx' test/terms.test.tsx
 git commit -m "feat(store): Terms of sale page" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
@@ -781,8 +786,57 @@ Expected: PASS (all three tests).
 - [ ] **Step 10: Commit**
 
 ```
-git add components/store/Footer.tsx test/footer.test.tsx app/(store)/layout.tsx components/store/Header.tsx test/header.test.tsx
+git add components/store/Footer.tsx test/footer.test.tsx 'app/(store)/layout.tsx' components/store/Header.tsx test/header.test.tsx
 git commit -m "feat(store): footer with legal links; About rejoins the nav" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+```
+
+---
+
+## Task 8: Restrict checkout to US-only
+
+Makes "United States only" honest. Today the checkout country `<select>` offers US, Canada, UK, and Germany (`app/(store)/checkout/page.tsx:7-9`) and non-US buyers are charged a flat 12% tax, so an order the policy pages say is impossible can actually be placed. Trim the offered countries to the US so the reachable checkout matches the copy.
+
+**Files:**
+- Modify: `app/(store)/checkout/page.tsx:7-9` (the `COUNTRIES` array)
+- Modify: `test/checkout.test.tsx` (add a US-only assertion)
+
+**Interfaces:**
+- No new exports. `COUNTRIES` keeps its type `[string, string][]`; the default `country: 'US'` (line 14) and the `usNeedsRegion` logic (line 33) are unaffected.
+
+**Money-path note:** this narrows only the UI, the one reachable path. `lib/pricing.ts` is the golden-equivalence-locked money code and is **NOT** touched — its `estimateTaxRate` country branch stays byte-identical, it merely stops being reachable from the store. Server-side hardening of `/api/checkout` against a hand-crafted non-US request is a separate follow-up, out of scope here.
+
+- [ ] **Step 1: Add the failing test** to `test/checkout.test.tsx` (append inside `describe('Checkout', ...)`, after the last existing test)
+
+```tsx
+  it('offers only the United States as a shipping destination', () => {
+    render(<CartProvider><Checkout /></CartProvider>)
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['United States'])
+  })
+```
+
+- [ ] **Step 2: Run it and confirm it fails**
+
+Run: `npx vitest run test/checkout.test.tsx`
+Expected: FAIL — four options are offered (`United States`, `Canada`, `United Kingdom`, `Germany`), not one.
+
+- [ ] **Step 3: Trim `COUNTRIES` in `app/(store)/checkout/page.tsx`**
+
+```tsx
+const COUNTRIES: [string, string][] = [
+  ['US', 'United States'],
+]
+```
+
+- [ ] **Step 4: Run the checkout tests and confirm they pass**
+
+Run: `npx vitest run test/checkout.test.tsx`
+Expected: PASS — all four tests (the three existing + the new US-only one).
+
+- [ ] **Step 5: Commit**
+
+```
+git add 'app/(store)/checkout/page.tsx' test/checkout.test.tsx
+git commit -m "feat(store): restrict checkout to US-only so the policy is honest" -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
 ---
@@ -801,7 +855,7 @@ Run: `npm run build`
 Expected: build passes; the new routes `/about`, `/shipping`, `/refunds`, `/privacy`, `/terms` appear as static pages.
 
 Run: `npm test`
-Expected: all green — 1840 prior + the new tests (Prose, Contact, About, Shipping, Refunds, Privacy, Terms, Footer, + the added Header case). `test/noindex.test.ts` still green (untouched).
+Expected: all green — 1840 prior + the new tests (Prose, Contact, About, Shipping, Refunds, Privacy, Terms, Footer, the added Header case, + the checkout US-only case). `test/noindex.test.ts` still green (untouched).
 
 - [ ] **Confirm noindex untouched**
 
