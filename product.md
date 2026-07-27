@@ -229,7 +229,7 @@ The literature editor is not a nice-to-have. It is where the site's voice lives.
 
 Forward-only except for cancel/refund. No state is ever set by a timer (§1).
 
-### 6.2 The lab export — the core feature ✓ specified
+### 6.2 The lab export — the core feature ✓ specified — BUILT (slice 7)
 
 The reason this beats the current workflow. For an order, produce everything needed to place it at the lab without retyping:
 
@@ -243,6 +243,8 @@ The reason this beats the current workflow. For an order, produce everything nee
 
 **Confirm before building:** Nations' exact surface/paper vocabulary, so the `finish` enum and the NOTES block match their real order form.
 
+> **Still open after slice 7, deliberately.** The export was built without it: `lab_finish` is **free text** defaulting to `Lustre` (a select of invented finishes would encode a guess into their real order form), and the paper string is the `PAPER` constant in `lib/orders/lab-export.ts`. Confirming the vocabulary is one edit in each place, and until then nothing claims to know it.
+
 ### 6.3 Amount reconciliation ✓ decided, and it belongs to the rebuild
 
 `create-checkout-session` prices whatever `items` the request claims and never checks them against the order saved under that `orderId`. The stated exploit was: save a $65 order, submit the same id with a 4x6, pay ~$5.50, and the webhook marks the $65 row complete.
@@ -253,7 +255,7 @@ The fix is still correct, and now it is *buildable* rather than theoretical: the
 
 **The admin is what makes the fix meaningful** — a flag nothing surfaces is not a fix. A mismatched order must be visibly quarantined out of the fulfillment queue and **excluded from its count** (`design.md §11.4-D`), because the failure mode is shipping $65 of prints for $5.50.
 
-### 6.4 Orders list ✓ specified
+### 6.4 Orders list ✓ specified — BUILT (slice 7)
 Default view is the work queue: `paid`, oldest first. Mismatches surfaced, never silently queued. Search by order id or email — the customer's only receipt is Stripe's, so the id is what they will quote.
 
 Designed as `design.md §11.4-D`: tabs (Queue / Needs attention / Shipped / All), expandable rows showing each work's size, register, and price, and a per-row copy of name + address. A mismatched order is held out of the queue on an alert wash with a pulsing chip — **and is excluded from the queue tab count**, so it cannot be fulfilled by someone working the list top-to-bottom (§6.3).

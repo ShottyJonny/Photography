@@ -1,6 +1,6 @@
+import Link from 'next/link'
 import { formatPrice } from '@/lib/format/price'
 import { formatRowDate } from '@/lib/admin/dates'
-import { MarkedButton } from '@/components/admin/MarkedControl'
 import type { QueueOrder } from '@/lib/admin/dashboard'
 
 /**
@@ -38,7 +38,13 @@ export function QueueRow({ order, held = false }: { order: QueueOrder; held?: bo
         <span className="admin-paid">PAID</span>
       )}
 
-      <MarkedButton label={held ? 'Review' : 'Copy for lab'} />
+      {/* §11.4-A's "Copy for lab" ghost button is a link instead: copying a
+          block the row does not show is a control whose output you cannot
+          check before pasting it into a real order form. The block lives on
+          the order, directly under a Copy button. */}
+      <Link className="admin-ord-open" href={`/admin/orders/${order.id}`}>
+        {held ? 'Review →' : 'Open →'}
+      </Link>
     </li>
   )
 }

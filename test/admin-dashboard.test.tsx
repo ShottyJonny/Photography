@@ -138,7 +138,6 @@ describe('the dashboard', () => {
     result.value = ok({ queue: [order()], summary: { ...ok().summary, queueCount: 1 } })
     const { container } = await renderDash()
     expect(container.textContent).toContain('＋ Post a photo')
-    expect(container.textContent).toContain('All orders →')
     expect(container.textContent).toContain('Change what leads home →')
     const focal = container.querySelector('a[href="/admin/home-feature"]')
     expect(focal?.textContent).toContain('Change what leads home →')
@@ -146,5 +145,16 @@ describe('the dashboard', () => {
     const buttons = [...container.querySelectorAll('button')]
     expect(buttons.length).toBeGreaterThan(0)
     for (const b of buttons) expect(b.getAttribute('aria-disabled')).toBe('true')
+  })
+
+  // Slice 7 built the queue, so these two stopped being markers and became
+  // navigation.
+  it('sends All orders and each queue row into the orders surface', async () => {
+    result.value = ok({ queue: [order()], summary: { ...ok().summary, queueCount: 1 } })
+    const { container } = await renderDash()
+    const all = container.querySelector('a[href="/admin/orders"]')
+    expect(all?.textContent).toContain('All orders →')
+    const row = container.querySelector('.admin-queue-row a')
+    expect(row?.getAttribute('href')).toMatch(/^\/admin\/orders\//)
   })
 })
