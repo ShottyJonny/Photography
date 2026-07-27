@@ -55,6 +55,37 @@ describe('OrderConfirmation', () => {
     expect(container.textContent).toContain('90001')
   })
 
+  // product.md §6.1: shipped is the ONLY state that may show a tracking number,
+  // and the system sends no email — so this page is the only place a real one
+  // can reach the customer. The legacy site invented a UPS number on a 900ms
+  // timer for every order; nothing here may imply a carrier or a lookup.
+  it('shows a real tracking number once the order is shipped', async () => {
+    state.order = { ...ORDER, status: 'shipped', tracking_number: '1Z999AA10123456784' }
+    state.items = ITEMS
+    const { container } = await renderConfirm()
+    expect(container.querySelector('.confirm-tracking')?.textContent).toBe('Tracking: 1Z999AA10123456784')
+    expect(container.textContent).not.toMatch(/UPS|FedEx|USPS|track your/i)
+    expect(container.querySelector('.confirm-tracking a')).toBeNull()
+  })
+
+  it('shows no tracking for any state short of shipped', async () => {
+    for (const status of ['paid', 'submitted_to_lab', 'pending', 'amount_mismatch']) {
+      cleanup()
+      state.order = { ...ORDER, status, tracking_number: '1Z999AA10123456784' }
+      state.items = ITEMS
+      const { container } = await renderConfirm()
+      expect(container.querySelector('.confirm-tracking')).toBeNull()
+    }
+  })
+
+  it('shows no tracking line when a shipped order has no number', async () => {
+    state.order = { ...ORDER, status: 'shipped', tracking_number: null }
+    state.items = ITEMS
+    const { container } = await renderConfirm()
+    expect(container.querySelector('.confirm-tracking')).toBeNull()
+    expect(container.textContent).not.toContain('Tracking:')
+  })
+
   it('treats amount_mismatch as active but never claims paid or promises shipping (F2/F3)', async () => {
     state.order = { ...ORDER, status: 'amount_mismatch' }; state.items = ITEMS
     const { container } = await renderConfirm()

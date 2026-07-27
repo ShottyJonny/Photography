@@ -75,6 +75,36 @@ describe('the admin component classes', () => {
     expect(rule('.admin-mark')).not.toMatch(/content:/)
   })
 
+  // --- Slice 7: the orders surfaces ---
+  it('defines every class the orders queue and detail render', () => {
+    for (const cls of [
+      '.admin-ord-tabbar', '.admin-ord-tab', '.admin-ord-tabcount', '.admin-ord-search',
+      '.admin-ord-banner', '.admin-ord-row', '.admin-ord-caret', '.admin-ord-chev',
+      '.admin-ord-item', '.admin-ord-block', '.admin-ord-rail', '.admin-ord-step',
+      '.admin-ord-download', '.admin-ord-missing', '.admin-chip-lab', '.admin-chip-shipped',
+      '.admin-chip-status', '.admin-copy-state',
+    ]) {
+      expect(css, `${cls} missing`).toContain(cls)
+    }
+  })
+
+  it('gives the tracking-carrying storefront confirmation a class of its own', () => {
+    expect(css).toContain('.confirm-tracking')
+  })
+
+  it('uses --hairform, not --hair, on the orders form controls (D11, SC 1.4.11)', () => {
+    expect(rule('.admin-ord-searchinput')).toContain('--hairform')
+    expect(rule('.admin-ord-finish-input')).toContain('--hairform')
+  })
+
+  // The export block is pasted into Nations' order form; collapsing its
+  // whitespace would destroy the column alignment buildLabExport computes.
+  it('preserves whitespace in the export block and lets it scroll', () => {
+    const block = rule('.admin-ord-block')
+    expect(block).toMatch(/white-space:\s*pre/)
+    expect(block).toMatch(/overflow-x:\s*auto/)
+  })
+
   it('stacks the shell below 900px (D9)', () => {
     expect(flat).toMatch(/@media \(max-width: 900px\)/)
   })

@@ -101,6 +101,7 @@ body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(
 .confirm-id { font-family: var(--font-mono); font-size: 0.6875rem; color: var(--dim); letter-spacing: 0.06em; }
 .confirm-h1 { font-family: var(--font-playfair); font-weight: 400; font-size: clamp(2.5rem, 8vw, 4.75rem); margin: 0.5rem 0 1rem; }
 .confirm-note { font-family: var(--font-newsreader); font-size: 1.0625rem; color: var(--ink); max-width: 34rem; margin: 0 auto 2.5rem; }
+.confirm-tracking { font-family: var(--font-mono); font-size: 0.8125rem; color: var(--ink); margin: -1.75rem auto 2.5rem; letter-spacing: 0.04em; }
 .confirm-notfound { font-family: var(--font-newsreader); }
 .confirm-cells { display: grid; grid-template-columns: 1fr; gap: 1.5rem; text-align: left; }
 @media (min-width: 640px) { .confirm-cells { grid-template-columns: 1fr 1fr; } }
@@ -531,4 +532,103 @@ a.admin-btn2 { display: inline-flex; align-items: center; justify-content: cente
 @media (max-width: 900px) {
   .admin-hf-body { grid-template-columns: 1fr; }
   .admin-hf-preview { height: 360px; }
+}
+
+/* ===================================================================
+   Orders — Surface D (queue) and E (detail + lab export), §11.4-D/E
+   =================================================================== */
+.admin-ord-pad { padding: 24px 40px 40px; }
+.admin-meta { margin: 8px 0 0; font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--faint); }
+
+.admin-ord-tabbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; border-bottom: 1px solid var(--hair); padding-bottom: 12px; margin-bottom: 18px; }
+.admin-ord-tabs { display: flex; gap: 18px; flex-wrap: wrap; }
+.admin-ord-tab { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); text-decoration: none; border-bottom: 1px solid transparent; }
+.admin-ord-tab:hover { color: var(--ink); }
+.admin-ord-tab.is-active { color: var(--ink); border-bottom-color: var(--ink); }
+.admin-ord-tabcount { color: var(--faint); }
+.admin-ord-tab.is-active .admin-ord-tabcount { color: var(--ink); }
+
+.admin-ord-search { display: flex; align-items: center; gap: 8px; }
+.admin-ord-searchinput { min-height: 44px; min-width: 220px; padding: 8px 12px; background: transparent; color: var(--ink); border: 1px solid var(--hairform); font-family: var(--font-mono); font-size: 12px; }
+.admin-ord-clear { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--faint); }
+
+.admin-ord-banner { margin: 0 0 16px; padding: 12px 14px; background: rgba(200, 91, 61, 0.06); border-left: 2px solid var(--alert); font-size: 12px; color: var(--ink); }
+.admin-ord-note { margin: 8px 0 0; font-size: 11px; color: var(--faint); }
+.admin-ord-error { margin: 8px 0 0; font-size: 12px; color: var(--alert); }
+
+.admin-ord-head, .admin-ord-rowmain { display: grid; grid-template-columns: 120px 1.4fr 130px 90px auto auto; gap: 16px; align-items: center; }
+.admin-ord-head { padding: 0 10px 8px; font-family: var(--font-mono); font-weight: 500; font-size: 9px; letter-spacing: 0.18em; text-transform: uppercase; color: var(--faint); }
+.admin-ord-list { list-style: none; margin: 0; padding: 0; }
+.admin-ord-row { border-bottom: 1px solid var(--hairsoft); padding: 14px 10px; }
+.admin-ord-copy { display: inline-flex; align-items: center; gap: 6px; margin-top: 6px; min-height: 44px; background: none; border: 0; padding: 0; color: var(--faint); font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; cursor: pointer; }
+.admin-ord-copy:hover { color: var(--ink); }
+.admin-copy-state { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--ok); }
+
+.admin-ord-caret { display: flex; align-items: center; gap: 8px; min-height: 44px; background: none; border: 0; color: var(--dim); cursor: pointer; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.08em; }
+.admin-ord-thumbs { display: inline-flex; gap: 4px; }
+.admin-ord-thumb { width: 26px; height: 33px; object-fit: cover; }
+.admin-ord-thumb.is-empty, .admin-ord-itemthumb.is-empty { border: 1px solid var(--hairsoft); background: var(--panel2); }
+.admin-ord-chev { transition: transform 160ms ease; }
+.admin-ord-chev.is-open { transform: rotate(180deg); }
+.admin-ord-total { font-family: var(--font-playfair); font-size: 20px; }
+.admin-ord-open { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--dim); white-space: nowrap; }
+.admin-ord-open:hover { color: var(--ink); }
+
+.admin-ord-items { list-style: none; margin: 12px 0 0; padding: 12px 0 0 0; border-top: 1px solid var(--hairsoft); }
+.admin-ord-item { display: grid; grid-template-columns: 34px 1.4fr 70px 110px 120px auto; gap: 12px; align-items: center; padding: 6px 0; }
+.admin-ord-itemthumb { width: 34px; height: 43px; object-fit: cover; }
+.admin-ord-itemname { font-family: var(--font-playfair); font-size: 16px; }
+.admin-ord-itemmeta { font-family: var(--font-mono); font-size: 11px; color: var(--faint); }
+.admin-ord-itemprice { font-family: var(--font-mono); font-size: 12px; text-align: right; }
+
+/* Status chips — §11.1: text always, colour never alone. */
+.admin-chip-status { font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--faint); border: 1px solid var(--hairform); padding: 4px 9px; white-space: nowrap; }
+.admin-chip-lab { font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--warn); border: 1px solid var(--warn); padding: 4px 9px; white-space: nowrap; }
+.admin-chip-shipped { font-family: var(--font-mono); font-weight: 500; font-size: 11px; color: var(--info); border: 1px solid var(--info); padding: 4px 9px; white-space: nowrap; }
+
+/* --- Surface E --- */
+.admin-ord-crumb { color: var(--faint); }
+.admin-ord-crumb:hover { color: var(--ink); }
+.admin-ord-uuid { margin: 10px 0 0; font-family: var(--font-mono); font-size: 12px; color: var(--dim); word-break: break-all; }
+.admin-ord-pi { margin: 6px 0 0; font-family: var(--font-mono); font-size: 10px; color: var(--faint); word-break: break-all; }
+.admin-ord-headright { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.admin-ord-detail { display: grid; grid-template-columns: 1.35fr 1fr; gap: 32px; align-items: start; padding: 24px 40px 40px; }
+.admin-ord-panel { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; border: 1px solid var(--hair); padding: 20px; margin-bottom: 28px; }
+.admin-ord-cell { min-width: 0; }
+.admin-ord-address { display: flex; flex-direction: column; gap: 2px; font-style: normal; font-size: 13px; }
+.admin-ord-copyrow { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 12px; }
+.admin-ord-email { margin: 0; font-family: var(--font-mono); font-size: 12px; word-break: break-all; }
+.admin-ord-linelist { list-style: none; margin: 0; padding: 0; }
+.admin-ord-line { display: grid; grid-template-columns: 1.2fr 1.4fr auto auto; gap: 14px; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--hairsoft); }
+.admin-ord-download { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em; color: var(--info); white-space: nowrap; }
+.admin-ord-missing { font-family: var(--font-mono); font-size: 10px; color: var(--faint); white-space: nowrap; }
+.admin-ord-totals { margin: 18px 0 0; display: flex; flex-direction: column; gap: 6px; font-family: var(--font-mono); font-size: 12px; }
+.admin-ord-totals > div { display: flex; justify-content: space-between; }
+.admin-ord-totals dt, .admin-ord-totals dd { margin: 0; color: var(--faint); }
+.admin-ord-grand dt, .admin-ord-grand dd { color: var(--ink); }
+
+.admin-ord-side { display: flex; flex-direction: column; gap: 28px; }
+.admin-ord-export { border: 1px solid var(--hair); padding: 18px; }
+.admin-ord-finish { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+.admin-ord-finish-label { font-family: var(--font-mono); font-weight: 500; font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase; color: var(--dim); }
+.admin-ord-finish-input { min-height: 44px; padding: 8px 10px; background: transparent; color: var(--ink); border: 1px solid var(--hairform); font-family: var(--font-mono); font-size: 12px; }
+.admin-ord-block { margin: 0; padding: 16px; background: var(--panel2); border: 1px solid var(--hairsoft); font-family: var(--font-mono); font-size: 11px; line-height: 1.6; white-space: pre; overflow-x: auto; color: var(--ink); }
+.admin-ord-exportfoot { margin-top: 14px; }
+
+.admin-ord-rail { border: 1px solid var(--hair); padding: 18px; }
+.admin-ord-steps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 16px; }
+.admin-ord-step { display: flex; flex-direction: column; gap: 6px; padding-left: 14px; border-left: 2px solid var(--hairsoft); }
+.admin-ord-step.is-done { border-left-color: var(--ok); }
+.admin-ord-stepname { font-family: var(--font-mono); font-weight: 500; font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--ink); }
+.admin-ord-stepmeta { font-size: 11px; color: var(--faint); }
+.admin-ord-tracking { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+.admin-ord-resolve { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--hairsoft); display: flex; flex-direction: column; gap: 16px; }
+.admin-ord-resolveitem { display: flex; flex-direction: column; gap: 4px; align-items: flex-start; }
+
+@media (max-width: 900px) {
+  .admin-ord-pad, .admin-ord-detail { padding: 20px; }
+  .admin-ord-detail, .admin-ord-panel { grid-template-columns: 1fr; }
+  .admin-ord-head { display: none; }
+  .admin-ord-rowmain { grid-template-columns: 1fr; gap: 8px; }
+  .admin-ord-item, .admin-ord-line { grid-template-columns: 1fr; gap: 4px; }
 }

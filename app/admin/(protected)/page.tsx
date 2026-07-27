@@ -65,7 +65,7 @@ export default async function AdminDashboard() {
             <section>
               <h2 className="admin-sectionhead">
                 Fulfillment queue · oldest first
-                <MarkedLink label="All orders →" />
+                <Link href="/admin/orders" className="admin-sectionhead-link">All orders →</Link>
               </h2>
               <ul className="admin-queue">
                 {result.queue.length === 0 ? (
