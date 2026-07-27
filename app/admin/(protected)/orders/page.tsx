@@ -83,7 +83,16 @@ export default async function OrdersPage({
         ) : null}
 
         {rows.length === 0 ? (
-          <p className="admin-empty">{query ? 'No order matches that search.' : EMPTY[tab]}</p>
+          <p className="admin-empty">
+            {query
+              ? truncated
+                // A partial search only sees the rows that were read. Claiming
+                // "no match" outright would be a claim about orders this page
+                // never looked at.
+                ? `No order matches that search in the first ${LIST_CAP}. Search a full order id to look across every order.`
+                : 'No order matches that search.'
+              : EMPTY[tab]}
+          </p>
         ) : (
           <>
             <div className="admin-ord-head" aria-hidden="true">

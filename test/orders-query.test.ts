@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import {
-  TABS, statusesForTab, isOrderTab, countsByTab, filterOrders, type OrderTab,
+  TABS, statusesForTab, isOrderTab, filterOrders, type OrderTab,
 } from '@/lib/orders/query'
 
 const row = (id: string, email: string, name: string | null = null) => ({
@@ -57,24 +57,6 @@ describe('isOrderTab', () => {
   it('accepts the five keys and rejects everything else', () => {
     for (const t of ['queue', 'lab', 'attention', 'shipped', 'all']) expect(isOrderTab(t)).toBe(true)
     for (const t of ['Queue', 'paid', '', 'drop table', undefined]) expect(isOrderTab(t)).toBe(false)
-  })
-})
-
-describe('countsByTab', () => {
-  it('counts each tab from the same predicates the rows use', () => {
-    const counts = countsByTab([
-      'paid', 'paid', 'submitted_to_lab', 'amount_mismatch', 'shipped', 'pending', 'refunded',
-    ])
-    expect(counts).toEqual({ queue: 2, lab: 1, attention: 1, shipped: 1, all: 7 })
-  })
-
-  it('excludes a mismatch from the queue count (product.md §6.3)', () => {
-    // The failure mode this guards is shipping $65 of prints for $5.50.
-    expect(countsByTab(['paid', 'amount_mismatch']).queue).toBe(1)
-  })
-
-  it('is all zeroes for no orders', () => {
-    expect(countsByTab([])).toEqual({ queue: 0, lab: 0, attention: 0, shipped: 0, all: 0 })
   })
 })
 

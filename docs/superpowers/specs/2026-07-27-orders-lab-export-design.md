@@ -98,7 +98,12 @@ and the id Jon has in hand is usually the 8-character prefix the queue showed hi
 - `filterOrders(rows, query)` — a pure, unit-tested function — keeps rows whose id *starts with*
   the query (case-insensitive, hyphens ignored) **or** whose email or customer name *contains* it.
 - When the read hits the cap, the surface says so: *"Showing the first 200 orders."* A cap that
-  silently truncates would let a real order be invisible while the page looks complete.
+  silently truncates would let a real order be invisible while the page looks complete — and when
+  a search comes back empty on a truncated page, the empty line is bounded to what was actually
+  searched rather than claiming no order matches.
+- **A full uuid is resolved by the query itself, across every tab.** That is the id §6.4 says the
+  customer will quote, so it must never come back "no match" because the order had moved to a
+  state you were not looking at, or sat past the cap.
 
 At this volume the cap will not be reached for years. It is a stated bound, not a hidden one.
 
@@ -271,8 +276,11 @@ export interface OrderListResult {
   so rather than rendering "no orders", the D7 rule).
 - Rows carry their items because `§11.4-D`'s expansion lists every work inline and the thumbnail group
   needs the slugs. One `order_items` read for the page's ids, grouped in JS — not N+1.
-- `counts` come from a single `select('status')` over all orders, tallied by the same pure tab
-  predicates the filter uses, so a tab's number and its contents cannot disagree.
+- `counts` are **exact head counts, one per tab** (`count: 'exact', head: true` + the shared
+  `statusesForTab` predicate). Not a `select('status')` tallied in JS: Supabase caps a response at
+  the project's "Max rows" setting (1000 by default), so that read would quietly stop counting and
+  every tab number would be wrong with no signal. Head requests transfer no rows and have no
+  ceiling.
 - `getOrderForFulfillment(id)` → the row above plus `subtotal_cents`, `shipping_cents`, `tax_cents`,
   `stripe_payment_intent_id`, `submitted_to_lab_at`, `shipped_at`, `lab_finish`, `notes`, and a
   `signedOriginals: Record<itemId, string | null>` map minted at render.

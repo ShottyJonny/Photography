@@ -49,18 +49,6 @@ export function isOrderTab(value: string | undefined | null): value is OrderTab 
 
 export type TabCounts = Record<OrderTab, number>
 
-/** One pass over every order's status. `all` counts everything, including
- *  `pending`, `cancelled` and `refunded`, which have no tab of their own. */
-export function countsByTab(statuses: OrderStatus[]): TabCounts {
-  const counts: TabCounts = { queue: 0, lab: 0, attention: 0, shipped: 0, all: statuses.length }
-  for (const status of statuses) {
-    for (const tab of TABS) {
-      if (tab.statuses?.includes(status)) counts[tab.key] += 1
-    }
-  }
-  return counts
-}
-
 interface Searchable {
   id: string
   customer_email: string

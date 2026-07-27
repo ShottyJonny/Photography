@@ -1,7 +1,7 @@
 import 'server-only'
 import { requireAdmin } from '@/lib/admin/require-admin'
 import { createAuthServerClient } from '@/lib/supabase/auth-server'
-import { countsByTab, filterOrders, statusesForTab, TABS, type OrderStatus, type OrderTab, type TabCounts } from '@/lib/orders/query'
+import { filterOrders, statusesForTab, TABS, type OrderStatus, type OrderTab, type TabCounts } from '@/lib/orders/query'
 import type { StoredAddress } from '@/lib/orders/address'
 
 /**
@@ -123,24 +123,55 @@ async function itemsByOrder(
   return grouped
 }
 
+/** A canonical uuid — the id a customer quotes back. */
+const FULL_UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+
+/**
+ * Exact counts, one head request per tab.
+ *
+ * NOT a `select('status')` tallied in JS: Supabase caps a response at its
+ * project "Max rows" setting (1000 by default), so that read would quietly
+ * stop counting past the cap and every tab number would be wrong with no
+ * signal. `count: 'exact', head: true` transfers no rows and has no ceiling.
+ * The predicates are still the shared ones (lib/orders/query), so a tab's
+ * number and its contents cannot disagree.
+ */
+async function tabCounts(db: any): Promise<TabCounts | null> {
+  const pairs = await Promise.all(
+    TABS.map(async (tab) => {
+      let q = db.from('orders').select('id', { count: 'exact', head: true })
+      if (tab.statuses) q = q.in('status', tab.statuses)
+      const { count, error } = await q
+      if (error) {
+        console.error('[admin] order count failed', tab.key, error)
+        return null
+      }
+      return [tab.key, count ?? 0] as const
+    }),
+  )
+  if (pairs.some((pair) => pair === null)) return null
+  return Object.fromEntries(pairs as (readonly [OrderTab, number])[]) as TabCounts
+}
+
 export async function listOrders(input: { tab: OrderTab; query: string }): Promise<OrderListResult | null> {
   await requireAdmin()
   const db = await createAuthServerClient()
 
-  // 1. Counts, from every order's status. Cheap, and it guarantees a tab's
-  //    number and its contents come from the same predicates (lib/orders/query).
-  const { data: statusRows, error: statusErr } = await db.from('orders').select('status')
-  if (statusErr) {
-    console.error('[admin] listOrders counts failed', statusErr)
-    return null
-  }
-  const counts = countsByTab(((statusRows as { status: OrderStatus }[]) ?? []).map((r) => r.status))
+  const counts = await tabCounts(db)
+  if (!counts) return null
 
-  // 2. The tab's rows, capped at LIST_CAP + 1 so truncation is detectable.
-  const statuses = statusesForTab(input.tab)
+  const query = input.query.trim()
+  const exactId = FULL_UUID.test(query)
+
+  // A full order id is what §6.4 says the customer will quote, so it is looked
+  // up directly and ACROSS every tab: an order that exists must never come
+  // back "no match" because it had moved to a state you were not looking at,
+  // or because it sat past the row cap.
+  const statuses = exactId ? null : statusesForTab(input.tab)
   const oldestFirst = TABS.find((t) => t.key === input.tab)?.oldestFirst ?? true
   let listQuery = db.from('orders').select(ROW_COLS)
-  if (statuses) listQuery = listQuery.in('status', statuses)
+  if (exactId) listQuery = listQuery.eq('id', query)
+  else if (statuses) listQuery = listQuery.in('status', statuses)
   const { data: orderRows, error: listErr } = await listQuery
     .order('created_at', { ascending: oldestFirst })
     .limit(LIST_CAP + 1)
@@ -170,8 +201,10 @@ export async function listOrders(input: { tab: OrderTab; query: string }): Promi
     items: grouped.get(o.id) ?? [],
   }))
 
-  // 4. Search last, in memory — see lib/orders/query.filterOrders.
-  return { rows: filterOrders(rows, input.query), counts, truncated }
+  // A partial id / email / name is filtered in memory over the capped page —
+  // see lib/orders/query.filterOrders for why it is not a Postgres predicate.
+  // An exact id was already resolved by the query above.
+  return { rows: exactId ? rows : filterOrders(rows, query), counts, truncated }
 }
 
 export async function getOrderForFulfillment(id: string): Promise<AdminOrderDetail | null> {

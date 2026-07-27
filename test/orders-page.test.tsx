@@ -94,6 +94,15 @@ describe('the orders queue', () => {
     expect(container.textContent).toContain('No order matches that search.')
   })
 
+  // A partial search only sees the rows that were read, so a flat "no match"
+  // would be a claim about orders this page never looked at.
+  it('bounds the no-match claim to what it actually searched', async () => {
+    result.value = { rows: [], counts: counts(), truncated: true }
+    const { container } = await renderPage({ q: 'nobody' })
+    expect(container.textContent).toContain('No order matches that search in the first 200.')
+    expect(container.textContent).toContain('Search a full order id')
+  })
+
   // A cap that truncates silently hides a real order behind a page that looks
   // complete.
   it('admits when the list was truncated', async () => {

@@ -5,7 +5,7 @@ vi.mock('@/lib/admin/require-admin', () => ({ requireAdmin: () => requireAdmin()
 
 type Canned = { many?: unknown; one?: unknown; error?: unknown }
 const state: Record<string, Canned> = {}
-const calls: { table: string; select?: string; in?: [string, unknown]; limit?: number; order?: [string, boolean] }[] = []
+const calls: { table: string; select?: string; in?: [string, unknown]; eq?: [string, unknown]; limit?: number; order?: [string, boolean]; head?: boolean }[] = []
 const signed = { url: 'https://signed.example/original', error: null as unknown, throws: false }
 const signCalls: string[] = []
 
@@ -15,14 +15,30 @@ function fake() {
       const record: (typeof calls)[number] = { table }
       calls.push(record)
       const q = {
-        select(cols: string) { record.select = cols; return q },
+        select(cols: string, opts?: { count?: string; head?: boolean }) {
+          record.select = cols
+          record.head = opts?.head === true
+          return q
+        },
         in(col: string, values: unknown) { record.in = [col, values]; return q },
-        eq() { return q },
+        eq(col: string, value: unknown) { record.eq = [col, value]; return q },
         order(col: string, opts: { ascending: boolean }) { record.order = [col, opts.ascending]; return q },
         limit(n: number) { record.limit = n; return q },
         maybeSingle: async () => ({ data: state[table]?.one ?? null, error: state[table]?.error ?? null }),
-        then: (res: (v: { data: unknown; error: unknown }) => void) =>
-          res({ data: state[table]?.many ?? [], error: state[table]?.error ?? null }),
+        then: (res: (v: { data: unknown; error: unknown; count?: number }) => void) => {
+          const rows = (state[table]?.many ?? []) as { status?: string }[]
+          // A head+count request transfers no rows; it answers with a count
+          // computed over the same status predicate the caller passed.
+          if (record.head) {
+            const statuses = record.in?.[1] as string[] | undefined
+            const matching = statuses ? rows.filter((r) => statuses.includes(r.status ?? '')) : rows
+            return res({ data: null, error: state[table]?.error ?? null, count: matching.length })
+          }
+          const filtered = record.eq
+            ? rows.filter((r) => (r as Record<string, unknown>)[record.eq![0]] === record.eq![1])
+            : rows
+          return res({ data: filtered, error: state[table]?.error ?? null })
+        },
       }
       return q
     },
@@ -88,7 +104,7 @@ describe('listOrders', () => {
   it('passes the tab statuses to the query and sorts oldest-first for the queue', async () => {
     state.orders = { many: [order('o1')] }
     await listOrders({ tab: 'queue', query: '' })
-    const listCall = calls.filter((c) => c.table === 'orders').at(-1)!
+    const listCall = calls.filter((c) => c.table === 'orders' && !c.head).at(-1)!
     expect(listCall.in).toEqual(['status', ['paid']])
     expect(listCall.order).toEqual(['created_at', true])
   })
@@ -96,16 +112,43 @@ describe('listOrders', () => {
   it('applies no status filter on All, newest first', async () => {
     state.orders = { many: [order('o1')] }
     await listOrders({ tab: 'all', query: '' })
-    const listCall = calls.filter((c) => c.table === 'orders').at(-1)!
+    const listCall = calls.filter((c) => c.table === 'orders' && !c.head).at(-1)!
     expect(listCall.in).toBeUndefined()
     expect(listCall.order).toEqual(['created_at', false])
   })
 
-  it('counts every tab from the status read, not from the page', async () => {
-    // The count read returns the whole table; the row read returns one tab.
+  it('counts every tab exactly, per tab, rather than tallying a capped read', async () => {
     state.orders = { many: [order('o1', 'paid'), order('o2', 'amount_mismatch'), order('o3', 'shipped')] }
     const result = await listOrders({ tab: 'queue', query: '' })
     expect(result!.counts).toEqual({ queue: 1, lab: 0, attention: 1, shipped: 1, all: 3 })
+  })
+
+  // A select().length tally silently stops at the project's Max rows setting
+  // (1000 by default), so every tab number would be wrong with no signal.
+  it('asks Postgres for the count with head, transferring no rows', async () => {
+    state.orders = { many: [order('o1', 'paid')] }
+    await listOrders({ tab: 'queue', query: '' })
+    const headCalls = calls.filter((c) => c.table === 'orders' && c.head)
+    expect(headCalls).toHaveLength(5)
+    expect(headCalls.some((c) => c.in === undefined)).toBe(true) // the All tab
+  })
+
+  it('returns null when a count read fails', async () => {
+    state.orders = { error: { message: 'boom' } }
+    expect(await listOrders({ tab: 'queue', query: '' })).toBeNull()
+  })
+
+  // §6.4: the id is what the customer quotes. An exact one is resolved by the
+  // query itself, across every tab — an order that exists must never come back
+  // "no match" because it moved state or sat past the row cap.
+  it('looks up a full uuid directly, ignoring the tab filter', async () => {
+    const id = '8f14e45f-ceea-467a-9b3a-2c4f7a5d1e02'
+    state.orders = { many: [order(id, 'shipped')] }
+    const result = await listOrders({ tab: 'queue', query: id })
+    const listCall = calls.filter((c) => c.table === 'orders' && !c.head).at(-1)!
+    expect(listCall.eq).toEqual(['id', id])
+    expect(listCall.in).toBeUndefined()
+    expect(result!.rows.map((r) => r.id)).toEqual([id])
   })
 
   it('reports a deleted photo as a null slug rather than dropping the item', async () => {
@@ -128,7 +171,7 @@ describe('listOrders', () => {
     const result = await listOrders({ tab: 'queue', query: '' })
     expect(result!.truncated).toBe(true)
     expect(result!.rows).toHaveLength(LIST_CAP)
-    expect(calls.filter((c) => c.table === 'orders').at(-1)!.limit).toBe(LIST_CAP + 1)
+    expect(calls.filter((c) => c.table === 'orders' && !c.head).at(-1)!.limit).toBe(LIST_CAP + 1)
   })
 
   it('does not flag truncation below the cap', async () => {
