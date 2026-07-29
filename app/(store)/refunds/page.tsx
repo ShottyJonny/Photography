@@ -14,7 +14,8 @@ export default function RefundsPage() {
         <a className="email" href="mailto:jonhoffmanbusiness@gmail.com">
           jonhoffmanbusiness@gmail.com
         </a>{' '}
-        within 30 days of delivery with a photo of the damage, and the lab will make it right.
+        within two weeks of delivery with a photo of the damage. Keep the packaging — a photo of it
+        may be needed too.
       </p>
     </Prose>
   )
