@@ -11,12 +11,15 @@ Jon Hoffman Photography — a **Next.js + TypeScript** print portfolio and store
 | | Stack |
 |---|---|
 | Framework | **Next.js 16 (App Router, Turbopack), TypeScript strict, React 19** |
-| Hosting | **Vercel** (target — not wired/deployed yet) |
+| Hosting | **Vercel** — live at `www.jonhoffmanphotography.com` (apex 308s to `www`) |
 | Data | **Supabase** (Postgres + Auth + Storage; `supabase/schema.sql` is applied and live) |
 | Payments | **Stripe Checkout** (**test mode** — not live) |
 | Tests | **Vitest** |
 
-**Nothing is deployed. There is no live-money constraint on this repo** — that was the legacy site, now taken down. Build and push freely on feature branches.
+**The site is deployed, but takes no money yet.** `main` ships to production on push; the storefront is
+`noindex` and Stripe is still in **test mode**, so no card can be charged. Build and push freely on
+feature branches — but from the Stripe live cutover onward, `main` is real money and this paragraph
+is the thing to change first.
 
 **The rebuild is happening in slices.** Slice 1 (Foundation + Money path) is built and on `develop`. Later slices are specced/planned under `docs/superpowers/`. See [Roadmap](#roadmap).
 
@@ -50,11 +53,11 @@ Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR 
 | lint | `npm run lint` | 0 errors/warnings |
 | typecheck | `npm run typecheck` | 0 errors |
 | build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
-| test | `npm test` | all green (**2005** tests as of slice 7) |
+| test | `npm test` | all green (**2006** tests as of slice 7) |
 
 Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
-**Unlike the legacy app, the money code is now under test.** `lib/pricing.ts` is proven byte-identical in logic to the frozen legacy original by a 1471-case golden equivalence test (`test/pricing.equivalence.test.ts` vs `test/fixtures/legacy-pricing.cjs`); the checkout route, webhook, and reconciliation are all tested. Still: green is necessary, not sufficient — **end-to-end verification against real Stripe (test mode) is a manual step and hasn't run yet** (see [Money path](#money-path)).
+**Unlike the legacy app, the money code is now under test.** `lib/pricing.ts` is proven byte-identical in logic to the frozen legacy original by a 1471-case golden equivalence test (`test/pricing.equivalence.test.ts` vs `test/fixtures/legacy-pricing.cjs`); the checkout route, webhook, and reconciliation are all tested. Still: green is necessary, not sufficient — the end-to-end verification against real Stripe is a **manual** step, and it has only been run in **test mode** (see [Money path](#money-path)).
 
 Lint runs via the ESLint CLI (`eslint .` — Next 16 removed `next lint`), so it covers **all** of `app/`/`components/`/`lib/`/`test/`; the legacy "test files aren't linted" gap is closed.
 
@@ -140,7 +143,17 @@ The most dangerous code in the project.
 - **Never `process.env.URL`.** It is Netlify-only; on Vercel it is undefined, and the old localhost fallback would redirect a paying customer to localhost *after* charging the card. Redirect URLs come from `SITE_URL` (→ `VERCEL_URL` fallback; `lib/env.ts` **throws in production** if neither is set). **Set `SITE_URL` in the Vercel production env** to the canonical domain — `VERCEL_URL` is the per-deploy `*.vercel.app` host, not your domain.
 - **`SUPABASE_SERVICE_ROLE_KEY` is server-only.** `lib/supabase/admin.ts` and `lib/stripe.ts` begin with `import 'server-only'` (a stray client import is a build error); Vitest neutralizes it via `test/stubs/server-only.ts`. Never `NEXT_PUBLIC_` it.
 
-**End-to-end money verification is manual and has not run.** Drive `/api/checkout` → Stripe test Checkout → webhook against real (test-mode) Stripe + a live Supabase project, and observe: order `pending → paid`; a forced `amount_mismatch` quarantined with the amount recorded; the shipping address stored complete + snake_case; and `success_url` resolving to a real origin (not localhost). **This gates `develop → main`.**
+**End-to-end money verification, test mode: PASSED 2026-07-19.** Driven against real test-mode Stripe +
+the live Supabase project. Observed: order `pending → paid` via a real Checkout and a real webhook; a
+forced `amount_mismatch` quarantined with `amount_paid_cents` recorded; `shipping_address` stored
+complete and snake_case; `success_url` resolving from `SITE_URL` — the `process.env.URL` trap proven
+fixed. The mismatch branch was forced with a correctly-signed synthetic `checkout.session.completed`,
+since real Stripe never produces a mismatch naturally (the server computes both amounts).
+
+**The remaining gate is live mode, and it has NOT run.** Live is a different secret key, a different
+webhook signing secret, and a different endpoint URL — the test-mode pass proves none of it. After the
+live cutover, place one real low-value order and refund it, and observe the same four things. Until
+that has happened, treat the live money path as unverified no matter how green CI is.
 
 ## Environment
 
@@ -162,15 +175,28 @@ The most dangerous code in the project.
 
 `supabase/schema.sql` is applied and live on a new Supabase project: five tables (`photos`, `collections`, `collection_photos`, `orders`, `order_items`), RLS on all five, `orders`/`order_items` closed to anon (reads go through the service key). Buckets: `originals` private, `derivatives` public. Public signups disabled. Three honest-function invariants are enforced by Postgres: can't publish a photo without alt text; can't publish without `derivatives_ready`; can't store a tracking number without a shipment. The SQL is authoritative over prose in `product.md`.
 
-**Before the store can take money (cutover checklist, `product.md §1.5`):** upgrade Supabase off the free tier (the free-tier pause is how the last database died); re-register the Stripe webhook at the deploy URL; point env at the right project; swap Stripe to live mode **last**.
+**Cutover checklist (`product.md §1.5`) — state as of 2026-07-29:**
+
+| Step | Status |
+|---|---|
+| Upgrade Supabase off the free tier (the free-tier pause is how the last database died) | **DONE** — org on Pro, 2026-07-29 |
+| Point env at the right project | **DONE** — `vfjixurevanpzmbiywxm`, verified live |
+| `SITE_URL` set to the canonical origin | **DONE** — `https://www.jonhoffmanphotography.com` (Production) |
+| Re-register the Stripe webhook at the deploy URL | **TODO** — live endpoint does not exist yet |
+| Swap Stripe to live mode | **TODO — do this last** |
+| Verify the live money path with one real order + refund | **TODO** |
+| Lift `noindex` (delete `app/robots.ts` + the `robots` key in `app/layout.tsx`) and add a sitemap | **TODO — after the above** |
 
 ## Git workflow
 
 - **`develop` is the integration branch.** Branch feature/slice work off `develop`; merge back into `develop`.
 - **`develop → main` is gated by the manual money-path verification** (above). `main` is the release branch.
 - **Never commit directly to `main` or `develop`**; never `--no-verify`, `--force`, or bypass hooks.
-- Every commit message ends with:
-  `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`
+- Every commit message ends with a `Co-Authored-By:` trailer naming **the model that actually wrote it**:
+  `Co-Authored-By: Claude Opus 5 <noreply@anthropic.com>`
+  History through 2026-07-27 says `Claude Opus 4.8`, which was accurate then. Do not copy the older
+  string forward onto work a newer model did — a trailer is a claim about authorship, and §1's
+  honest-function rule does not stop at the storefront.
 - Nothing deploys on push yet (Vercel isn't wired). When it is, `main` → production.
 
 ## Roadmap
