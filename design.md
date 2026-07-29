@@ -413,6 +413,19 @@ Copyable as plain text (chosen format, `product.md §6.2`). `finish` is a settab
 >
 > **Resolved 2026-07-19 — Nations' own site does the crop** (`product.md §8 q7`). The export links `<slug>_orig.tif`, the untouched original. Jon crops on Nations' order form when placing the order. The storefront's `cropGuide()` shows a **centre** crop — that is the convention; Nations permits any crop, and centre-cropping there keeps the promise the customer was shown. The drift risk (Nations deviates from the centre crop) is carried forward to slice 7 rather than rediscovered.
 
+> **Slice 7 deviations (D25–D32).** The built surfaces differ from the handoff above. Four are handoff defects (D25, D26, D27, D30); D28/D29/D31 fill gaps §11.4-D/E never had; D32 is a §11.4-A correction slice 7 made possible.
+>
+> | # | Deviation | Why |
+> |---|---|---|
+> | **D25** | **Five tabs**, with `At the lab` added | The handoff's four strand `submitted_to_lab`: not paid, not shipped, so it shows up nowhere but All — at the point in fulfillment Jon most needs it. Queue stays exactly `paid` so it keeps matching §11.4-A's tile. |
+> | **D26** | `ORDER` prints the **full uuid**; the queue prints the first 8 | Same as D14 — there is no order-number column, and `JH-20260716-0042` would fabricate the field used to reconcile against Stripe. |
+> | **D27** | Each line prints the snapshotted **`order_items.original_key`**, or `(not recorded)` | `<slug>_orig.tif` names an object that does not exist; originals are `<slug>/<register>.<ext>`. A filename that looks right and is wrong costs a reprint, on Jon. |
+> | **D28** | Signed download links live on the line items, **never in the block** | The block gets pasted into Nations' form and may sit for hours; an expired link inside a document he trusts is worse than no link. |
+> | **D29** | `amount_mismatch` gains **Accept as paid / Mark refunded / Mark cancelled** | §11.4-D quarantines but gives no way out, so a held order would stay held forever. Accept-as-paid is the one non-forward transition, and only a human may press it. |
+> | **D30** | `finish` is **free text**, not an enum or a select | `product.md §6.2`'s "confirm before building" is still open. A dropdown of invented finishes would encode a guess into a real order form. |
+> | **D31** | Tracking is **required** to mark shipped | §6.1 defines `shipped` as "manually + tracking" and as the only state that may show a number; `tracking_requires_shipment` guards the other direction only. |
+> | **D32** | §11.4-A's "Copy for lab" ghost button became **"Open →"** | Copying a block the row does not display is a control whose output you cannot check before pasting. The block lives on the order, under its own Copy button. |
+
 #### F · Collections (`product.md §5.3`)
 Left = collection list (cover thumb, Playfair name, mono status; Relics carries a `--ok` "Featured" tag). Right = editor: title + "Featured on home" tag + Playfair "Save collection"; a 2-col body — **Works** (drag rows: ⠿ handle, thumb, Playfair name, cover ★ toggle in `--warn`; "＋ Add works" dashed) and **The literature** (a `--panel2` Newsreader editor with title, italic dek, essay body, and a word-count + B/i/quote/¶ toolbar). A mono note restates the §1 thesis: *this is where the voice lives; if it stops sounding like the essay, it's wrong.*
 

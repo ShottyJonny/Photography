@@ -70,12 +70,15 @@ describe('QueueRow', () => {
     expect(container.querySelector('.admin-row-name')?.textContent).toBe('maya@example.com')
   })
 
-  it('renders Copy for lab as a marked control, not a live button', () => {
+  // §11.4-A's "Copy for lab" ghost button became a link in slice 7: copying a
+  // block the row does not show is a control whose output you cannot check
+  // before pasting it into Nations' real order form.
+  it('links into the order instead of copying a block it does not show', () => {
     const { container } = render(<QueueRow order={ORDER} />)
-    const button = container.querySelector('button')
-    expect(button?.getAttribute('aria-disabled')).toBe('true')
-    expect(button?.textContent).toContain('Copy for lab')
-    expect(button?.textContent).toContain('NOT BUILT')
+    const link = container.querySelector('a')
+    expect(link?.getAttribute('href')).toBe(`/admin/orders/${ORDER.id}`)
+    expect(link?.textContent).toContain('Open')
+    expect(container.textContent).not.toContain('NOT BUILT')
   })
 
   it('quarantines a held row with the paid-vs-expected line, in that order', () => {
@@ -89,11 +92,12 @@ describe('QueueRow', () => {
     expect(container.querySelector('.admin-held-line')?.textContent).toBe('paid $5.50 · expected $65')
   })
 
-  it('renders Review as a marked control on a held row', () => {
+  it('sends a held row to the order to be reviewed', () => {
     const { container } = render(
       <QueueRow held order={{ ...ORDER, status: 'amount_mismatch', amount_paid_cents: 550 }} />,
     )
-    expect(container.textContent).toContain('Review')
-    expect(container.querySelector('button')?.getAttribute('aria-disabled')).toBe('true')
+    const link = container.querySelector('a')
+    expect(link?.textContent).toContain('Review')
+    expect(link?.getAttribute('href')).toBe(`/admin/orders/${ORDER.id}`)
   })
 })

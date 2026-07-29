@@ -14,6 +14,7 @@ type Order = {
   shipping_cents: number
   tax_cents: number
   total_cents: number
+  tracking_number: string | null
 }
 type Item = { title: string; size: string; register: string; qty: number; unit_cents: number }
 
@@ -36,7 +37,7 @@ export default async function OrderConfirmation({ params }: { params: Promise<{ 
   const db = supabaseAdmin()
   const { data: order } = await db
     .from('orders')
-    .select('id, status, created_at, customer_name, customer_email, shipping_address, subtotal_cents, shipping_cents, tax_cents, total_cents')
+    .select('id, status, created_at, customer_name, customer_email, shipping_address, subtotal_cents, shipping_cents, tax_cents, total_cents, tracking_number')
     .eq('id', id)
     .single()
 
@@ -59,6 +60,16 @@ export default async function OrderConfirmation({ params }: { params: Promise<{ 
       <p className="confirm-id">{o.id}</p>
       <h1 className="confirm-h1">{active ? 'Thank you.' : 'Order update'}</h1>
       <p className="confirm-note">{noteFor(o.status)}</p>
+
+      {/* product.md §6.1: shipped is the ONLY state that may show a tracking
+          number, and only after a human entered a real one. No carrier, no
+          "track your package" link — the schema records neither, and the
+          legacy site's fabricated UPS numbers are the reason this rule exists.
+          The customer gets no email, so this page is the only place it can
+          reach them. */}
+      {o.status === 'shipped' && o.tracking_number ? (
+        <p className="confirm-tracking">Tracking: {o.tracking_number}</p>
+      ) : null}
 
       <div className="confirm-cells">
         <section className="confirm-cell">

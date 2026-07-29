@@ -49,4 +49,9 @@ describe('Checkout', () => {
     expect(sent.items).toEqual([{ photoId: 'p1', size: '8x10', register: 'colour', qty: 2 }])
     expect(Object.keys(sent.items[0]).sort()).toEqual(['photoId', 'qty', 'register', 'size'])
   })
+
+  it('offers only the United States as a shipping destination', () => {
+    render(<CartProvider><Checkout /></CartProvider>)
+    expect(screen.getAllByRole('option').map((o) => o.textContent)).toEqual(['United States'])
+  })
 })

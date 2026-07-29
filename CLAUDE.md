@@ -50,7 +50,7 @@ Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR 
 | lint | `npm run lint` | 0 errors/warnings |
 | typecheck | `npm run typecheck` | 0 errors |
 | build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
-| test | `npm test` | all green (**1822** tests as of slice 6a) |
+| test | `npm test` | all green (**2005** tests as of slice 7) |
 
 Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
@@ -83,22 +83,28 @@ app/
       page.tsx                 # /admin — §11.4-A dashboard on live counts
       photographs/{page,new/page}.tsx    # library landing + Surface C ingest
       collections/{page,new/page,[id]/page}.tsx  # collections admin (slice 6a)
+      home-feature/page.tsx        # home focal point picker (slice 6b)
+      orders/{page,[id]/page}.tsx  # §11.4-D queue + §11.4-E detail/export (slice 7)
 lib/
   pricing.ts                   # VERBATIM port of the 4 pricing functions (money authority)
   checkout/{build,schema}.ts   # pure checkout core + zod request contract
   orders/reconcile.ts          # pure amount reconciliation
   reorder.ts                   # pure applyReorder for @dnd-kit drop (slice 6a)
+  orders/{lab-export,address,query}.ts  # pure: the Nations block, address lines, tabs+search (slice 7)
+  data/orders-admin.ts         # admin order reads + signed originals (slice 7)
+  admin/order-actions.ts       # the six fulfillment transitions (slice 7)
+  collections/pull-quote.ts    # shared pullQuote for home hero + admin preview (slice 6b)
   ingest/{slug,keys,plan,validate,process,actions}.ts  # the ingest pipeline (slice 5a)
-  data/collections-admin.ts    # admin collection reads (slice 6a)
+  data/collections-admin.ts    # admin collection reads + listCollectionsForFeature (slice 6a/6b)
   env.ts                       # typed, validated env (throws loud on missing)
   supabase/{admin,server,client}.ts  # service-key / anon-server / browser clients
   supabase/{auth-server,auth-proxy}.ts # cookie-bound authenticated clients (slice 4a)
   admin/{require-admin,auth-actions,auth-state}.ts  # requireAdmin() boundary + sign-in/out
-  admin/{dashboard,dates,collection-actions}.ts  # dashboard reads + collection actions (slice 6a)
+  admin/{dashboard,dates,collection-actions,home-feature-actions}.ts  # dashboard + collection + home feature actions
   format/price.ts              # priceForSize / priceRangeLabel / formatPrice (shared)
   stripe.ts                    # lazy, server-only Stripe client
 components/{cart,theme}/        # CartContext/AddToCart, ThemeProvider
-components/admin/               # CollectionList, CollectionEditor, WorksList, LiteratureEditor, PhotoPicker (slice 6a)
+components/admin/               # CollectionList, CollectionEditor, WorksList, LiteratureEditor, PhotoPicker (slice 6a); HomeFeaturePicker, HomeHeroPreview (slice 6b); OrderTabs, OrderRows, LabExport, FulfillmentRail, CopyButton (slice 7)
 test/                          # Vitest; test/fixtures/legacy-pricing.cjs is the pricing reference
 supabase/schema.sql            # the applied data model (5 tables, RLS)
 docs/superpowers/{specs,plans}/  # the rebuild's design + implementation docs, one per slice
@@ -107,7 +113,7 @@ design/*.dc.html               # design prototypes (reference, not production co
 
 proxy.ts                       # session refresh + redirect for /admin/:path*
 
-The **admin half** is partly built. Slice 4a shipped auth; slice 4b shipped the dashboard shell; slice 5a shipped ingest (Surface C + a plain Photographs landing); slice 6a shipped collections admin (create/edit, add photos, drag-reorder, cover, literature). The orders queue and lab export are slice 7.
+The **admin half** is built. Slice 4a shipped auth; slice 4b shipped the dashboard shell; slice 5a shipped ingest (Surface C + a plain Photographs landing); slice 6a shipped collections admin (create/edit, add photos, drag-reorder, cover, literature); slice 6b shipped the home-feature picker (`/admin/home-feature`); slice 7 shipped the orders queue and the Nations lab export (`/admin/orders`). **All five nav items are live and no `NOT BUILT` marker remains.** What is left in the admin is `§11.4-B`'s work-card grid (slice 5b), not a missing capability.
 
 **Admin surfaces read as the logged-in user** through `lib/supabase/auth-server.ts` under RLS, so `schema.sql`'s `authenticated` policies are exercised rather than decorative. The service key stays confined to the three sessionless paths (`/api/checkout`, `/api/stripe-webhook`, `/order/[id]`). **Authorization is `requireAdmin()` in the data-access layer, never a layout** — Next layouts do not re-render on client-side navigation, so a layout check stops running on route changes. Every admin read, write, and Server Action calls it first.
 
@@ -127,7 +133,7 @@ The most dangerous code in the project.
 - **`lib/pricing.ts` is a verbatim port**, logic byte-identical to the legacy original and locked to it by the golden equivalence test. There is no longer a client/server mirror to keep in sync (the legacy `netlify/functions/lib/pricing.js` duplication is gone) — it's one module the routes import. Pricing is **size-keyed** today (per-photo pricing is `product.md §8 q3`, open). A *deliberate* pricing change means updating the unit tests and consciously retiring/adjusting the equivalence lock — not a casual edit.
 - **Orders are service-key only.** `orders`/`order_items` are touched only via `lib/supabase/admin.ts`; RLS gives anon no access. **No order data in `localStorage`, ever** (that was the legacy bug).
 - **DB is snake_case**, no exceptions.
-- **Order status enum:** `pending | paid | amount_mismatch | submitted_to_lab | shipped | cancelled | refunded`. The legacy `completed`/`expired`/`failed` do not exist.
+- **Order status enum:** `pending | paid | amount_mismatch | submitted_to_lab | shipped | cancelled | refunded`. The legacy `completed`/`expired`/`failed` do not exist. Since slice 7 every value except `pending` is reachable from `/admin/orders/[id]`, and **every transition is a human pressing a button** — `lib/admin/order-actions.ts` is the only writer, it re-reads and gates on the current status server-side, and nothing in the codebase advances a state on a timer.
 
 **Two traps the rebuild handles — know why the code is shaped this way:**
 
@@ -172,13 +178,19 @@ The most dangerous code in the project.
 The rebuild is sliced; each slice is a spec → plan → subagent-driven build under `docs/superpowers/`.
 
 - **Slice 1 — Foundation + Money path: DONE** (on `develop`). Scaffold, tokens/type, clients/env, `lib/pricing.ts`, `/api/checkout`, webhook, order persistence.
-- **Slice 2 — Storefront read-path:** specced (`docs/superpowers/specs/2026-07-17-storefront-read-path-design.md`) and adversarially reviewed (21 findings to apply first — chiefly the CropGuide: native-aspect plate, landscape via `aspect_ratio`). Home / Prints / Collection / Product / Contact + the shared header/shell.
+- **Slice 2 — Storefront read-path: DONE.** Home / Prints / Collection / Product / Contact + the shared header/shell, on the visibility-gated data layer; the CropGuide on a native-aspect plate.
+- **Slice 3 — Cart + checkout final visual: DONE.** Identity-merged cart, slide-in drawer with a focus trap, the two-column checkout on `previewQuote` (a pure display mirror of `computeOrderAmounts`).
 - **Slice 4 — Admin foundation: DONE.** 4a shipped auth (`proxy.ts`, `requireAdmin()` in the DAL, sign-in, the `[data-admin]` token scope); 4b shipped the `§11.3` shell and the `§11.4-A` dashboard on live counts.
 - **Slice 5a — Admin ingest: DONE.** Browser → signed upload URL → Supabase Storage; staged derivative generation; Surface C (`/admin/photographs/new`); plain Photographs landing (`/admin/photographs`). **Slice 5b** (`§11.4-B` work-card grid) is next.
-- **Slice 6a — Collections + literature: DONE.** Admin write surface for collections — create/edit, add photos, drag-reorder, set cover, write literature. Storefront literature renders as semantic `<p>` paragraphs. **Slice 6b** (home-feature picker) is next.
-- Slices 3, 5b, 6b–9 (planned in the specs / `product.md`): cart+checkout final visual, orders queue + Nations lab export, home feature, and the undesigned surfaces (About / Contact / legal / footer — blocked on design, `product.md §4`).
+- **Slice 6a — Collections + literature: DONE.** Admin write surface for collections — create/edit, add photos, drag-reorder, set cover, write literature. Storefront literature renders as semantic `<p>` paragraphs.
+- **Slice 6b — Home feature: DONE.** Admin write surface for the home focal point — picker with live preview, clear-then-set of `featured_on_home`, shared `pullQuote` with the storefront home.
+- **About + legal surfaces: DONE.** Shared `Prose` layout, About / Shipping / Refunds / Privacy / Terms, the footer, and US-only checkout so the shipping policy is honest.
+- **Slice 7 — Orders + lab export: DONE.** `/admin/orders` (five tabs, search, expandable rows, mismatch quarantine) and `/admin/orders/[id]` (detail, signed originals, the Nations export block, the forward-only fulfillment rail). The storefront confirmation shows a real tracking number once an order is genuinely shipped.
+- **Slice 5b** (`§11.4-B` work-card grid for `/admin/photographs`) and **per-photo pricing** (`product.md §8 q3`) are the remaining feature slices. Neither blocks taking money.
 
-**Carried forward from slice 1** (do before they bite): the `ThemeProvider` theme-flash (fix with a pre-hydration inline script when the theme toggle ships in slice 2); typed Supabase `Database` clients (codegen once a live project is at hand). Full list of follow-ups: `.superpowers/sdd/progress.md`.
+**Carried forward:** typed Supabase `Database` clients (codegen once a live project is at hand) — the admin reads still carry a local `no-explicit-any` disable because of it. The slice-1 theme-flash is **closed**: the pre-hydration script is in `app/layout.tsx`. Full list of follow-ups: `.superpowers/sdd/progress.md`.
+
+**Still unconfirmed, and it reaches a real order form:** Nations' exact surface/paper vocabulary (`product.md §6.2`). `lab_finish` is free text defaulting to `Lustre`, and the export header's paper string is a constant in `lib/orders/lab-export.ts` — one edit each once Jon confirms.
 
 ## Source-of-truth docs
 

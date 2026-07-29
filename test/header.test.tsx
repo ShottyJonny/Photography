@@ -45,4 +45,9 @@ describe('Header', () => {
     fireEvent.click(screen.getByRole('button', { name: /Cart \(0\)/ }))
     expect(screen.getByTestId('open').textContent).toBe('yes')
   })
+
+  it('links About to /about in the primary nav', () => {
+    setup()
+    expect(screen.getByRole('link', { name: 'About' }).getAttribute('href')).toBe('/about')
+  })
 })

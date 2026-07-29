@@ -20,30 +20,23 @@ describe('AdminNav', () => {
     expect(labels).toEqual(['Dashboard', 'Photographs', 'Collections', 'Orders', 'Home feature'])
   })
 
-  it('has three live links now: Dashboard, Photographs, and Collections', async () => {
+  // Slice 7 made Orders live. Every nav item now goes somewhere.
+  it('has five live links, Orders among them', async () => {
     const { container } = await renderNav()
     const links = [...container.querySelectorAll('a')]
-    expect(links.map((a) => a.textContent?.trim())).toEqual(['Dashboard', 'Photographs', 'Collections'])
-    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/admin', '/admin/photographs', '/admin/collections'])
+    expect(links.map((a) => a.textContent?.trim())).toEqual(['Dashboard', 'Photographs', 'Collections', 'Orders', 'Home feature'])
+    expect(links.map((a) => a.getAttribute('href'))).toEqual(['/admin', '/admin/photographs', '/admin/collections', '/admin/orders', '/admin/home-feature'])
   })
 
-  it('marks the two remaining unbuilt items', async () => {
+  it('carries no NOT BUILT marker at all', async () => {
     const { container } = await renderNav()
-    const marks = [...container.querySelectorAll('.admin-mark')]
-    expect(marks).toHaveLength(2)
-    expect(marks.every((m) => m.textContent === 'NOT BUILT')).toBe(true)
+    expect(container.querySelectorAll('.admin-mark')).toHaveLength(0)
+    expect(container.textContent).not.toContain('NOT BUILT')
   })
 
-  it('renders the two unbuilt items as non-interactive text carrying the marker', async () => {
+  it('renders no inert span item', async () => {
     const { container } = await renderNav()
-    const marked = [...container.querySelectorAll('span.admin-navitem')]
-    expect(marked.length).toBe(2)
-    for (const el of marked) {
-      expect(el.textContent).toContain('NOT BUILT')
-      expect(el.hasAttribute('href')).toBe(false)
-      expect(el.hasAttribute('tabindex')).toBe(false)
-      expect(el.getAttribute('role')).toBeNull()
-    }
+    expect(container.querySelectorAll('span.admin-navitem')).toHaveLength(0)
   })
 
   it('marks the active item and only the active item', async () => {
@@ -54,14 +47,23 @@ describe('AdminNav', () => {
   })
 
   it('does not mark Dashboard active on another admin path', async () => {
-    pathname.value = '/admin/orders'
+    pathname.value = '/admin/photographs/new'
     const { container } = await renderNav()
-    expect(container.querySelectorAll('.admin-navitem.is-active').length).toBe(0)
+    const active = container.querySelectorAll('.admin-navitem.is-active')
+    expect(active.length).toBe(0)
   })
 
-  // §11.3's Orders count pill is deferred (D8): a pill on a dead item
-  // advertises a queue that cannot be opened.
-  it('renders no count pill on the marked Orders item', async () => {
+  it('marks Orders active on its own path', async () => {
+    pathname.value = '/admin/orders'
+    const { container } = await renderNav()
+    const active = container.querySelectorAll('.admin-navitem.is-active')
+    expect(active.length).toBe(1)
+    expect(active[0].textContent).toContain('Orders')
+  })
+
+  // §11.3's Orders count pill stays deferred (D8): the queue's own tabs carry
+  // the counts, and a second copy in the sidebar is a number to keep in sync.
+  it('renders no count pill on the Orders item', async () => {
     const { container } = await renderNav()
     expect(container.textContent).not.toMatch(/Orders\s*\d/)
   })

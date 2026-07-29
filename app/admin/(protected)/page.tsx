@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { getDashboard } from '@/lib/admin/dashboard'
 import { formatKicker, greetingFor } from '@/lib/admin/dates'
 import { StatTile } from '@/components/admin/StatTile'
@@ -64,7 +65,7 @@ export default async function AdminDashboard() {
             <section>
               <h2 className="admin-sectionhead">
                 Fulfillment queue · oldest first
-                <MarkedLink label="All orders →" />
+                <Link href="/admin/orders" className="admin-sectionhead-link">All orders →</Link>
               </h2>
               <ul className="admin-queue">
                 {result.queue.length === 0 ? (
@@ -90,7 +91,7 @@ export default async function AdminDashboard() {
               <div className="admin-railcard">
                 <h2 className="admin-sectionhead">
                   Home focal point
-                  <MarkedLink label="Change what leads home →" />
+                  <Link href="/admin/home-feature" className="admin-sectionhead-link">Change what leads home →</Link>
                 </h2>
                 {result.summary.featuredCollectionName ? (
                   // No plate: cover_photo_id is nullable and no derivative
