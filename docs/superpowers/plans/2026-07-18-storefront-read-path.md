@@ -17,7 +17,7 @@
 - **Images: `<picture>` over the derivative ladder, never `next/image`** (we own the exact widths; `product.md §3.2`). Key convention (locked, shared with slice 5): `derivatives/<photo-slug>/<register>/<width>.avif` and `.webp`, `register ∈ {colour,silver}`, `width ∈ {160,400,600,960,1200,1800}`. Public bucket base from `NEXT_PUBLIC_SUPABASE_URL`.
 - **Alt text is `photos.alt_text`, never the title.** Decorative bleed is `aria-hidden`.
 - **Honest function (`product.md §1`):** no dead controls. "Add to cart" is wired to slice 1's `CartContext`; there is **no** "Save to collection" (removed — §11 C3). Collections/photos that aren't published never appear.
-- **Focus:** every interactive element gets the hairline ink-ring on `:focus-visible` (`design.md §10 q2`). Motion gated behind `prefers-reduced-motion`; **no auto-advancing carousel** (`design.md §9`).
+- **Focus:** every interactive element gets the hairline ink-ring on `:focus-visible` (`DESIGN.md §10 q2`). Motion gated behind `prefers-reduced-motion`; **no auto-advancing carousel** (`DESIGN.md §9`).
 - **Money is untouched.** `lib/pricing.ts` `PRICE_BY_SIZE` is imported for *display* only; the server remains the sole price authority at checkout.
 - **Corrections (spec §11) are binding:** native-aspect Product plate + orientation from `aspect_ratio`; Product as one client-state island; real cart; collections visibility gate; Home empty state; kicker/ordering rules; seed via service key; `<picture>` lazy/LCP/null-dim.
 

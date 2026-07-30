@@ -5,7 +5,7 @@ type Theme = 'dark' | 'light'
 const Ctx = createContext<{ theme: Theme; toggle: () => void }>({ theme: 'dark', toggle: () => {} })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark') // dark is the default (design.md §12.2)
+  const [theme, setTheme] = useState<Theme>('dark') // dark is the default (DESIGN.md §12.2)
   // Reads localStorage (unavailable during SSR) after mount, so the first client
   // render matches the server-rendered ('dark') markup — no hydration mismatch.
   // Known theme-flash tracked in CLAUDE.md roadmap (pre-hydration script, slice 2).

@@ -1,7 +1,7 @@
 # Slice 6a — Collections + literature (design spec)
 
 > **STATUS: Brainstormed 2026-07-20, ready for a plan.** Slice 6a is the **admin write surface for
-> collections** (`design.md §11.4-F`): create and edit collections, add photos, drag-reorder them,
+> collections** (`DESIGN.md §11.4-F`): create and edit collections, add photos, drag-reorder them,
 > set a cover, and write the literature. The storefront read-path for collections is already built
 > (slice 2 — `lib/data/collections.ts`, both `/collections` pages), so this is purely the admin
 > half.
@@ -15,7 +15,7 @@
 >
 > Branch: `slice-6a` off `develop`.
 
-Companion: `design.md §11.4-F`, `§11.1`/`§11.2`/`§11.3`; `product.md §1`, `§5.3`;
+Companion: `DESIGN.md §11.4-F`, `§11.1`/`§11.2`/`§11.3`; `product.md §1`, `§5.3`;
 `supabase/schema.sql` (`collections`, `collection_photos`); slice 5a
 (`docs/superpowers/specs/2026-07-19-admin-ingest-design.md`) for the admin patterns;
 `design/Jon Hoffman Admin.dc.html` Surface F (pixel source, extracted 2026-07-20).
@@ -272,7 +272,7 @@ to throw; `render(await Page())` for async server components).
 
 ---
 
-## 9. Deviations from `design.md §11.4-F`
+## 9. Deviations from `DESIGN.md §11.4-F`
 
 Continues 5a's D-numbering (5a owns D16–D25).
 
@@ -283,7 +283,7 @@ Continues 5a's D-numbering (5a owns D16–D25).
 | **D28** | Draft members carry a `DRAFT` marker | Membership allows drafts (§0); the mock assumes all-published, which would hide *why* a work isn't live |
 | **D29** | Collection slug editable + warned | The mock has no slug field; collections aren't storage-keyed, so editable is safe but link-breaking |
 
-D26–D29 are `design.md` gaps/decisions, written back into `§11.4-F` on merge.
+D26–D29 are `DESIGN.md` gaps/decisions, written back into `§11.4-F` on merge.
 
 ---
 
@@ -312,7 +312,7 @@ D26–D29 are `design.md` gaps/decisions, written back into `§11.4-F` on merge.
 ## 11. Carried forward
 
 - **6b home feature** (`§11.4-G`) — the picker + live preview, setting `featured_on_home`.
-- `design.md §11.4-F` gets D26–D29 written back.
+- `DESIGN.md §11.4-F` gets D26–D29 written back.
 - **Collection cover on the storefront home** — depends on 6b.
 - The literature editor stays plain prose; if inline emphasis is ever wanted, markdown is the
   lightweight upgrade (recorded, not built).

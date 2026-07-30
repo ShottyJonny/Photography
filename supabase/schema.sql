@@ -13,7 +13,7 @@
 --   product.md §5   -- admin: ingest, collections, literature
 --   product.md §6.1 -- the fulfillment state machine (order_status, below)
 --   product.md §6.3 -- amount reconciliation
---   design.md  §11  -- the admin surfaces that read and write all of this
+--   DESIGN.md  §11  -- the admin surfaces that read and write all of this
 --
 -- ===========================================================================
 -- RLS POSTURE -- read this before changing a policy
@@ -61,7 +61,7 @@ do $$ begin
   );
 exception when duplicate_object then null; end $$;
 
--- design.md §12.5-D: the register toggle. The legacy app models this as
+-- DESIGN.md §12.5-D: the register toggle. The legacy app models this as
 -- `blackAndWhite: boolean`; 'silver' is the same thing with the design's name.
 do $$ begin
   create type print_register as enum ('colour', 'silver');
@@ -128,19 +128,19 @@ alter table photos drop constraint if exists derivatives_required_when_published
 alter table photos add constraint derivatives_required_when_published
   check (not published or derivatives_ready);
 
--- `aura` is SPECULATIVE, not a feature (design.md §10 q3, product.md §3).
--- design.md §12.1 rejected borrowed colour, which was this column's entire
+-- `aura` is SPECULATIVE, not a feature (DESIGN.md §10 q3, product.md §3).
+-- DESIGN.md §12.1 rejected borrowed colour, which was this column's entire
 -- justification. Nothing on the storefront reads it; the hero's colour bleed is a
 -- blur of the actual plate, not a computed average. It is stored only because it is
 -- cheap with the file in hand and expensive to backfill.
 -- jsonb because the shape is unsettled and nobody has reconciled it:
--- src/utils/color.ts averageColor() returns ONE {r,g,b}; design.md §11.4-C draws
+-- src/utils/color.ts averageColor() returns ONE {r,g,b}; DESIGN.md §11.4-C draws
 -- THREE swatches. Do not build UI implying this is live.
--- RESOLVED 2026-07-19 (design.md §10 q3, slice 5a): the column IS written at
+-- RESOLVED 2026-07-19 (DESIGN.md §10 q3, slice 5a): the column IS written at
 -- ingest, as the single {r,g,b} sharp's stats().dominant returns -- which is
 -- also the shape legacy averageColor() returned, so the mock's THREE swatches
 -- are reconciled by dropping them, not by inventing two more. Nothing reads it,
--- deliberately, and design.md §11.4-C's "Aura -- computed" tile is NOT built.
+-- deliberately, and DESIGN.md §11.4-C's "Aura -- computed" tile is NOT built.
 
 -- ---------------------------------------------------------------------------
 -- collections
@@ -150,15 +150,15 @@ create table if not exists collections (
   slug             text not null unique,
   name             text not null,           -- Playfair
   dek              text,                    -- Newsreader italic. collections.ts calls this `description`.
-  literature       text,                    -- THE ESSAY. design.md §1: where the voice lives.
+  literature       text,                    -- THE ESSAY. DESIGN.md §1: where the voice lives.
   cover_photo_id   uuid references photos(id) on delete set null,
-  featured_on_home boolean not null default false,  -- design.md §11.4-G, the home focal point
+  featured_on_home boolean not null default false,  -- DESIGN.md §11.4-G, the home focal point
   position         integer,
   created_at       timestamptz not null default now(),
   updated_at       timestamptz not null default now()
 );
 
--- Exactly one collection leads home (design.md §11.4-G). Enforce it rather than
+-- Exactly one collection leads home (DESIGN.md §11.4-G). Enforce it rather than
 -- trusting the admin UI to keep the radio group honest.
 create unique index if not exists collections_one_featured
   on collections (featured_on_home) where featured_on_home;
@@ -232,16 +232,16 @@ create table if not exists orders (
   submitted_to_lab_at      timestamptz,
   shipped_at               timestamptz,
   tracking_number          text,
-  lab_finish               text default 'Lustre',  -- design.md §11.4-E export header
+  lab_finish               text default 'Lustre',  -- DESIGN.md §11.4-E export header
   notes                    text,
 
-  -- design.md §11.6 / product.md §6.1: "shipped is the ONLY state that may show a
+  -- DESIGN.md §11.6 / product.md §6.1: "shipped is the ONLY state that may show a
   -- tracking number, and only after a human enters it." Keyed to shipped_at rather
   -- than status so it survives a later refund or cancellation of a shipped order.
   constraint tracking_requires_shipment
     check (tracking_number is null or shipped_at is not null),
 
-  -- A quarantined order must record what was actually paid -- design.md §11.4-D
+  -- A quarantined order must record what was actually paid -- DESIGN.md §11.4-D
   -- renders "paid $X · expected $Y", and it cannot invent X.
   constraint mismatch_records_amount_paid
     check (status <> 'amount_mismatch' or amount_paid_cents is not null)

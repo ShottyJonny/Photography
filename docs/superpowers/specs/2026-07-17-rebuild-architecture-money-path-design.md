@@ -1,14 +1,14 @@
 # Rebuild — Architecture & Money Path (design spec)
 
 > **Status: proposed, awaiting review.** Written 2026-07-17 from the source-of-truth
-> docs (`CLAUDE.md`, `product.md`, `design.md`, `supabase/schema.sql`) and the legacy
+> docs (`CLAUDE.md`, `product.md`, `DESIGN.md`, `supabase/schema.sql`) and the legacy
 > money path (`netlify/functions/`). This is the structural spec for the Next.js
 > rebuild plus the first buildable slice.
 >
 > **What this spec IS:** the App Router skeleton, the cross-cutting decisions, and the
 > **Foundation + Money-path** slice in build detail. **What it is NOT:** the pixel-level
 > design of any storefront or admin surface — those are already specified in
-> `design.md §11–§12` and each gets its own spec→plan cycle (see §7). This spec builds
+> `DESIGN.md §11–§12` and each gets its own spec→plan cycle (see §7). This spec builds
 > the frame those surfaces hang on, and the money code they all depend on.
 
 ---
@@ -27,7 +27,7 @@ was decided in the 2026-07-17 brainstorm.
 | Billing address | **Stripe** — `billing_address_collection: 'required'`; we never store it | brainstorm |
 | Country input | ISO-2 `<select>` (feeds tax and Stripe `allowed_countries` alike) | `product.md §1.5`, `CLAUDE.md` |
 | Money logic | **Verbatim port** of the 4 pure functions; handlers rebuilt around them | `product.md §1.5` |
-| Nav | wordmark → `/`, cloud mark → theme toggle | `design.md §12.2` |
+| Nav | wordmark → `/`, cloud mark → theme toggle | `DESIGN.md §12.2` |
 | v1 pricing | **size-only** (no price column; `§8 q3` stays open) | `supabase/schema.sql`, `product.md §8 q3` |
 | `unlisted` | kept, as `photos.published = false` | `product.md §8 q4` |
 | Repo strategy | Next at root; legacy Vite tree removed in an early commit | brainstorm |
@@ -35,7 +35,7 @@ was decided in the 2026-07-17 brainstorm.
 
 **The shipping-vs-billing split is the important correction from the brainstorm.**
 Stripe mails nothing, so the *shipping* address belongs on our site (it drives the
-Nations lab export, `design.md §11.4-E`, and it is what tax is computed against).
+Nations lab export, `DESIGN.md §11.4-E`, and it is what tax is computed against).
 Stripe collects only the *billing* address, for the card/AVS check. Because tax and
 shipping now read the **same** form object, the `§1.5` "tax computed against one
 address, ship to another" divergence hazard does not exist in this design — we
@@ -106,7 +106,7 @@ middleware.ts                    # gate the (admin) group on a Supabase session
 - **`(store)` is static + ISR.** Pages are statically generated and served from cache.
   Data reads are tagged (`{ next: { tags: [...] } }` on the Supabase-fetch layer, or
   `unstable_cache` with tags). Admin publish/edit paths call `revalidateTag(...)` so new
-  or edited work appears **with no redeploy** — which is what makes `design.md §11.4-G`'s
+  or edited work appears **with no redeploy** — which is what makes `DESIGN.md §11.4-G`'s
   on-screen promise honest.
 - **`(admin)` is dynamic and auth-gated.** Never cached; every load reflects live state.
   `middleware.ts` redirects unauthenticated requests under `(admin)` to `/login`.
@@ -257,7 +257,7 @@ rebuilt, not ported.
 ### 4.4 Order-confirmation read — `app/(store)/order/[id]/page.tsx`
 
 Reads the order + items through a **server-side service-key** path (anon has no access to
-`orders` by design). Renders **only true states** (`product.md §1`, `design.md §12.5-H`):
+`orders` by design). Renders **only true states** (`product.md §1`, `DESIGN.md §12.5-H`):
 the Stripe receipt is the only receipt; no fake tracking; no "email sent" claim. If the
 order is `amount_mismatch`, the customer still sees a valid "thank you / we're reviewing
 your order" state — never a bare success claim that isn't true.
@@ -272,7 +272,7 @@ Slice 1 is **Foundation + Money path**, not the pixel-faithful surfaces. Concret
 - Next scaffold; TypeScript strict; ESLint/Prettier; the legacy-removal commit.
 - `lib/env.ts`, the three Supabase clients, `lib/stripe.ts`.
 - **Type + token infrastructure**: load the four faces (Playfair Display, Newsreader,
-  IBM Plex Mono, Hanken Grotesk) via `next/font`; define the `design.md §12.2`/`§11.1`
+  IBM Plex Mono, Hanken Grotesk) via `next/font`; define the `DESIGN.md §12.2`/`§11.1`
   color + type tokens as CSS custom properties for both store themes and the admin dark
   theme; a `ThemeProvider` (mark-as-toggle wiring lands with the store header later).
   This is the *substrate* every later surface consumes — not the surfaces themselves.
@@ -337,7 +337,7 @@ Each slice after this one gets its **own** spec→plan→implementation cycle.
 8. **Home feature** — `§11.4-G` + the `revalidateTag` wiring proving the "no redeploy"
    promise end-to-end.
 9. **Undesigned surfaces** — About / Contact / legal / footer. **Blocked on design**
-   (`product.md §4`, `design.md §10`): the nav links to About and Contact and Stripe
+   (`product.md §4`, `DESIGN.md §10`): the nav links to About and Contact and Stripe
    expects a refund policy, but none are designed. Do not ship nav links that go nowhere
    (`product.md §1`).
 
@@ -349,10 +349,10 @@ Each slice after this one gets its **own** spec→plan→implementation cycle.
   no price column. If it lands later, `pricing.ts` and the schema move in the same commit.
 - **`§8 q7` ordered-crop → Nations** — how a non-4:5 size reaches the lab print-ready. The
   export "says nothing about crop rather than guessing" until decided. Belongs to slice 7.
-- **`design.md §10 q2` focus states** — §8's visible-focus rule applies to every keyboard-
+- **`DESIGN.md §10 q2` focus states** — §8's visible-focus rule applies to every keyboard-
   reachable surface; the ink-on-paper treatment (hairline ink ring candidate) needs
   specifying before slices 2–8 build interactive chrome.
-- **`design.md §10 q3` aura fate** — stored speculatively at ingest; nothing reads it.
+- **`DESIGN.md §10 q3` aura fate** — stored speculatively at ingest; nothing reads it.
   Decide before it becomes permanent dead weight. Belongs to slice 5.
 - **Webhook `payment_intent.payment_failed` handling** — silent-pending vs surfacing;
   confirm in slice-1 build (§4.3).
@@ -368,6 +368,6 @@ Each slice after this one gets its **own** spec→plan→implementation cycle.
 
 - `CLAUDE.md` — working norms, the money-path constraints, the verification hole.
 - `product.md` — IA, honest-function, `§1.5` migration hazards, `§6` fulfillment, `§8` open Qs.
-- `design.md` — `§11` admin / `§12` storefront targets, `§8` cross-cutting rules.
+- `DESIGN.md` — `§11` admin / `§12` storefront targets, `§8` cross-cutting rules.
 - `supabase/schema.sql` — the applied, live data model (authoritative over `product.md §3`).
 - `netlify/functions/lib/pricing.js` — the verbatim-port source (also in the quarry/archive).

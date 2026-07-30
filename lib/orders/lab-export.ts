@@ -1,7 +1,7 @@
 import { addressLines, type StoredAddress } from '@/lib/orders/address'
 
 /**
- * The Nations Photo Lab export block (design.md §11.4-E, product.md §6.2).
+ * The Nations Photo Lab export block (DESIGN.md §11.4-E, product.md §6.2).
  *
  * Nations offers no integration, so this is not an API payload — it is plain
  * text a human copies into their order form. That makes every line a claim Jon

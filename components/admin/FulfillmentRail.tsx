@@ -8,7 +8,7 @@ import {
 import type { OrderStatus } from '@/lib/orders/query'
 
 /**
- * design.md §11.4-E's fulfillment rail: Paid → Submitted to lab → Shipped.
+ * DESIGN.md §11.4-E's fulfillment rail: Paid → Submitted to lab → Shipped.
  *
  * Forward-only, and every step is a button a human presses. No timer, no
  * inference, no optimistic advance: the rail moves only after the server says

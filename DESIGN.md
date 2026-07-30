@@ -1,10 +1,10 @@
-# design.md
+# DESIGN.md
 
 > **STATUS: Target specified 2026-07-16.** [§11](#11-admin-studio-admin) (admin) and [§12](#12-storefront-jon-hoffman-photography) (storefront) **are the design** — stated as settled fact, and between them they resolve every question §1 previously left open. [§1](#1-aesthetic-direction) records the posture and what was decided.
 >
 > **§2–§7 are a legacy inventory of `src/styles.css`** — the stylesheet the rebuild deletes. They describe the live site until cutover and they expire then. **Do not read them as targets.** §8 (cross-cutting rules) and §9 (regressions the rebuild must not inherit) are **live** and apply to the new stack.
 
-Companion to `CLAUDE.md` and `product.md`. **`design.md` = how it looks and moves. `product.md` = what each surface is and does. `CLAUDE.md` = how to work in the repo, and the money path.**
+Companion to `CLAUDE.md` and `product.md`. **`DESIGN.md` = how it looks and moves. `product.md` = what each surface is and does. `CLAUDE.md` = how to work in the repo, and the money path.**
 
 **Start here:** §1 for the posture and the decisions → §12 for the storefront → §11 for the admin.
 
