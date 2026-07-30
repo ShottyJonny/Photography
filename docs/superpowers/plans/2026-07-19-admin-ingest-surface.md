@@ -74,7 +74,7 @@ app/admin/(protected)/photographs/page.tsx       NEW  the landing
 app/admin/(protected)/photographs/new/page.tsx   NEW  Surface C
 app/globals.css                                  MODIFY  append .admin-ingest-* / .admin-photolist-*
 CLAUDE.md                                        MODIFY  baseline, lib/ingest layer
-design.md / product.md / supabase/schema.sql     MODIFY  writeback (Task 11)
+DESIGN.md / product.md / supabase/schema.sql     MODIFY  writeback (Task 11)
 
 test/ingest-schema.test.ts        NEW
 test/ingest-slug.test.ts          NEW
@@ -170,7 +170,7 @@ Append to the end of `app/globals.css`. Every class is prefixed `admin-`; border
 
 ```css
 /* --------------------------------------------------------------------------
-   Slice 5a — ingest (design.md §11.4-C) and the Photographs landing.
+   Slice 5a — ingest (DESIGN.md §11.4-C) and the Photographs landing.
    Measurements from design/Jon Hoffman Admin.dc.html, Surface C.
    -------------------------------------------------------------------------- */
 
@@ -587,7 +587,7 @@ describe('Surface C — the form', () => {
     expect(container.textContent).toMatch(/draft/i)
   })
 
-  it('builds no Aura tile (design.md §11.4-C’s own correction)', () => {
+  it('builds no Aura tile (DESIGN.md §11.4-C’s own correction)', () => {
     const { container } = renderForm()
     expect(container.textContent).not.toMatch(/aura/i)
   })
@@ -1070,7 +1070,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 - Consumes: `listPhotos` (Task 7); `generateRegister`, `finishIngest`, `deletePhoto` (Task 6).
 - Produces: `/admin/photographs`, and `Photographs` as the second live nav item.
 
-**This landing is deliberately plain and explicitly NOT `design.md §11.4-B`** — exactly as slice 4a's placeholder was not `§11.4-A`. Slice 5b replaces it wholesale with the 4-col work-card grid, filter chips, counts and search. Do not build those here.
+**This landing is deliberately plain and explicitly NOT `DESIGN.md §11.4-B`** — exactly as slice 4a's placeholder was not `§11.4-A`. Slice 5b replaces it wholesale with the 4-col work-card grid, filter chips, counts and search. Do not build those here.
 
 - [ ] **Step 1: Write the failing tests**
 
@@ -1180,7 +1180,7 @@ import { generateRegister, finishIngest, setPublished, deletePhoto } from '@/lib
 import type { AdminPhoto } from '@/lib/data/photos-admin'
 
 /**
- * Slice 5a's landing. Deliberately plain and explicitly NOT design.md §11.4-B
+ * Slice 5a's landing. Deliberately plain and explicitly NOT DESIGN.md §11.4-B
  * -- slice 5b replaces it wholesale with the work-card grid, filter chips and
  * counts, exactly as 4b replaced 4a's placeholder.
  *
@@ -1368,7 +1368,7 @@ Expected: all green.
 git add components/admin/PhotoList.tsx "app/admin/(protected)/photographs/page.tsx" components/admin/AdminNav.tsx test/photographs-landing.test.tsx test/admin-nav.test.tsx
 git commit -m "feat(admin): the Photographs landing, and the nav item goes live
 
-Deliberately plain and explicitly NOT design.md §11.4-B -- slice 5b replaces
+Deliberately plain and explicitly NOT DESIGN.md §11.4-B -- slice 5b replaces
 it wholesale, as 4b replaced 4a's placeholder.
 
 photos === null means the read FAILED; rendering 'No photographs yet' then
@@ -1388,7 +1388,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 
 **Files:**
 - Modify: `CLAUDE.md`
-- Modify: `design.md`
+- Modify: `DESIGN.md`
 - Modify: `product.md`
 
 **Interfaces:** none. This task ships no code.
@@ -1409,7 +1409,7 @@ Following the `docs/design-md-admin-writeback` precedent (PR #4). Left undone, t
 - In the Roadmap, mark **Slice 5a — Admin ingest: DONE** and note 5b (`§11.4-B`) as next.
 - Add to the Data model section: `photos.derivatives_ready` and the `derivatives_required_when_published` constraint, alongside the existing note about the two honest-function invariants — there are now **three**.
 
-- [ ] **Step 2: Update `design.md`**
+- [ ] **Step 2: Update `DESIGN.md`**
 
 - **`§11.4-C`**: append a blockquote recording deviations **D16–D24** (list them from spec §11), stating that six are handoff defects (D16, D18, D19, D20, D23, D24), D17 applies a defect `§11.7` already documented, and D21/D22 fill gaps.
 - **`§11.7`**: mark resolved, in place, never renumbering:
@@ -1422,7 +1422,7 @@ Following the `docs/design-md-admin-writeback` precedent (PR #4). Left undone, t
 
 - [ ] **Step 3: Update `product.md`**
 
-- **`§8`**: mark **q3** (deferred with a pointer to its own slice), **q4**, **q5** and **q7** answered in place, dated 2026-07-19. Do not renumber — `design.md §11.7` cites them by number.
+- **`§8`**: mark **q3** (deferred with a pointer to its own slice), **q4**, **q5** and **q7** answered in place, dated 2026-07-19. Do not renumber — `DESIGN.md §11.7` cites them by number.
 - **`§3`**: update the aura blockquote — the column is now written, and still read by nothing, deliberately.
 - **`§3.2`**: note that the ladder is implemented in `lib/ingest/plan.ts` and locked to `lib/images/derivatives.ts` by `test/ingest-core.test.ts`.
 - **`§5.2`**: change "published/unlisted" to "published/draft", and record that silver arrives as a **separately uploaded file**, never a server-side desaturation.
@@ -1436,12 +1436,12 @@ Expected: all four green. Record the final test count.
 - [ ] **Step 5: Commit**
 
 ```bash
-git add CLAUDE.md design.md product.md
+git add CLAUDE.md DESIGN.md product.md
 git commit -m "docs(slice-5a): write slice 5's decisions back into the source-of-truth docs
 
 Closes product.md §8 q4, q5 and q7 in place, and records q3 as deferred rather
 than declined with the three findings its own slice inherits. Closes
-design.md §10 q3. Records deviations D16-D24 against §11.4-C, six of which are
+DESIGN.md §10 q3. Records deviations D16-D24 against §11.4-C, six of which are
 handoff defects rather than build-time disagreements.
 
 Left undone, the next slice's agent reads §11.4-C as authoritative and rebuilds

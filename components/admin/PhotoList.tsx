@@ -7,7 +7,7 @@ import { generateRegister, finishIngest, setPublished, deletePhoto } from '@/lib
 import type { AdminPhoto } from '@/lib/data/photos-admin'
 
 /**
- * Slice 5a's landing. Deliberately plain and explicitly NOT design.md §11.4-B
+ * Slice 5a's landing. Deliberately plain and explicitly NOT DESIGN.md §11.4-B
  * -- slice 5b replaces it wholesale with the work-card grid, filter chips and
  * counts, exactly as 4b replaced 4a's placeholder.
  *

@@ -11,7 +11,7 @@
 > `ThemeProvider`, and `lib/pricing.ts`. It also **replaces** slice 1's temporary
 > `force-dynamic` `/prints` stub with the real thing.
 >
-> Companion design source: `design.md §12.5-A–D` (Home / Prints / Collection / Product),
+> Companion design source: `DESIGN.md §12.5-A–D` (Home / Prints / Collection / Product),
 > `§12.2` (theme + nav), `§12.3` (type), `§12.4` (layout), `§12.6` (motion), `§8` (cross-cutting).
 
 ---
@@ -20,15 +20,15 @@
 
 | Decision | Value | Source |
 |---|---|---|
-| Nav | **Prints · Collections · Contact · Cart** (drop Work and About) | brainstorm (`design.md §12.2` open) |
-| Home / theme controls | wordmark → `/`; cloud mark → theme toggle | `design.md §12.2` |
+| Nav | **Prints · Collections · Contact · Cart** (drop Work and About) | brainstorm (`DESIGN.md §12.2` open) |
+| Home / theme controls | wordmark → `/`; cloud mark → theme toggle | `DESIGN.md §12.2` |
 | Home index rail | **the featured collection's works** (editorial order), not the whole portfolio | brainstorm |
 | Images | **hand-seed a few real derivatives + lock the key convention**; render with `<picture>` (AVIF+WebP), **not `next/image`** | brainstorm (`product.md §3.2`) |
 | Collections index | **derived** simple design (grid of collection cards → detail); not blocked like About | brainstorm |
 | Contact | **minimal + honest** — a real email in the site's voice, no form, no dead social links | brainstorm (`product.md §4`, §1) |
 | Price display | import `PRICE_BY_SIZE` from `lib/pricing.ts` — **single source of truth**; server stays the authority | brainstorm |
 | Rendering | **real ISR + tagged fetches** (replaces slice 1's `force-dynamic /prints`) | `product.md §8 q5` |
-| Focus states | **hairline ink ring on `:focus-visible`**, applied globally to every interactive element | `design.md §10 q2` / §8 |
+| Focus states | **hairline ink ring on `:focus-visible`**, applied globally to every interactive element | `DESIGN.md §10 q2` / §8 |
 | Alt text | images use `photos.alt_text` (never the title) | `product.md §5.2`, a11y audit |
 | Add-to-cart | **stub → slice 3**; the button renders but cart wiring is deferred | slice plan §7 |
 
@@ -115,7 +115,7 @@ staleness is bounded before slice 8 wires real invalidation.
 
 ## 5. Surfaces
 
-Per-surface behaviour; appearance is `design.md §12.5`. All server components except the noted client islands.
+Per-surface behaviour; appearance is `DESIGN.md §12.5`. All server components except the noted client islands.
 
 - **Home** (`page.tsx`, §12.5-A): `getFeaturedCollection()`. 820×900 plate right-aligned,
   `object-position:center 40%`, 150px gradient mask; blurred 160 bleed behind; left rail =
@@ -135,7 +135,7 @@ Per-surface behaviour; appearance is `design.md §12.5`. All server components e
     removed `src/` from this repo, so it comes from the archive like the pricing port did. Given the
     plate's `aspect_ratio` and the selected size's aspect, draw the centered inscribed crop rectangle
     and shade the excluded margins, captioned "Guides show the N×M crop." Five of seven sizes crop, so
-    the guide is meaningful (`design.md §12.5-D`). It is UI logic, not money — adapt, don't treat as verbatim.
+    the guide is meaningful (`DESIGN.md §12.5-D`). It is UI logic, not money — adapt, don't treat as verbatim.
 - **Collections index** (`collections/page.tsx`, derived): `getCollections()`. Grid of collection
   cards: cover `Plate` + Playfair name + mono count ("Six photographs") + Newsreader dek → detail.
 - **Collection detail** (`collections/[slug]/page.tsx`, §12.5-C): `getCollectionBySlug()`. Centered
@@ -154,7 +154,7 @@ Per-surface behaviour; appearance is `design.md §12.5`. All server components e
   `useTheme().toggle`, swaps asset + `data-theme`), Playfair "Jon Hoffman" wordmark linking `/`
   over a mono "PHOTOGRAPHS & PRINTS" kicker, then nav (Prints · Collections · Contact · Cart-stub
   with a count of 0 for now). Same lockup shape the admin reuses later (§11.3).
-- **Focus states** (`design.md §10 q2`, §8): a **hairline ink ring** on `:focus-visible` for
+- **Focus states** (`DESIGN.md §10 q2`, §8): a **hairline ink ring** on `:focus-visible` for
   every interactive element — `outline: 1px solid var(--ink); outline-offset: 2px` (or a `--hair`
   variant). Defined once globally. §8's one rule the handoff dropped; it does not get dropped again.
 - **Motion** (§12.6): hovers `.18–.2s`; theme flip instant. **Every** animation gated behind
@@ -204,7 +204,7 @@ boundaries.
 
 ## 10. Source docs
 
-- `design.md §12.2–§12.7` (storefront target), `§8` (cross-cutting), `§10 q2` (focus).
+- `DESIGN.md §12.2–§12.7` (storefront target), `§8` (cross-cutting), `§10 q2` (focus).
 - `product.md §3.2` (derivative ladder), `§4` (surfaces), `§5.2` (alt text), `§8 q5` (freshness).
 - `supabase/schema.sql` — `photos`, `collections`, `collection_photos`, RLS published-read.
 - `docs/superpowers/specs/2026-07-17-rebuild-architecture-money-path-design.md` — slice 1 (dependency).

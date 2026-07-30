@@ -6,7 +6,7 @@ import { CopyButton } from '@/components/admin/CopyButton'
 import { setLabFinish } from '@/lib/admin/order-actions'
 
 /**
- * design.md §11.4-E's export panel. The block itself is built server-side by
+ * DESIGN.md §11.4-E's export panel. The block itself is built server-side by
  * lib/orders/lab-export.ts and passed down whole, so what Jon reads on screen
  * and what lands on the clipboard are the same string by construction.
  *

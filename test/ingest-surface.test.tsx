@@ -65,7 +65,7 @@ describe('Surface C — the form', () => {
     expect(container.textContent).toMatch(/draft/i)
   })
 
-  it('builds no Aura tile (design.md §11.4-C’s own correction)', () => {
+  it('builds no Aura tile (DESIGN.md §11.4-C’s own correction)', () => {
     const { container } = renderForm()
     expect(container.textContent).not.toMatch(/aura/i)
   })

@@ -30,7 +30,7 @@ describe('measure', () => {
   })
 
   it('returns the aura as a single {r,g,b}', async () => {
-    // design.md §10 q3: the shape legacy averageColor() returned. Nothing reads
+    // DESIGN.md §10 q3: the shape legacy averageColor() returned. Nothing reads
     // it; it is stored because the file is in hand.
     const m = await measure(source)
     expect(Object.keys(m.aura).sort()).toEqual(['b', 'g', 'r'])

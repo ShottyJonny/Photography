@@ -5,7 +5,7 @@ import { usePathname } from 'next/navigation'
 import { MarkedLink } from '@/components/admin/MarkedControl'
 
 /**
- * Order is the PROTOTYPE's sidebar order — design.md §11.3 specifies item
+ * Order is the PROTOTYPE's sidebar order — DESIGN.md §11.3 specifies item
  * styling but does not enumerate the items, and §11 says the prototype wins
  * where the section is silent.
  *

@@ -5,7 +5,7 @@ import { filterOrders, statusesForTab, TABS, type OrderStatus, type OrderTab, ty
 import type { StoredAddress } from '@/lib/orders/address'
 
 /**
- * Order reads for the admin (design.md §11.4-D/E).
+ * Order reads for the admin (DESIGN.md §11.4-D/E).
  *
  * These run as the LOGGED-IN USER through createAuthServerClient(), so
  * schema.sql's `orders_admin_all` / `order_items_admin_all` policies are what

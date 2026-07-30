@@ -3,7 +3,7 @@
  *
  * product.md §1: "a control's label must match what it does." These say they
  * do nothing, and they do nothing — the marker is real text content, never a
- * title, tooltip, or colour (design.md §11.1: status is never carried by
+ * title, tooltip, or colour (DESIGN.md §11.1: status is never carried by
  * colour alone).
  *
  * NOT BUILT rather than SOON: "soon" claims a timeline nothing guarantees.

@@ -28,7 +28,7 @@ These apply to **every** task. They are not repeated per-task.
 
 **Code rules:**
 
-- **Apostrophes in user-visible strings use `’`**, never `'` — because `design.md §11.2` specifies typographic apostrophes. This is *not* a lint requirement: `react/no-unescaped-entities` fires on **JSX text only**, so a straight apostrophe in a `.ts` string literal passes lint. Use `’` in both places anyway. JSX precedent: `app/(store)/order/[id]/page.tsx:34`.
+- **Apostrophes in user-visible strings use `’`**, never `'` — because `DESIGN.md §11.2` specifies typographic apostrophes. This is *not* a lint requirement: `react/no-unescaped-entities` fires on **JSX text only**, so a straight apostrophe in a `.ts` string literal passes lint. Use `’` in both places anyway. JSX precedent: `app/(store)/order/[id]/page.tsx:34`.
 - **DB is snake_case**, no exceptions.
 - **Do not touch** `lib/pricing.ts`, `lib/checkout/`, `lib/orders/`, `lib/data/`, `app/api/`, `app/(store)/`, `components/{store,cart,product,theme}/`.
 - **Do not modify `vitest.config.ts`, `eslint.config.mjs`, `tsconfig.json`, `next.config.ts`, or `.github/workflows/ci.yml`.** Do not add any dependency other than `@supabase/ssr` — in particular **do not add `@testing-library/jest-dom`**; work within the assertion set above. Do not add `eslint-disable` comments. If a gate cannot be satisfied without one of these, **stop and report** rather than changing the gate.
@@ -38,7 +38,7 @@ These apply to **every** task. They are not repeated per-task.
 - **Never run SQL against the Supabase project, and never open the Supabase dashboard.** The spec's §9.1 and §9.3 queries are Jon's to run, not yours. Slice 4a reads no business data at all.
 - **The spec's §9.2 manual verification steps are Jon's** — browser, real sign-in, autofill, Back button. Do not attempt them and do not claim them done.
 - **Do not build the shell, the nav, or the dashboard.** Those are slice 4b. If you find yourself writing a sidebar, stop.
-- **Do not "correct" `--faint: .50` or `--hairform: .37` back to `design.md §11.1`'s literals.** They deviate deliberately (spec D10/D11) because §11.1's values fail WCAG contrast. `test/admin-tokens.test.ts` locks them.
+- **Do not "correct" `--faint: .50` or `--hairform: .37` back to `DESIGN.md §11.1`'s literals.** They deviate deliberately (spec D10/D11) because §11.1's values fail WCAG contrast. `test/admin-tokens.test.ts` locks them.
 
 **Process:**
 
@@ -799,7 +799,7 @@ export type SignInState =
 
 export const INITIAL_SIGN_IN_STATE: SignInState = { status: 'idle' }
 
-// Typographic apostrophes per design.md §11.2.
+// Typographic apostrophes per DESIGN.md §11.2.
 export const SIGN_IN_ERROR_COPY: Record<SignInErrorKind, string> = {
   // Deliberately generic — never reveals whether an address exists. GoTrue
   // returns a uniform invalid_credentials for both cases, so this matches.
@@ -1066,7 +1066,7 @@ git commit -m "feat(admin): signIn / signOut server actions" -m "Errors classify
 - Modify: `app/globals.css` (append only — change no existing rule)
 - Test: `test/admin-tokens.test.ts`
 
-**The bug this fixes is live today:** `app/layout.tsx` stamps `data-theme` on `<html>` from `localStorage['theme:v1']` on **every** route, and `globals.css` has `:root[data-theme='light']` redefining `--paper` to `#f2efe8`. `design.md §11.1` says dark is the only admin theme. Unscoped, toggling the storefront to light and opening the admin renders the admin on light paper.
+**The bug this fixes is live today:** `app/layout.tsx` stamps `data-theme` on `<html>` from `localStorage['theme:v1']` on **every** route, and `globals.css` has `:root[data-theme='light']` redefining `--paper` to `#f2efe8`. `DESIGN.md §11.1` says dark is the only admin theme. Unscoped, toggling the storefront to light and opening the admin renders the admin on light paper.
 
 Custom properties resolve per element, so a declaration on the `[data-admin]` wrapper beats the value inherited from `:root` regardless of selector specificity.
 
@@ -1142,7 +1142,7 @@ describe('the [data-admin] token scope', () => {
     expect(css).toContain('.admin-sr-only')
   })
 
-  // design.md §8 / §10 q2: "It does not get to fail twice." The admin relies on
+  // DESIGN.md §8 / §10 q2: "It does not get to fail twice." The admin relies on
   // the global rule rather than re-declaring it — so assert both that the rule
   // is intact and that nothing in the admin CSS opts out.
   it('keeps the global focus ring intact and never suppresses it in the admin', () => {
@@ -1182,7 +1182,7 @@ Append to the **end** of `app/globals.css`. Change nothing above it.
 
 ```css
 /* ===================================================================
-   Admin (design.md §11) — dark only, and structurally unreachable by
+   Admin (DESIGN.md §11) — dark only, and structurally unreachable by
    the storefront theme toggle.
 
    Tokens are declared on the [data-admin] wrapper, never :root. Custom
@@ -1273,7 +1273,7 @@ Expected: 9 tests PASS; 0 errors; 0 problems.
 
 ```bash
 git add app/globals.css test/admin-tokens.test.ts
-git commit -m "feat(admin): [data-admin] token scope, unreachable by the storefront toggle" -m "app/layout.tsx stamps data-theme on <html> for every route, so without scoping, a light-mode storefront session renders the admin on light paper. Tokens go on the wrapper, not :root. Adds color-scheme:dark (autofill and UA widgets are not custom properties) and reclaims the body background." -m "--faint raised to .50 and --hairform added at .37: §11.1's values compute to 3.58:1 and 1.42:1, failing AA and SC 1.4.11. Locked by contrast assertions, along with the global focus ring design.md §8 says does not get to fail twice." -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+git commit -m "feat(admin): [data-admin] token scope, unreachable by the storefront toggle" -m "app/layout.tsx stamps data-theme on <html> for every route, so without scoping, a light-mode storefront session renders the admin on light paper. Tokens go on the wrapper, not :root. Adds color-scheme:dark (autofill and UA widgets are not custom properties) and reclaims the body background." -m "--faint raised to .50 and --hairform added at .37: §11.1's values compute to 3.58:1 and 1.42:1, failing AA and SC 1.4.11. Locked by contrast assertions, along with the global focus ring DESIGN.md §8 says does not get to fail twice." -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
 ---
@@ -1378,7 +1378,7 @@ describe('SignInFields', () => {
     expect(container.querySelector('button[type="submit"]')?.hasAttribute('disabled')).toBe(true)
   })
 
-  // design.md §10 q2 — every control must be reachable and keep the global ring.
+  // DESIGN.md §10 q2 — every control must be reachable and keep the global ring.
   it('renders three focusable controls and takes none out of the tab order', () => {
     const { container } = render(<SignInFields state={INITIAL_SIGN_IN_STATE} pending={false} />)
     expect(container.querySelectorAll('input, button').length).toBe(3)
@@ -1522,7 +1522,7 @@ Expected: 10 tests PASS; 0 errors; 0 problems.
 
 ```bash
 git add app/admin/layout.tsx app/admin/sign-in/page.tsx components/admin/SignInForm.tsx test/sign-in.test.tsx
-git commit -m "feat(admin): sign-in surface and the admin token-scope layout" -m "The sign-in surface is invented — it appears nowhere in design.md §11 or the prototype — so it uses only §11.1/§11.2 vocabulary. Presentation is split from the useActionState wrapper so all five error states are tested deterministically, and the data-admin attribute the token scope depends on is asserted rather than assumed." -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+git commit -m "feat(admin): sign-in surface and the admin token-scope layout" -m "The sign-in surface is invented — it appears nowhere in DESIGN.md §11 or the prototype — so it uses only §11.1/§11.2 vocabulary. Presentation is split from the useActionState wrapper so all five error states are tested deterministically, and the data-admin attribute the token scope depends on is asserted rather than assumed." -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
 ---
@@ -1891,7 +1891,7 @@ Slice 4a is complete when the four gate commands are green and all nine files ex
 **Not done, deliberately — do not attempt:**
 
 - **The `§11.3` shell, the nav, the `§11.4-A` dashboard**, and any read of `orders` / `photos` / `collections`. Slice 4b.
-- **The `design.md §11` write-back** of D1, D6, D10, D11 and the §6.0 focus treatment. Record it in `.superpowers/sdd/progress.md` as a slice-4a follow-up, so slice 4b's builder does not read `§11.1`'s `--faint: .42` as current and "correct" the token back.
+- **The `DESIGN.md §11` write-back** of D1, D6, D10, D11 and the §6.0 focus treatment. Record it in `.superpowers/sdd/progress.md` as a slice-4a follow-up, so slice 4b's builder does not read `§11.1`'s `--faint: .42` as current and "correct" the token back.
 - **The spec's §9.2 manual verification** (browser, real sign-in, autofill, Back button) — Jon's.
 - **The spec's §9.1 and §9.3 SQL** — Jon's. Never run SQL against the Supabase project.
 - Password reset, MFA, rate limiting.

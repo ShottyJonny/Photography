@@ -69,7 +69,7 @@ Next.js App Router. Route groups separate the two halves.
 app/
   layout.tsx                   # root: next/font faces + globals.css
   page.tsx                     # placeholder home (slice 2 rebuilds home under (store))
-  globals.css                  # design tokens (design.md §12.2), both themes
+  globals.css                  # design tokens (DESIGN.md §12.2), both themes
   (store)/                     # public storefront — light/dark
     layout.tsx                 # ThemeProvider + CartProvider
     prints/page.tsx            # minimal shop (slice 1) → §12.5-B (slice 2)
@@ -221,7 +221,7 @@ The rebuild is sliced; each slice is a spec → plan → subagent-driven build u
 ## Source-of-truth docs
 
 - **`product.md`** — information architecture, per-surface behaviour, the honest-function rules, open questions, and the migration hazards (§1.5).
-- **`design.md`** — how it looks and moves. `§11` (admin) and `§12` (storefront) are the design target; `§8` cross-cutting rules are live. `§2–§7` are a legacy inventory of the deleted stylesheet and expire at cutover — do not read them as targets.
+- **`DESIGN.md`** — how it looks and moves. `§11` (admin) and `§12` (storefront) are the design target; `§8` cross-cutting rules are live. `§2–§7` are a legacy inventory of the deleted stylesheet and expire at cutover — do not read them as targets.
 - **`supabase/schema.sql`** — the applied data model (authoritative over prose).
 - **`docs/superpowers/specs/` + `plans/`** — the rebuild's design and TDD implementation docs, one per slice.
 - **`.superpowers/sdd/progress.md`** — the slice-1 execution ledger and follow-up findings (git-ignored scratch).
@@ -236,4 +236,4 @@ The deleted Vite app lives in the sibling folder `C:\Users\Shott\Photography-mai
 
 ## Design system
 
-`design.md` is the source of truth for how the site looks and moves. `§11` (admin) and `§12` (storefront) are the settled target; `§8` cross-cutting rules — visible focus, `prefers-reduced-motion`, pinch-zoom on the photograph, give the photograph the dominant share, `alt` text that describes the image — apply to every slice. Every price comes from `lib/pricing.ts`, never from the design mocks' hardcoded numbers.
+`DESIGN.md` is the source of truth for how the site looks and moves. `§11` (admin) and `§12` (storefront) are the settled target; `§8` cross-cutting rules — visible focus, `prefers-reduced-motion`, pinch-zoom on the photograph, give the photograph the dominant share, `alt` text that describes the image — apply to every slice. Every price comes from `lib/pricing.ts`, never from the design mocks' hardcoded numbers.

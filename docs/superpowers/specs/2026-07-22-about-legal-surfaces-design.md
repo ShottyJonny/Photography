@@ -1,7 +1,7 @@
 # Slice — About + legal surfaces + footer (design spec)
 
 **Date:** 2026-07-22
-**Surface:** the storefront surfaces `product.md §4` records as **undesigned** (About, Contact, Privacy, Terms, Refund, Shipping) plus the missing footer. Register per `product.md §1` (honest function) and the literature voice (`design.md §12.3`, Newsreader).
+**Surface:** the storefront surfaces `product.md §4` records as **undesigned** (About, Contact, Privacy, Terms, Refund, Shipping) plus the missing footer. Register per `product.md §1` (honest function) and the literature voice (`DESIGN.md §12.3`, Newsreader).
 **Status:** approved (brainstorm), ready for writing-plans
 
 ## Goal
@@ -45,7 +45,7 @@ Every claim on these pages must be true. In particular:
 4. **A single `Footer`**, added once to the store layout. Holds legal links, email, copyright.
    Minimal — no social links (none exist yet).
 5. **About rejoins the header nav.** Primary nav becomes Prints · Collections · About · Contact ·
-   Cart, restoring `design.md §12`'s intended nav. Legal lives in the footer only.
+   Cart, restoring `DESIGN.md §12`'s intended nav. Legal lives in the footer only.
 6. **Email is the only contact channel.** No phone, no contact form, no socials.
 
 ## Out of scope (do not do in this slice)

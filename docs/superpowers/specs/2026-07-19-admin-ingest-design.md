@@ -3,7 +3,7 @@
 > **STATUS: Brainstormed 2026-07-19, ready for adversarial review then a plan.** Slice 5a is the
 > **ingest pipeline**: a photograph goes in through the browser, its original lands privately, its
 > derivative ladder is generated, its row is written, and it appears on the live storefront. It
-> ships `design.md §11.4-C` (Post a photo) and a deliberately minimal Photographs landing.
+> ships `DESIGN.md §11.4-C` (Post a photo) and a deliberately minimal Photographs landing.
 >
 > **Slice 5b** builds `§11.4-B` proper — the 4-col work-card grid, filter chips, counts,
 > search/sort — replacing 5a's plain list wholesale, exactly as 4b replaced 4a's placeholder.
@@ -18,7 +18,7 @@
 >
 > Branch: `slice-5`, off `develop` at `6b1d563`.
 
-Companion: `design.md §11.1` (tokens), `§11.2` (type roles), `§11.3` (shell), `§11.4-C` (this
+Companion: `DESIGN.md §11.1` (tokens), `§11.2` (type roles), `§11.3` (shell), `§11.4-C` (this
 surface), `§11.5`, `§11.6`, `§8`; `product.md §1` (honest function), `§3` (storage tiers), `§3.2`
 (the derivative ladder), `§5.2` (photo library), `§8 q3/q4/q5/q7`; `supabase/schema.sql`;
 `design/Jon Hoffman Admin.dc.html` (pixel source — `§11` wins where they disagree, the prototype
@@ -42,7 +42,7 @@ wins where `§11` is silent).
 | **`product.md §8 q4`** | **CLOSED — `unlisted` was a leftover.** The state is **Draft**: `published=false` means invisible to everyone, which is what RLS already enforces | **Jon** |
 | **`product.md §8 q5`** | **CLOSED — on-demand revalidation, confirmed.** `revalidateTag` on every write; the 3600s TTL stays as a self-healing backstop | **Jon** |
 | **`product.md §8 q7`** | **CLOSED — Nations' own site does the crop.** Nothing here produces a print-ready file | **Jon** |
-| **`design.md §10 q3`** | **CLOSED — aura computed and stored at ingest, single `{r,g,b}`, no UI.** The `§11.4-C` tile is not built | **Jon** |
+| **`DESIGN.md §10 q3`** | **CLOSED — aura computed and stored at ingest, single `{r,g,b}`, no UI.** The `§11.4-C` tile is not built | **Jon** |
 | Crop preview | **Surface C imports the storefront's `cropGuide()`.** No new geometry | Jon |
 | Crop convention | **Centre crop**, recorded. A per-size offset feature belongs to slice 7 if ever | Jon |
 | Collection assignment | **Included**, appending at `max(position)+1` | Jon |
@@ -369,7 +369,7 @@ Type specs verbatim from the prototype:
 **Why Base price and the size chips go.** The prototype offers `8×10 · $150`, `16×20 · $260`,
 `24×30 · $360`, `32×40 · $480`. Real `ALL_SIZES` is `4x6, 5x7, 8x10, 11x14, 12x16, 16x20, 20x30`
 at `$5.00–$65.00`. **`24×30` and `32×40` are not sizes that exist**, and no price on that row is
-real. `design.md §11.7` caught the "$150 base" above it and did not catch the row itself.
+real. `DESIGN.md §11.7` caught the "$150 base" above it and did not catch the row itself.
 `schema.sql` has no price column, deliberately, with a fourteen-line comment explaining why, and
 `lib/pricing.ts` is locked to the legacy original by a 1471-case golden equivalence test. Per-photo
 pricing would also require changing `ProductInteractive.tsx:59`, which renders `ALL_SIZES`
@@ -430,7 +430,7 @@ removed. Three marked items remain (Collections, Orders, Home feature).
 
 ## 9. Revalidation — `product.md §8 q5`, closed
 
-`§11.4-G` prints "publishing needs no redeploy" as UI copy. `design.md §11.7` flags it as a
+`§11.4-G` prints "publishing needs no redeploy" as UI copy. `DESIGN.md §11.7` flags it as a
 promise the system may not keep. This slice makes it true.
 
 The caches already carry tags — no change to `lib/data/*` is needed:
@@ -472,7 +472,7 @@ components.
 
 ---
 
-## 11. Deviations from `design.md §11.4-C`
+## 11. Deviations from `DESIGN.md §11.4-C`
 
 Slice 4a owns D1, D6, D10, D11; slice 4b owns D2–D5, D7–D9, D12–D15. Slice 5a continues at D16.
 
@@ -542,7 +542,7 @@ The four `§11.7` items this slice closes (q3, q4, q5, crop) are marked resolved
 
 ## 13. Carried forward
 
-- **`design.md §11.4-C`** needs D16–D24 written back in, and `§11.7` needs q3, q4, q5 and the crop
+- **`DESIGN.md §11.4-C`** needs D16–D24 written back in, and `§11.7` needs q3, q4, q5 and the crop
   item marked resolved — following the `docs/design-md-admin-writeback` precedent (PR #4).
 - **`product.md §8`** needs q3, q4, q5 and q7 marked answered in place, and `§3`'s aura paragraph
   updated to record that the column is now written and still read by nothing.

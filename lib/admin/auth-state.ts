@@ -7,7 +7,7 @@ export type SignInState =
 
 export const INITIAL_SIGN_IN_STATE: SignInState = { status: 'idle' }
 
-// Typographic apostrophes per design.md §11.2.
+// Typographic apostrophes per DESIGN.md §11.2.
 export const SIGN_IN_ERROR_COPY: Record<SignInErrorKind, string> = {
   // Deliberately generic — never reveals whether an address exists. GoTrue
   // returns a uniform invalid_credentials for both cases, so this matches.

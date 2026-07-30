@@ -23,7 +23,7 @@ describe('the admin component classes', () => {
     }
   })
 
-  it('pins the sidebar to 242px (design.md §11.3)', () => {
+  it('pins the sidebar to 242px (DESIGN.md §11.3)', () => {
     expect(rule('.admin-sidebar')).toMatch(/width:\s*242px/)
   })
 

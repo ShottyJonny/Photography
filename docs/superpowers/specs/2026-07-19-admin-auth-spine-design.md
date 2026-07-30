@@ -6,7 +6,7 @@
 > It ends at a verifiable milestone — **signed in, on a deliberately plain protected page, able
 > to sign out** — and ships no shell and no dashboard.
 >
-> **Slice 4b** (`2026-07-19-admin-shell-dashboard-design.md`) builds the `design.md §11.3` shell
+> **Slice 4b** (`2026-07-19-admin-shell-dashboard-design.md`) builds the `DESIGN.md §11.3` shell
 > and the `§11.4-A` dashboard on top of this. The split was taken on review: the combined slice
 > projected to ~15 tasks and ~3,000 plan lines, and the back half — where the honest-function
 > invariants live — is exactly where a long plan degrades.
@@ -16,7 +16,7 @@
 >
 > Built on `develop` at slice 3 (`df15c4b`). Branch: `slice-4`.
 
-Companion: `design.md §11.1` (tokens), `§11.2` (type roles), `§8` (cross-cutting);
+Companion: `DESIGN.md §11.1` (tokens), `§11.2` (type roles), `§8` (cross-cutting);
 `product.md §1` (honest function), `§5.1` (auth); `supabase/schema.sql` (the `authenticated`
 policies).
 
@@ -210,7 +210,7 @@ The argument for the authenticated client is not defence-in-depth in the strong 
 policies are `using (true)`, so a logged-in attacker gets everything either way). It is that the
 alternative leaves a security control in the schema that nothing exercises, and this repo has a
 documented instance of exactly that decay — `products.ts:price`, the dead field that "sat there
-until a designer copied it onto a mockup and it nearly became spec" (`design.md §11.7`).
+until a designer copied it onto a mockup and it nearly became spec" (`DESIGN.md §11.7`).
 
 ### 3.4 Env and client construction
 
@@ -488,9 +488,9 @@ The existing global `prefers-reduced-motion` block already neutralises animation
 
 ## 6. Surfaces
 
-### 6.0 Focus — closing `design.md §10 q2`
+### 6.0 Focus — closing `DESIGN.md §10 q2`
 
-`design.md §8`: *"The focus row is load-bearing and is this document's alone. §11 and §12 do not
+`DESIGN.md §8`: *"The focus row is load-bearing and is this document's alone. §11 and §12 do not
 mention focus states… It is the one accessibility rule the handoff dropped, and the current site
 already fails it. **It does not get to fail twice.**"* And `§10 q2` asks for a specified
 treatment *"before anyone builds a keyboard-reachable surface."* This is that surface.
@@ -501,7 +501,7 @@ Inside `[data-admin]` it resolves against the admin `--ink` (`#efeae0`) at **16.
 tests it. On the `--btnbg` primary button (a near-white ground) the 2px offset is what keeps the
 ring visible; that is why the offset is not zero.
 
-Written back into `design.md §11.5` on merge, closing `§10 q2`.
+Written back into `DESIGN.md §11.5` on merge, closing `§10 q2`.
 
 ### 6.1 Sign-in — `/admin/sign-in` (**D1**)
 
@@ -566,16 +566,16 @@ claim falsely.
 
 ---
 
-## 7. Deviations from `design.md §11`
+## 7. Deviations from `DESIGN.md §11`
 
 | # | Deviation | Why |
 |---|---|---|
 | **D1** | Sign-in surface is new | Absent from `§11` and the prototype (0 grep matches). Built from `§11.1`/`§11.2` only |
-| **D6** | `--nb` defaulted to `var(--ink)` | `§11.3` uses it for the nav dot; `§11.1`'s token table never defines it. A **`design.md` gap** |
+| **D6** | `--nb` defaulted to `var(--ink)` | `§11.3` uses it for the nav dot; `§11.1`'s token table never defines it. A **`DESIGN.md` gap** |
 | **D10** | `--faint` raised `.42` → `.50` in the admin block | `.42` computes to **3.58:1** on `--paper`, failing the 4.5:1 body-text minimum. `.50` gives **4.63:1**. `§11.1` assigns `--faint` to "tertiary text, meta, placeholder" — all real text. 4b's `NOT BUILT` marker and stat-tile subs both land here, so the string carrying the honest-function mechanism would otherwise be the least readable text on screen |
 | **D11** | New `--hairform` (`.37`) for form-control borders; `--hair` stays `.15` for dividers | `--hair` as an input border gives **1.42:1**, failing SC 1.4.11's 3:1 for non-text UI. `.37` is the first passing value at **3.02:1**. Dividers are decorative and 3:1 does not apply, so the token splits by role rather than moving |
 
-D1, D6, D10 and D11 are `design.md` **gaps or defects**, not disagreements — all four get written
+D1, D6, D10 and D11 are `DESIGN.md` **gaps or defects**, not disagreements — all four get written
 back into `§11` on merge, together with §6.0's focus treatment, so slices 5–7 do not rediscover
 them.
 
@@ -667,7 +667,7 @@ the live database is not an agent's to make.
   `app/(admin)/`), the new clients in the Money-path client table, and the stale 1498 baseline.
   Left alone, the next slice's agent reads `(admin)` as authoritative and rebuilds the mistake
   this spec exists to prevent.
-- `design.md §11` needs D1, D6, D10, D11 and §6.0's focus treatment written back in.
+- `DESIGN.md §11` needs D1, D6, D10, D11 and §6.0's focus treatment written back in.
 - Typed Supabase `Database` generics (from slice 1) — now also `auth-server.ts`/`auth-proxy.ts`.
 - **Consider shortening the access-token TTL** (§3.6's known property).
 - **MFA** — explicitly weighed and deferred; blast radius recorded in §9.1.
@@ -680,5 +680,5 @@ the live database is not an agent's to make.
   printing, so a printed admin page is near-white on white. Deliberately out of scope until
   slice 7, the surface anyone would actually print.
 - Supabase **FREE tier** (`product.md §1.5`) — the documented way the last database died.
-- `JH-YYYYMMDD-NNNN` order ids (`design.md §11.4-E`) have **no backing column** in `schema.sql`.
+- `JH-YYYYMMDD-NNNN` order ids (`DESIGN.md §11.4-E`) have **no backing column** in `schema.sql`.
   4b renders a uuid prefix; slice 7's lab export needs a real decision.
