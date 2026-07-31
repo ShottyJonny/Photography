@@ -418,3 +418,103 @@ describe('HomeHero — auto-advance', () => {
     expect(panel()?.getAttribute('aria-live')).toBe('polite')
   })
 })
+
+describe('HomeHero — dwell progress', () => {
+  afterEach(() => { vi.useRealTimers() })
+
+  const bars = (c: HTMLElement) => [...c.querySelectorAll('.home-index-progress')]
+  const running = (c: HTMLElement) => c.querySelector('.home-index-progress.is-running')
+  const complete = (c: HTMLElement) => [...c.querySelectorAll('.home-index-progress.is-complete')]
+  const rowOf = (el: Element) => el.closest('[role="tab"]')?.textContent
+
+  it('runs a bar on the active row only, before anything has advanced', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    expect(bars(container)).toHaveLength(1)
+    expect(rowOf(running(container)!)).toContain('Photo 1')
+    expect(complete(container)).toHaveLength(0)
+  })
+
+  it('leaves a full bar behind on rows already shown, and none on upcoming rows', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    act(() => { vi.advanceTimersByTime(6000) })
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(rowOf(running(container)!)).toContain('Photo 3')
+    expect(complete(container).map(rowOf)).toEqual([
+      expect.stringContaining('Photo 1'),
+      expect.stringContaining('Photo 2'),
+    ])
+    expect(bars(container)).toHaveLength(3)
+  })
+
+  // The pass boundary is the starting photograph, not index 0. A cover at 05
+  // runs 05, 06, 01, 02, 03, 04 and only then begins a new pass — the trail
+  // must survive the numeric wrap in the middle of that.
+  it('carries the trail through the numeric wrap', () => {
+    vi.useFakeTimers()
+    const { container } = mount({ initialIndex: 4 })
+    act(() => { vi.advanceTimersByTime(6000) }) // -> Photo 6
+    act(() => { vi.advanceTimersByTime(6000) }) // -> Photo 1, across the wrap
+    expect(rowOf(running(container)!)).toContain('Photo 1')
+    expect(complete(container).map(rowOf)).toEqual([
+      expect.stringContaining('Photo 5'),
+      expect.stringContaining('Photo 6'),
+    ])
+  })
+
+  it('clears the trail when the pass returns to where it started', () => {
+    vi.useFakeTimers()
+    const { container } = mount({ initialIndex: 4 })
+    for (let i = 0; i < 5; i += 1) act(() => { vi.advanceTimersByTime(6000) })
+    expect(complete(container)).toHaveLength(5)
+    act(() => { vi.advanceTimersByTime(6000) }) // back to Photo 5 — new pass
+    expect(rowOf(running(container)!)).toContain('Photo 5')
+    expect(complete(container)).toHaveLength(0)
+  })
+
+  // Honest function: a bar implies a pending advance. Once auto-advance is
+  // stopped there is nothing pending, so it must not be on screen at all.
+  it('shows no bars at all once a click has stopped auto-advance', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(bars(container).length).toBeGreaterThan(0)
+    fireEvent.click(tabs(container)[3])
+    expect(bars(container)).toHaveLength(0)
+  })
+
+  it('shows no bars under prefers-reduced-motion, where nothing advances', () => {
+    stubMatchMedia(true)
+    vi.useFakeTimers()
+    const { container } = mount()
+    expect(bars(container)).toHaveLength(0)
+  })
+
+  it('freezes the bar while hovered rather than letting it run on', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.mouseOver(container.querySelector('[role="tablist"]')!)
+    expect(running(container)?.getAttribute('style')).toContain('paused')
+  })
+
+  it('resumes the countdown where it left off instead of restarting it', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    const rail = container.querySelector('[role="tablist"]')!
+    act(() => { vi.advanceTimersByTime(4000) })
+    fireEvent.mouseOver(rail)
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+    fireEvent.mouseOut(rail, { relatedTarget: container.querySelector('.home-copy') })
+    // 2s of the 6s remained. A restart would need the full 6s.
+    act(() => { vi.advanceTimersByTime(2000) })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('gives the bar the same duration as the advance interval, from one source', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    expect(running(container)?.getAttribute('style')).toContain('6000ms')
+  })
+})

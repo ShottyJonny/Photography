@@ -31,6 +31,13 @@ export function HomeHero({
   const [playing, setPlaying] = useState(photos.length > 1)
   const [hovered, setHovered] = useState(false)
   const [focusWithin, setFocusWithin] = useState(false)
+  // Indices whose dwell finished in the current pass. Cleared on wrap, so a
+  // filled bar always means "shown since this pass began" and never lies about
+  // a photograph the visitor has not actually seen yet.
+  const [completed, setCompleted] = useState<number[]>([])
+  // Elapsed dwell, so a pause resumes rather than restarting the full interval.
+  const elapsedRef = useRef(0)
+  const startedAtRef = useRef<number | null>(null)
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
   const railRef = useRef<HTMLElement | null>(null)
   const panelRef = useRef<HTMLDivElement | null>(null)
@@ -60,6 +67,7 @@ export function HomeHero({
   const select = useCallback(
     (next: number) => {
       setPlaying(false)
+      setCompleted([])
       if (next === active) return
       if (!reduced) setOutgoing(active)
       setActive(next)
@@ -97,15 +105,45 @@ export function HomeHero({
     img.src = derivativeSrc(next.slug, 'colour', 1200, 'webp')
   }, [active, photos])
 
+  // A fresh dwell begins whenever the active photograph changes. Declared
+  // before the timer effect so the reset lands before the timer reads it.
   useEffect(() => {
-    if (!playing || reduced || hovered || focusWithin) return
-    if (photos.length < 2) return
+    elapsedRef.current = 0
+    startedAtRef.current = null
+  }, [active])
+
+  const paused = hovered || focusWithin
+
+  useEffect(() => {
+    if (!playing || reduced || photos.length < 2) return
+    if (paused) {
+      // Bank what has run so far, then stop. The CSS bar pauses in step via
+      // animation-play-state, so the visible fill and the timer agree.
+      if (startedAtRef.current !== null) {
+        elapsedRef.current += Date.now() - startedAtRef.current
+        startedAtRef.current = null
+      }
+      return
+    }
+    startedAtRef.current = Date.now()
+    const remaining = Math.max(0, ADVANCE_MS - elapsedRef.current)
     const id = setTimeout(() => {
+      const next = (active + 1) % photos.length
+      // Revisiting a row means the pass is over, so the trail starts empty
+      // again. The boundary is the pass's own starting photograph, not index 0
+      // — the cover can be anywhere in the list, and a pass beginning at 05
+      // legitimately runs 05, 06, 01, 02... through the numeric wrap.
+      setCompleted((prev) => (prev.includes(next) ? [] : [...prev, active]))
       setOutgoing(active)
-      setActive((active + 1) % photos.length)
-    }, ADVANCE_MS)
+      setActive(next)
+    }, remaining)
     return () => clearTimeout(id)
-  }, [playing, reduced, hovered, focusWithin, active, photos.length])
+  }, [playing, reduced, paused, active, photos.length])
+
+  // A bar implies a pending advance. When nothing is advancing — stopped by a
+  // selection, or reduced motion — there is nothing to count down, so no bar is
+  // drawn at all rather than one sitting frozen and implying otherwise.
+  const showProgress = playing && !reduced && photos.length > 1
 
   const current = photos[active]
 
@@ -182,6 +220,21 @@ export function HomeHero({
                 >
                   <span className="home-index-num">{pad(i + 1)}</span>
                   <span className="home-index-title">{photo.title}</span>
+                  {showProgress && isActive ? (
+                    <span
+                      // Remounting on each advance restarts the fill from zero.
+                      key={active}
+                      className="home-index-progress is-running"
+                      style={{
+                        // One source of truth with the timer above.
+                        animationDuration: `${ADVANCE_MS}ms`,
+                        animationPlayState: paused ? 'paused' : 'running',
+                      }}
+                    />
+                  ) : null}
+                  {showProgress && completed.includes(i) ? (
+                    <span className="home-index-progress is-complete" />
+                  ) : null}
                 </button>
               )
             })}
@@ -308,6 +361,7 @@ export function HomeHero({
         }
 
         .home-index-link {
+          position: relative;
           display: flex;
           align-items: baseline;
           gap: 1rem;
@@ -321,6 +375,36 @@ export function HomeHero({
           text-decoration: none;
           cursor: pointer;
           transition: padding-left 0.2s ease;
+        }
+
+        /* The dwell bar rides the row's existing hairline — it replaces the
+           divider's colour rather than adding a new element to the layout. */
+        .home-index-progress {
+          position: absolute;
+          left: 0;
+          bottom: -1px;
+          height: 1px;
+          width: 100%;
+          background: var(--ink);
+          transform: scaleX(0);
+          transform-origin: left center;
+          pointer-events: none;
+        }
+
+        .home-index-progress.is-running {
+          animation-name: home-index-fill;
+          animation-timing-function: linear;
+          animation-fill-mode: forwards;
+        }
+
+        .home-index-progress.is-complete {
+          transform: scaleX(1);
+          opacity: 0.45;
+        }
+
+        @keyframes home-index-fill {
+          from { transform: scaleX(0); }
+          to { transform: scaleX(1); }
         }
 
         .home-index-num {
