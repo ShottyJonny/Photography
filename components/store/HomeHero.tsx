@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { Plate } from '@/components/store/Plate'
 import { derivativeSrc } from '@/lib/images/derivatives'
 import type { PhotoInCollection } from '@/lib/data/collections'
@@ -27,6 +27,7 @@ export function HomeHero({
   const [active, setActive] = useState(initialIndex)
   const [outgoing, setOutgoing] = useState<number | null>(null)
   const [reduced, setReduced] = useState(false)
+  const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
@@ -44,6 +45,22 @@ export function HomeHero({
       setActive(next)
     },
     [active, reduced],
+  )
+
+  const onKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLDivElement>) => {
+      const last = photos.length - 1
+      let next: number
+      if (e.key === 'ArrowDown') next = active === last ? 0 : active + 1
+      else if (e.key === 'ArrowUp') next = active === 0 ? last : active - 1
+      else if (e.key === 'Home') next = 0
+      else if (e.key === 'End') next = last
+      else return
+      e.preventDefault()
+      select(next)
+      tabRefs.current[next]?.focus()
+    },
+    [active, photos.length, select],
   )
 
   useEffect(() => {
@@ -94,12 +111,16 @@ export function HomeHero({
             aria-label="Featured works"
             aria-orientation="vertical"
             className="home-index"
+            onKeyDown={onKeyDown}
           >
             {photos.map((photo, i) => {
               const isActive = i === active
               return (
                 <button
                   key={photo.id}
+                  ref={(el) => {
+                    tabRefs.current[i] = el
+                  }}
                   type="button"
                   role="tab"
                   id={`home-hero-tab-${photo.slug}`}

@@ -224,3 +224,55 @@ describe('HomeHero — cross-fade', () => {
     expect(container.querySelector('.home-hero-layer img')?.getAttribute('alt')).toBe('Alt for photo 5')
   })
 })
+
+describe('HomeHero — keyboard', () => {
+  const list = (c: HTMLElement) => c.querySelector('[role="tablist"]')!
+
+  it('ArrowDown moves selection to the next photograph', () => {
+    const { container } = mount()
+    fireEvent.keyDown(list(container), { key: 'ArrowDown' })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('ArrowUp moves selection to the previous photograph', () => {
+    const { container } = mount({ initialIndex: 2 })
+    fireEvent.keyDown(list(container), { key: 'ArrowUp' })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('ArrowDown wraps from the last photograph to the first', () => {
+    const { container } = mount({ initialIndex: 5 })
+    fireEvent.keyDown(list(container), { key: 'ArrowDown' })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+  })
+
+  it('ArrowUp wraps from the first photograph to the last', () => {
+    const { container } = mount()
+    fireEvent.keyDown(list(container), { key: 'ArrowUp' })
+    expect(selected(container)?.textContent).toContain('Photo 6')
+  })
+
+  it('Home and End jump to the ends', () => {
+    const { container } = mount({ initialIndex: 2 })
+    fireEvent.keyDown(list(container), { key: 'End' })
+    expect(selected(container)?.textContent).toContain('Photo 6')
+    fireEvent.keyDown(list(container), { key: 'Home' })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+  })
+
+  it('moves focus with the selection, so the roving tab stop follows', () => {
+    const { container } = mount()
+    fireEvent.keyDown(list(container), { key: 'ArrowDown' })
+    expect(document.activeElement).toBe(tabs(container)[1])
+    expect(tabs(container)[1].getAttribute('tabindex')).toBe('0')
+    expect(tabs(container)[0].getAttribute('tabindex')).toBe('-1')
+  })
+
+  it('ignores keys it does not bind, including Left and Right', () => {
+    const { container } = mount()
+    fireEvent.keyDown(list(container), { key: 'ArrowRight' })
+    fireEvent.keyDown(list(container), { key: 'ArrowLeft' })
+    fireEvent.keyDown(list(container), { key: 'a' })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+  })
+})
