@@ -99,22 +99,28 @@ export function HomeHero({
 
   return (
     <main className="home">
-      {outgoing !== null ? (
-        // eslint-disable-next-line @next/next/no-img-element
+      {/* The stack owns var(--bleedop), not the layers. With the token on each
+          layer, the outgoing one holds at 0.5 while the incoming fades 0 -> 0.5
+          over it; 0.5 never occludes, so they composite and the backdrop swells
+          to ~0.75 before snapping back on unmount. Inside the stack both run
+          0 -> 1 like the hero, which is a true cross-dissolve, and the group is
+          then dimmed once. */}
+      <div className="home-bleed-stack" aria-hidden="true">
+        {outgoing !== null ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            alt=""
+            className="home-bleed home-bleed-layer"
+            src={derivativeSrc(photos[outgoing].slug, 'colour', 160, 'webp')}
+          />
+        ) : null}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          aria-hidden="true"
           alt=""
-          className="home-bleed home-bleed-layer"
-          src={derivativeSrc(photos[outgoing].slug, 'colour', 160, 'webp')}
+          className={`home-bleed home-bleed-layer${outgoing !== null ? ' is-fading-in' : ''}`}
+          src={derivativeSrc(current.slug, 'colour', 160, 'webp')}
         />
-      ) : null}
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        aria-hidden="true"
-        alt=""
-        className={`home-bleed home-bleed-layer${outgoing !== null ? ' is-fading-in' : ''}`}
-        src={derivativeSrc(current.slug, 'colour', 160, 'webp')}
-      />
+      </div>
 
       <div
         className="home-grid"
@@ -223,6 +229,15 @@ export function HomeHero({
           color: var(--ink);
         }
 
+        /* The dimming lives here, once, for the whole group. */
+        .home-bleed-stack {
+          position: absolute;
+          inset: 0;
+          opacity: var(--bleedop, 0.5);
+          pointer-events: none;
+          z-index: 0;
+        }
+
         .home-bleed {
           position: absolute;
           inset: 0;
@@ -232,9 +247,7 @@ export function HomeHero({
           object-position: center 40%;
           filter: blur(90px);
           transform: scale(1.12);
-          opacity: var(--bleedop, 0.5);
           pointer-events: none;
-          z-index: 0;
         }
 
         .home-grid {
@@ -441,25 +454,18 @@ export function HomeHero({
           inset: 0;
         }
 
-        .home-hero-layer.is-fading-in {
+        /* Both stacks cross-dissolve the same way: the outgoing layer holds at
+           opacity 1 and the incoming fades over it until it fully occludes.
+           The bleed is dimmed by .home-bleed-stack, not per-layer, so it can
+           share these keyframes. */
+        .home-hero-layer.is-fading-in,
+        .home-bleed-layer.is-fading-in {
           animation: home-hero-fade-in 600ms ease;
         }
 
         @keyframes home-hero-fade-in {
           from { opacity: 0; }
           to { opacity: 1; }
-        }
-
-        /* The bleed rests at var(--bleedop, 0.5), so it needs its own keyframes.
-           Sharing the hero's 0->1 fade would flash the backdrop to full
-           strength for 600ms on every advance. */
-        .home-bleed-layer.is-fading-in {
-          animation: home-bleed-fade-in 600ms ease;
-        }
-
-        @keyframes home-bleed-fade-in {
-          from { opacity: 0; }
-          to { opacity: var(--bleedop, 0.5); }
         }
 
         @media (prefers-reduced-motion: reduce) {

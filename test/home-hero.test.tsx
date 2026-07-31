@@ -185,6 +185,22 @@ describe('HomeHero — cross-fade', () => {
     expect(container.querySelector('.home-hero-layer img')?.getAttribute('alt')).toBe('Alt for photo 4')
   })
 
+  // Regression: both bleed layers must live inside a single wrapper that
+  // carries var(--bleedop). With the token on each layer instead, the outgoing
+  // one stays at 0.5 while the incoming fades 0 -> 0.5 over it; because 0.5
+  // never occludes, they composite and the backdrop swells to ~0.75 before
+  // snapping back when the outgoing unmounts. Measured in-browser before the
+  // fix: 0.500 -> 0.631 -> 0.710 -> 0.745 -> hard cut to 0.500.
+  it('keeps the bleed opacity on one wrapper so the two layers cannot composite', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.click(tabs(container)[3])
+    const stack = container.querySelector('.home-bleed-stack')
+    expect(stack).not.toBeNull()
+    expect(stack?.querySelectorAll('.home-bleed-layer')).toHaveLength(2)
+    expect(container.querySelectorAll('.home-bleed-layer')).toHaveLength(2)
+  })
+
   it('cross-fades the blurred bleed too, so the backdrop does not jump', () => {
     vi.useFakeTimers()
     const { container } = mount()
