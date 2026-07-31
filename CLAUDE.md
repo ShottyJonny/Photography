@@ -50,7 +50,7 @@ Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR 
 | lint | `npm run lint` | 0 errors/warnings |
 | typecheck | `npm run typecheck` | 0 errors |
 | build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
-| test | `npm test` | all green (**2005** tests as of slice 7) |
+| test | `npm test` | all green (**2059** tests as of slice 8) |
 
 Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
@@ -65,7 +65,7 @@ Next.js App Router. Route groups separate the two halves.
 ```
 app/
   layout.tsx                   # root: next/font faces + globals.css
-  page.tsx                     # placeholder home (slice 2 rebuilds home under (store))
+  page.tsx                     # home — fetch + empty state; the surface is components/store/HomeHero (slice 8)
   globals.css                  # design tokens (design.md §12.2), both themes
   (store)/                     # public storefront — light/dark
     layout.tsx                 # ThemeProvider + CartProvider
@@ -104,6 +104,7 @@ lib/
   format/price.ts              # priceForSize / priceRangeLabel / formatPrice (shared)
   stripe.ts                    # lazy, server-only Stripe client
 components/{cart,theme}/        # CartContext/AddToCart, ThemeProvider
+components/store/HomeHero.tsx   # the home carousel — tablist, cross-fade, timer, dwell bar (slice 8)
 components/admin/               # CollectionList, CollectionEditor, WorksList, LiteratureEditor, PhotoPicker (slice 6a); HomeFeaturePicker, HomeHeroPreview (slice 6b); OrderTabs, OrderRows, LabExport, FulfillmentRail, CopyButton (slice 7)
 test/                          # Vitest; test/fixtures/legacy-pricing.cjs is the pricing reference
 supabase/schema.sql            # the applied data model (5 tables, RLS)
@@ -186,7 +187,8 @@ The rebuild is sliced; each slice is a spec → plan → subagent-driven build u
 - **Slice 6b — Home feature: DONE.** Admin write surface for the home focal point — picker with live preview, clear-then-set of `featured_on_home`, shared `pullQuote` with the storefront home.
 - **About + legal surfaces: DONE.** Shared `Prose` layout, About / Shipping / Refunds / Privacy / Terms, the footer, and US-only checkout so the shipping policy is honest.
 - **Slice 7 — Orders + lab export: DONE.** `/admin/orders` (five tabs, search, expandable rows, mismatch quarantine) and `/admin/orders/[id]` (detail, signed originals, the Nations export block, the forward-only fulfillment rail). The storefront confirmation shows a real tracking number once an order is genuinely shipped.
-- **Slice 5b** (`§11.4-B` work-card grid for `/admin/photographs`) and **per-photo pricing** (`product.md §8 q3`) are the remaining feature slices. Neither blocks taking money.
+- **Slice 8 — Home hero carousel: DONE.** The `§12.5-A` rail became what it was specced as: an ARIA tablist selecting the hero instead of six links out. Cross-fade mounting two plates (never one per photograph — six full-size derivatives on the LCP element), the full keyboard pattern, 6s auto-advance that pauses on hover/focus and stops permanently on any selection, and a dwell bar running down each row's own hairline. Motion policy and its three post-build amendments are in `design.md` §12.6.
+- **Slice 5b** (`§11.4-B` work-card grid for `/admin/photographs`) and **per-photo pricing** (`product.md §8 q3`) are the remaining feature slices. Neither blocks taking money. Mobile index dots (`§12.5-E`) are the one unbuilt piece of the home surface.
 
 **Carried forward:** typed Supabase `Database` clients (codegen once a live project is at hand) — the admin reads still carry a local `no-explicit-any` disable because of it. The slice-1 theme-flash is **closed**: the pre-hydration script is in `app/layout.tsx`. Full list of follow-ups: `.superpowers/sdd/progress.md`.
 

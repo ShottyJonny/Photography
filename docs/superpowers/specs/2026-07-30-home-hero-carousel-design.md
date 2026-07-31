@@ -161,3 +161,58 @@ Manual: `/` at desktop and ≤900px, keyboard-only pass through the tablist, and
 ## Git
 
 Branch `feature/home-hero-carousel` off `develop`, merged back to `develop`. No money-path code is touched, so the `develop → main` gate is not implicated.
+
+---
+
+## Built — amendments (2026-07-31)
+
+The plan executed as written. Three things were found afterwards, in the browser, that the spec had not anticipated. All three are shipped and recorded in `design.md` §12.6.
+
+### A1 — The bleed cross-fade swelled, then snapped
+
+**D2 above was wrong about the bleed.** It said the bleed "cross-fades the same way for consistency," and the implementation gave each layer `opacity: var(--bleedop, 0.5)`. The outgoing layer then held at 0.5 while the incoming faded `0 → 0.5` *over* it — and because 0.5 never occludes anything, the two **composited** rather than one replacing the other.
+
+Measured through one fade:
+
+| Time | Layers | Composite |
+|---|---|---|
+| rest | `0.500` | 0.500 |
+| 150ms | `0.500` + `0.262` | 0.631 |
+| 300ms | `0.500` + `0.421` | 0.710 |
+| 450ms | `0.500` + `0.490` | **0.745** |
+| 590ms | `0.500` | 0.500 ← hard cut |
+
+The hero layers never had this problem because their incoming layer reaches opacity `1` and fully covers the outgoing one.
+
+**Fix:** the dimming moved onto a `.home-bleed-stack` wrapper. Inside it both layers sit at opacity `1` and cross-dissolve exactly like the hero; the group is dimmed once. The swell is now impossible by construction — layers inside a wrapper cannot composite above the wrapper's own opacity. The separate `home-bleed-fade-in` keyframes are gone; both stacks share `home-hero-fade-in`.
+
+> An earlier "fix" gave the bleed its own keyframes ending at `var(--bleedop)`. That addressed the wrong half: it stopped the incoming layer flashing to full strength but left the two compositing, which is what was actually visible.
+
+### A2 — The pause region was the whole page
+
+D4's pause handlers sat on `.home-grid`, which measures **~90% of the viewport at 998px wide and ~76% at 1440×900**. A cursor resting over the copy, or crossing the page toward the tab bar, froze the carousel indefinitely. "Pause on hover" was meant to mean hovering the carousel; it meant hovering the page, and read as the carousel being stuck.
+
+**Fix:** handlers stay delegated on the grid but test the event target against refs on the rail and the hero panel. At 1440×900 the pause region drops **75.7% → 57.0%**, of which the hero plate is 48.8% and *should* pause — §12.5-A specifies a full-height 820×900 plate, so the photograph genuinely is half the page. This removes the accidental pauses, not the deliberate one.
+
+### A3 — Dwell progress on the index list
+
+Added after the plan, at the point where the carousel's state became hard to read: each row's existing hairline doubles as its dwell track. No new chrome.
+
+- Story-style: rows shown in the current pass hold a full line at 0.45 opacity, the active row fills over the 6s dwell, upcoming rows stay empty.
+- **The pass boundary is the pass's own starting photograph, not index 0.** The cover can sit anywhere in the list, so a pass beginning at 05 runs 05, 06, 01, 02, 03, 04 through the numeric wrap before starting clean. A first implementation reset at index 0 and would have blanked the trail mid-pass for any collection whose cover is not the first photograph.
+- **The countdown now resumes rather than restarting.** Elapsed dwell is banked on pause; only the remainder is scheduled on resume, and the bar pauses in step via `animation-play-state`, so the visible fill and the timer cannot disagree. This also closes the wart noted during planning, where repeated hovering could stall an advance indefinitely.
+- **No bar is drawn unless an advance is pending.** After a selection stops auto-advance, and under reduced motion, the track is absent rather than frozen — a stopped bar implies a countdown that will never fire (`product.md §1`).
+- Duration comes from `ADVANCE_MS` through an inline style, so there is one source of truth. `FADE_MS` still duplicates its value into the CSS; that pairing is unchanged and remains a hand-sync.
+
+### Final state
+
+79 test files, **2059 tests**, all green. `npm run lint`, `npm run typecheck` clean.
+
+Verified in a real browser rather than only jsdom: selection without navigation, the hero fade mid-animation at opacity 0.071 under `home-hero-fade-in 0.6s`, the bleed settling back to exactly 0.5, the pause-region geometry, and the progress bar's placement and 6s linear timing.
+
+**Not verified:** how the fill and the fade *look* in motion. The Browser pane was hidden throughout, so the page never composited frames and CSS animations did not advance. Structure, computed styles and timing are confirmed; visual weight is not. Two judgement calls deserve an eye — whether a full-strength `--ink` bar is too heavy against the dark theme, and whether 0.45 is right for the completed trail.
+
+### Still open
+
+- Mobile index dots (§12.5-E) remain unbuilt; the rail keeps its full title list at ≤900px and works as the selector there.
+- The Reliquary collection's `literature` is still the 184-character slice-6a placeholder, now sitting under six real photographs.
