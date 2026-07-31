@@ -6,7 +6,7 @@
 
 **Architecture:** `app/(store)/page.tsx` stays a Server Component and keeps all data fetching; everything visual moves into one new client component, `components/store/HomeHero.tsx`, which owns the selected index and the timer. The rail becomes a proper ARIA tablist driving a single tabpanel. Only two hero plates are ever mounted (current + outgoing) so the page does not pay for six full-size derivatives on first paint.
 
-**Tech Stack:** Next.js 16 App Router, React 19, TypeScript strict, Vitest 2 + @testing-library/react 16 (jsdom).
+**Tech Stack:** Next.js 16 App Router, React 19, TypeScript strict, Vitest 2.1.9 + @testing-library/react 16 (jsdom).
 
 **Spec:** [docs/superpowers/specs/2026-07-30-home-hero-carousel-design.md](../specs/2026-07-30-home-hero-carousel-design.md)
 
@@ -21,7 +21,10 @@ Every task's requirements implicitly include this section.
 - **Vitest `globals` is NOT enabled.** Import `describe, it, expect, vi, beforeEach, afterEach` from `vitest` explicitly.
 - **RTL auto-cleanup does NOT run** (it needs a global `afterEach`, which this config does not provide). Every test file must call `cleanup()` in its own `beforeEach`.
 - **jsdom does not implement `window.matchMedia`.** It appears nowhere in this repo. Any component calling it throws `TypeError: window.matchMedia is not a function` unless stubbed. Tests must stub it; the component must also guard with `typeof window.matchMedia === 'function'`.
-- **`fireEvent.mouseEnter` does not trigger React's `onMouseEnter`** — React derives enter/leave from `mouseover`/`mouseout` delegation. This plan therefore uses `onMouseOver`/`onMouseOut` handlers in the component and `fireEvent.mouseOver`/`fireEvent.mouseOut` in tests. **Do not "fix" this to `onMouseEnter`.**
+- **React event delegation breaks two obvious `fireEvent` calls. Both bite.**
+  - `fireEvent.mouseEnter` does **not** trigger React's `onMouseEnter` — React derives enter/leave from `mouseover`/`mouseout`. This plan uses `onMouseOver`/`onMouseOut` in the component and `fireEvent.mouseOver`/`fireEvent.mouseOut` in tests.
+  - `fireEvent.focus` / `fireEvent.blur` do **not** trigger React's `onFocus`/`onBlur` — React maps those to the native **`focusin`/`focusout`**, which bubble; a plain `focus` event does not. Tests must use `fireEvent.focusIn` / `fireEvent.focusOut`.
+  - **Do not "simplify" either pair back to the obvious form.** The tests will go green-to-red in a way that looks like a component bug and is not.
 - Test environment is picked by glob: `test/**/*.test.tsx` → jsdom, everything else → node. New component tests must end in `.tsx`.
 - `NEXT_PUBLIC_SUPABASE_URL` is unset in tests, so `derivativeSrc()` returns strings beginning `undefined/storage/...`. Never assert on a full derivative URL; assert on the slug segment only.
 
@@ -184,6 +187,9 @@ describe('HomeHero — selection', () => {
     const panel = container.querySelector('[role="tabpanel"]')
     expect(panel?.getAttribute('id')).toBe('home-hero-panel')
     expect(panel?.getAttribute('aria-labelledby')).toBe('home-hero-tab-photo-1')
+    // APG: a tabpanel with no focusable children must itself be focusable,
+    // or a keyboard user tabbing past the rail can never reach the photograph.
+    expect(panel?.getAttribute('tabindex')).toBe('0')
     expect(panel?.querySelector('img')?.getAttribute('alt')).toBe('Alt for photo 1')
 
     fireEvent.click(tabs(container)[3])
@@ -329,6 +335,7 @@ export function HomeHero({
           role="tabpanel"
           id="home-hero-panel"
           aria-labelledby={`home-hero-tab-${current.slug}`}
+          tabIndex={0}
         >
           <div className="home-hero-plate">
             <Plate
@@ -359,7 +366,7 @@ export function HomeHero({
       </div>
 
       <style>{`
-        /* MOVED VERBATIM from app/(store)/page.tsx lines 112-320, then edited. */
+        /* MOVED VERBATIM from app/(store)/page.tsx lines 112-334, then edited. See Step 4. */
       `}</style>
     </main>
   )
@@ -368,7 +375,11 @@ export function HomeHero({
 
 - [ ] **Step 4: Move the stylesheet**
 
-Open `app/(store)/page.tsx`. Copy the **entire** contents between `<style>{\`` and `\`}</style>` (currently lines 112–319) and paste it into `HomeHero.tsx` in place of the `/* MOVED VERBATIM ... */` comment. Then apply exactly these four edits to the pasted CSS — no others:
+Open `app/(store)/page.tsx`. It contains **two** `<style>` blocks: the first (lines 13–28) belongs to `EmptyHome` and **stays where it is**. The one you want is the second — `<style>{\`` on line 111, `\`}</style>` on line 335, so the CSS content is **lines 112–334 inclusive**.
+
+Copy those 223 lines and paste them into `HomeHero.tsx` in place of the `/* MOVED VERBATIM ... */` comment. Verify before moving on: the last rule you pasted must be the closing of the `@media (max-width: 900px)` block. If your paste ends around `.home-cta-ghost`, you have truncated it — go back.
+
+Then apply exactly these four edits to the pasted CSS — no others:
 
 **Edit A** — the rail is a `<div>` now, not a `<ul>`; move the hairline onto the tab and drop the list reset:
 
@@ -515,9 +526,12 @@ import { render, cleanup } from '@testing-library/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import type { CollectionDetail, PhotoInCollection } from '@/lib/data/collections'
 
-const getFeaturedCollection = vi.fn<[], Promise<CollectionDetail | null>>(async () => null)
+// Mutable module-scope value, not vi.fn generics: Vitest 2 takes a single
+// function-type generic, so the v1 `vi.fn<[], Promise<T>>` form is a type
+// error. This is also the pattern test/admin-dashboard.test.tsx already uses.
+const featuredValue: { current: CollectionDetail | null } = { current: null }
 vi.mock('@/lib/data/collections', () => ({
-  getFeaturedCollection: () => getFeaturedCollection(),
+  getFeaturedCollection: async () => featuredValue.current,
 }))
 
 function photo(n: number): PhotoInCollection {
@@ -551,10 +565,12 @@ const renderHome = async () => {
   return render(await Home())
 }
 
+const activeTab = (c: HTMLElement) => c.querySelector('[role="tab"][aria-selected="true"]')
+
 beforeEach(() => {
   cleanup()
   vi.clearAllMocks()
-  getFeaturedCollection.mockResolvedValue(null)
+  featuredValue.current = null
 })
 
 describe('Home', () => {
@@ -564,27 +580,27 @@ describe('Home', () => {
   })
 
   it('renders the quiet empty state when the featured collection has no photographs', async () => {
-    getFeaturedCollection.mockResolvedValue(featured({ photos: [], cover: null }))
+    featuredValue.current = featured({ photos: [], cover: null })
     const { container } = await renderHome()
     expect(container.textContent).toContain('Coming soon')
   })
 
   it('opens on the cover photograph, not on the first member', async () => {
-    getFeaturedCollection.mockResolvedValue(featured())
+    featuredValue.current = featured()
     const { container } = await renderHome()
-    expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Photo 3')
+    expect(activeTab(container)?.textContent).toContain('Photo 3')
   })
 
   it('falls back to the first member when the cover is not in the collection', async () => {
-    getFeaturedCollection.mockResolvedValue(featured({ cover: { slug: 'not-a-member', alt: null } }))
+    featuredValue.current = featured({ cover: { slug: 'not-a-member', alt: null } })
     const { container } = await renderHome()
-    expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Photo 1')
+    expect(activeTab(container)?.textContent).toContain('Photo 1')
   })
 
   it('falls back to the first member when there is no cover at all', async () => {
-    getFeaturedCollection.mockResolvedValue(featured({ cover: null }))
+    featuredValue.current = featured({ cover: null })
     const { container } = await renderHome()
-    expect(container.querySelector('[role="tab"][aria-selected="true"]')?.textContent).toContain('Photo 1')
+    expect(activeTab(container)?.textContent).toContain('Photo 1')
   })
 })
 ```
@@ -1122,13 +1138,17 @@ describe('HomeHero — auto-advance', () => {
     expect(selected(container)?.textContent).toContain('Photo 2')
   })
 
+  // focusIn/focusOut, NOT focus/blur. React maps onFocus/onBlur to the native
+  // focusin/focusout events; a non-bubbling `focus` event never reaches the
+  // handler on .home-grid. Same delegation trap as mouseEnter — see Global
+  // Constraints. Do not "simplify" these to fireEvent.focus/blur.
   it('pauses while focus is inside, and resumes on blur', () => {
     vi.useFakeTimers()
     const { container } = mount()
-    fireEvent.focus(grid(container))
+    fireEvent.focusIn(grid(container))
     act(() => { vi.advanceTimersByTime(60000) })
     expect(selected(container)?.textContent).toContain('Photo 1')
-    fireEvent.blur(grid(container))
+    fireEvent.focusOut(grid(container))
     act(() => { vi.advanceTimersByTime(6000) })
     expect(selected(container)?.textContent).toContain('Photo 2')
   })
@@ -1314,7 +1334,7 @@ Then check, at `http://localhost:3000`:
 1. The hero advances on its own roughly every 6 seconds, cross-fading rather than cutting.
 2. Hovering anywhere over the grid stops it; moving the pointer away restarts it.
 3. Clicking a title selects that photograph and it **never moves again**.
-4. `Tab` reaches the rail as **one** stop, not six. Then `↓`/`↑` move through the photographs, `Home`/`End` jump to the ends, and auto-advance is stopped from the first key.
+4. `Tab` reaches the rail as **one** stop, not six. Then `↓`/`↑` move through the photographs, `Home`/`End` jump to the ends, and auto-advance is stopped from the first key. Pressing `Tab` again lands on the photograph itself (the panel is focusable) rather than skipping straight to the CTAs.
 5. "View this print →" goes to the photograph currently shown, not always the cover.
 6. The counter reads `01 / 06` through `06 / 06` as the selection moves.
 7. Narrow the window below 900px: the title list is still there and still selects.

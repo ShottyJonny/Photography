@@ -66,7 +66,7 @@ Under `prefers-reduced-motion: reduce` there is no fade — the outgoing plate u
 
 - `<div role="tablist" aria-label="Featured works" aria-orientation="vertical">`
 - `<button role="tab">` per photograph, carrying `aria-selected`, `aria-controls="home-hero-panel"`, `id="home-hero-tab-{slug}"`, and roving `tabIndex` (`0` when active, `-1` otherwise)
-- the hero wrapper becomes `<div role="tabpanel" id="home-hero-panel" aria-labelledby="home-hero-tab-{activeSlug}">`
+- the hero wrapper becomes `<div role="tabpanel" id="home-hero-panel" aria-labelledby="home-hero-tab-{activeSlug}" tabindex="0">` — the panel holds only an image, and APG requires a tabpanel with no focusable children to be focusable itself; without it a keyboard user tabbing past the rail skips the photograph entirely and lands on the CTAs
 
 The `border-bottom` currently on `.home-index li` moves to the tab element. Visual result is unchanged: Playfair title, mono index number, active = `--ink`, rest = `--dim`, hover nudges right.
 
