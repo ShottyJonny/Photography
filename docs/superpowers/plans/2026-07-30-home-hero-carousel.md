@@ -882,12 +882,39 @@ Then extend the reduced-motion block at the end so it reads:
         }
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [ ] **Step 6: Update the one Task 1 assertion this breaks**
+
+Adding a second plate changes the DOM under a Task 1 test. In `test/home-hero.test.tsx`, the test `points the panel at the active tab and swaps the hero image` calls `panel?.querySelector('img')`, which now returns the **outgoing** plate mid-transition, not the incoming one. It will fail with `Alt for photo 1` where `Alt for photo 4` is expected.
+
+This is expected, not a bug — fix the assertion to target the layer that is not `aria-hidden`. Replace these lines:
+
+```tsx
+    expect(panel?.querySelector('img')?.getAttribute('alt')).toBe('Alt for photo 1')
+
+    fireEvent.click(tabs(container)[3])
+    expect(panel?.getAttribute('aria-labelledby')).toBe('home-hero-tab-photo-4')
+    expect(panel?.querySelector('img')?.getAttribute('alt')).toBe('Alt for photo 4')
+```
+
+with:
+
+```tsx
+    // Target the layer that is NOT aria-hidden. Two plates are mounted
+    // mid-transition and a bare querySelector('img') returns the outgoing one.
+    const shown = () => panel?.querySelector('.home-hero-layer:not([aria-hidden]) img')
+    expect(shown()?.getAttribute('alt')).toBe('Alt for photo 1')
+
+    fireEvent.click(tabs(container)[3])
+    expect(panel?.getAttribute('aria-labelledby')).toBe('home-hero-tab-photo-4')
+    expect(shown()?.getAttribute('alt')).toBe('Alt for photo 4')
+```
+
+- [ ] **Step 7: Run the tests to verify they pass**
 
 Run: `npx vitest run test/home-hero.test.tsx`
 Expected: PASS, 19 tests.
 
-- [ ] **Step 7: Check types and lint**
+- [ ] **Step 8: Check types and lint**
 
 Run: `npm run typecheck`
 Expected: no output, exit 0.
@@ -895,7 +922,7 @@ Expected: no output, exit 0.
 Run: `npm run lint`
 Expected: no errors, no warnings.
 
-- [ ] **Step 8: Commit**
+- [ ] **Step 9: Commit**
 
 Run: `git add components/store/HomeHero.tsx test/home-hero.test.tsx`
 

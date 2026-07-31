@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach } from 'vitest'
-import { render, cleanup, fireEvent } from '@testing-library/react'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { render, cleanup, fireEvent, act } from '@testing-library/react'
 import { HomeHero } from '@/components/store/HomeHero'
 import type { PhotoInCollection } from '@/lib/data/collections'
 
@@ -95,11 +95,15 @@ describe('HomeHero — selection', () => {
     // APG: a tabpanel with no focusable children must itself be focusable,
     // or a keyboard user tabbing past the rail can never reach the photograph.
     expect(panel?.getAttribute('tabindex')).toBe('0')
-    expect(panel?.querySelector('img')?.getAttribute('alt')).toBe('Alt for photo 1')
+    // Target the layer that is NOT aria-hidden. Once the cross-fade lands, two
+    // plates are mounted mid-transition and a bare querySelector('img') would
+    // return the outgoing one.
+    const shown = () => panel?.querySelector('.home-hero-layer:not([aria-hidden]) img')
+    expect(shown()?.getAttribute('alt')).toBe('Alt for photo 1')
 
     fireEvent.click(tabs(container)[3])
     expect(panel?.getAttribute('aria-labelledby')).toBe('home-hero-tab-photo-4')
-    expect(panel?.querySelector('img')?.getAttribute('alt')).toBe('Alt for photo 4')
+    expect(shown()?.getAttribute('alt')).toBe('Alt for photo 4')
   })
 
   it('every tab controls the single panel', () => {
@@ -141,5 +145,82 @@ describe('HomeHero — selection', () => {
   it('omits the quote element entirely when there is no quote', () => {
     const { container } = mount({ quote: null })
     expect(container.querySelector('.home-quote')).toBeNull()
+  })
+})
+
+describe('HomeHero — cross-fade', () => {
+  afterEach(() => { vi.useRealTimers() })
+
+  it('mounts only the active plate at rest', () => {
+    const { container } = mount()
+    expect(container.querySelectorAll('.home-hero-layer')).toHaveLength(1)
+  })
+
+  it('mounts exactly two plates mid-transition — never one per photograph', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.click(tabs(container)[3])
+    const layers = container.querySelectorAll('.home-hero-layer')
+    expect(layers).toHaveLength(2)
+    expect(layers[0].querySelector('img')?.getAttribute('alt')).toBe('Alt for photo 1')
+    expect(layers[1].querySelector('img')?.getAttribute('alt')).toBe('Alt for photo 4')
+  })
+
+  it('fades the incoming layer in, and hides the outgoing one from assistive tech', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.click(tabs(container)[3])
+    const layers = container.querySelectorAll('.home-hero-layer')
+    expect(layers[0].getAttribute('aria-hidden')).toBe('true')
+    expect(layers[1].className).toContain('is-fading-in')
+  })
+
+  it('drops the outgoing layer once the fade is done', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.click(tabs(container)[3])
+    expect(container.querySelectorAll('.home-hero-layer')).toHaveLength(2)
+    act(() => { vi.advanceTimersByTime(600) })
+    expect(container.querySelectorAll('.home-hero-layer')).toHaveLength(1)
+    expect(container.querySelector('.home-hero-layer img')?.getAttribute('alt')).toBe('Alt for photo 4')
+  })
+
+  it('cross-fades the blurred bleed too, so the backdrop does not jump', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.click(tabs(container)[3])
+    const bleeds = container.querySelectorAll('.home-bleed-layer')
+    expect(bleeds).toHaveLength(2)
+    expect(bleeds[1].getAttribute('src')).toContain('photo-4')
+  })
+
+  it('swaps instantly with no outgoing layer under reduced motion', () => {
+    stubMatchMedia(true)
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.click(tabs(container)[3])
+    expect(container.querySelectorAll('.home-hero-layer')).toHaveLength(1)
+    expect(container.querySelector('.home-hero-layer img')?.getAttribute('alt')).toBe('Alt for photo 4')
+  })
+
+  it('marks only the first-painted plate as priority', () => {
+    const { container } = mount()
+    expect(container.querySelector('.home-hero-layer img')?.getAttribute('loading')).toBe('eager')
+    fireEvent.click(tabs(container)[3])
+    const layers = container.querySelectorAll('.home-hero-layer')
+    expect(layers[1].querySelector('img')?.getAttribute('loading')).toBe('lazy')
+  })
+
+  it('never stacks more than two layers, however fast the clicking', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.click(tabs(container)[1])
+    fireEvent.click(tabs(container)[2])
+    fireEvent.click(tabs(container)[3])
+    fireEvent.click(tabs(container)[4])
+    expect(container.querySelectorAll('.home-hero-layer')).toHaveLength(2)
+    act(() => { vi.advanceTimersByTime(600) })
+    expect(container.querySelectorAll('.home-hero-layer')).toHaveLength(1)
+    expect(container.querySelector('.home-hero-layer img')?.getAttribute('alt')).toBe('Alt for photo 5')
   })
 })

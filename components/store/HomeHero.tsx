@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { useCallback, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Plate } from '@/components/store/Plate'
 import { derivativeSrc } from '@/lib/images/derivatives'
 import type { PhotoInCollection } from '@/lib/data/collections'
@@ -15,6 +15,7 @@ export interface HomeHeroProps {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0')
+const FADE_MS = 600
 
 export function HomeHero({
   photos,
@@ -24,20 +25,59 @@ export function HomeHero({
   quote,
 }: HomeHeroProps) {
   const [active, setActive] = useState(initialIndex)
+  const [outgoing, setOutgoing] = useState<number | null>(null)
+  const [reduced, setReduced] = useState(false)
 
-  const select = useCallback((next: number) => {
-    setActive(next)
+  useEffect(() => {
+    if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
+    const apply = () => setReduced(mq.matches)
+    apply()
+    mq.addEventListener('change', apply)
+    return () => mq.removeEventListener('change', apply)
   }, [])
+
+  const select = useCallback(
+    (next: number) => {
+      if (next === active) return
+      if (!reduced) setOutgoing(active)
+      setActive(next)
+    },
+    [active, reduced],
+  )
+
+  useEffect(() => {
+    if (outgoing === null) return
+    const id = setTimeout(() => setOutgoing(null), FADE_MS)
+    return () => clearTimeout(id)
+  }, [outgoing])
+
+  useEffect(() => {
+    if (photos.length < 2) return
+    if (typeof window === 'undefined' || typeof window.Image !== 'function') return
+    const next = photos[(active + 1) % photos.length]
+    const img = new window.Image()
+    img.src = derivativeSrc(next.slug, 'colour', 1200, 'webp')
+  }, [active, photos])
 
   const current = photos[active]
 
   return (
     <main className="home">
+      {outgoing !== null ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          aria-hidden="true"
+          alt=""
+          className="home-bleed home-bleed-layer"
+          src={derivativeSrc(photos[outgoing].slug, 'colour', 160, 'webp')}
+        />
+      ) : null}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         aria-hidden="true"
         alt=""
-        className="home-bleed"
+        className={`home-bleed home-bleed-layer${outgoing !== null ? ' is-fading-in' : ''}`}
         src={derivativeSrc(current.slug, 'colour', 160, 'webp')}
       />
 
@@ -85,13 +125,25 @@ export function HomeHero({
           tabIndex={0}
         >
           <div className="home-hero-plate">
-            <Plate
-              photo={current}
-              register="colour"
-              sizes="(max-width: 900px) 100vw, 820px"
-              priority={active === initialIndex}
-              className="home-hero-img"
-            />
+            {outgoing !== null ? (
+              <div className="home-hero-layer" aria-hidden="true">
+                <Plate
+                  photo={photos[outgoing]}
+                  register="colour"
+                  sizes="(max-width: 900px) 100vw, 820px"
+                  className="home-hero-img"
+                />
+              </div>
+            ) : null}
+            <div className={`home-hero-layer${outgoing !== null ? ' is-fading-in' : ''}`}>
+              <Plate
+                photo={current}
+                register="colour"
+                sizes="(max-width: 900px) 100vw, 820px"
+                priority={active === initialIndex}
+                className="home-hero-img"
+              />
+            </div>
           </div>
         </div>
 
@@ -334,9 +386,40 @@ export function HomeHero({
           }
         }
 
+        .home-hero-layer {
+          position: absolute;
+          inset: 0;
+        }
+
+        .home-hero-layer.is-fading-in {
+          animation: home-hero-fade-in 600ms ease;
+        }
+
+        @keyframes home-hero-fade-in {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+
+        /* The bleed rests at var(--bleedop, 0.5), so it needs its own keyframes.
+           Sharing the hero's 0->1 fade would flash the backdrop to full
+           strength for 600ms on every advance. */
+        .home-bleed-layer.is-fading-in {
+          animation: home-bleed-fade-in 600ms ease;
+        }
+
+        @keyframes home-bleed-fade-in {
+          from { opacity: 0; }
+          to { opacity: var(--bleedop, 0.5); }
+        }
+
         @media (prefers-reduced-motion: reduce) {
           .home-index-link {
             transition: none;
+          }
+
+          .home-hero-layer.is-fading-in,
+          .home-bleed-layer.is-fading-in {
+            animation: none;
           }
         }
       `}</style>
