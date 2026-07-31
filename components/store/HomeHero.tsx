@@ -32,6 +32,18 @@ export function HomeHero({
   const [hovered, setHovered] = useState(false)
   const [focusWithin, setFocusWithin] = useState(false)
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
+  const railRef = useRef<HTMLElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
+
+  // The pause region is the carousel — the rail and the hero panel — NOT the
+  // whole grid. The grid is ~90% of the viewport, so pausing on any hover
+  // within it froze the carousel whenever the cursor was parked over the copy
+  // or merely crossing the page, which reads as the carousel being stuck.
+  const inCarousel = useCallback(
+    (node: Node | null) =>
+      !!node && (!!railRef.current?.contains(node) || !!panelRef.current?.contains(node)),
+    [],
+  )
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
@@ -124,16 +136,20 @@ export function HomeHero({
 
       <div
         className="home-grid"
-        onMouseOver={() => setHovered(true)}
-        onMouseOut={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHovered(false)
+        onMouseOver={(e) => {
+          if (inCarousel(e.target as Node)) setHovered(true)
         }}
-        onFocus={() => setFocusWithin(true)}
+        onMouseOut={(e) => {
+          if (!inCarousel(e.relatedTarget as Node | null)) setHovered(false)
+        }}
+        onFocus={(e) => {
+          if (inCarousel(e.target as Node)) setFocusWithin(true)
+        }}
         onBlur={(e) => {
-          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocusWithin(false)
+          if (!inCarousel(e.relatedTarget as Node | null)) setFocusWithin(false)
         }}
       >
-        <aside className="home-rail">
+        <aside className="home-rail" ref={railRef}>
           <p className="home-rail-kicker">
             Featured work
             <span>
@@ -174,6 +190,7 @@ export function HomeHero({
 
         <div
           className="home-hero-wrap"
+          ref={panelRef}
           role="tabpanel"
           id="home-hero-panel"
           aria-labelledby={`home-hero-tab-${current.slug}`}

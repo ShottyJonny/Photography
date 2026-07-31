@@ -330,13 +330,42 @@ describe('HomeHero — auto-advance', () => {
     expect(selected(container)?.textContent).toContain('Photo 2')
   })
 
-  it('pauses while hovered and resumes on leave', () => {
+  it('pauses while the carousel itself is hovered, and resumes on leave', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    const rail = container.querySelector('[role="tablist"]')!
+    fireEvent.mouseOver(rail)
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+    fireEvent.mouseOut(rail, { relatedTarget: container.querySelector('.home-copy') })
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('pauses when the hero plate is hovered, not just the rail', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.mouseOver(container.querySelector('.home-hero-plate')!)
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+  })
+
+  // The grid is ~90% of the viewport. Pausing on any hover within it meant a
+  // cursor parked over the copy — or merely crossing the page — froze the
+  // carousel indefinitely, which reads as "it gets stuck". The pause region is
+  // the rail and the hero panel, not the whole grid.
+  it('does NOT pause when the pointer is over the copy block', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.mouseOver(container.querySelector('.home-copy')!)
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('does NOT pause when the pointer is over the grid but outside the carousel', () => {
     vi.useFakeTimers()
     const { container } = mount()
     fireEvent.mouseOver(grid(container))
-    act(() => { vi.advanceTimersByTime(60000) })
-    expect(selected(container)?.textContent).toContain('Photo 1')
-    fireEvent.mouseOut(grid(container))
     act(() => { vi.advanceTimersByTime(6000) })
     expect(selected(container)?.textContent).toContain('Photo 2')
   })
@@ -345,13 +374,21 @@ describe('HomeHero — auto-advance', () => {
   // focusin/focusout events; a non-bubbling `focus` event never reaches the
   // handler on .home-grid. Same delegation trap as mouseEnter — see Global
   // Constraints. Do not "simplify" these to fireEvent.focus/blur.
-  it('pauses while focus is inside, and resumes on blur', () => {
+  it('pauses while focus is inside the carousel, and resumes on blur', () => {
     vi.useFakeTimers()
     const { container } = mount()
-    fireEvent.focusIn(grid(container))
+    fireEvent.focusIn(tabs(container)[0])
     act(() => { vi.advanceTimersByTime(60000) })
     expect(selected(container)?.textContent).toContain('Photo 1')
-    fireEvent.focusOut(grid(container))
+    fireEvent.focusOut(tabs(container)[0], { relatedTarget: container.querySelector('.home-cta-primary') })
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('does NOT pause when focus is on the CTAs below the carousel', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.focusIn(container.querySelector('.home-cta-primary')!)
     act(() => { vi.advanceTimersByTime(6000) })
     expect(selected(container)?.textContent).toContain('Photo 2')
   })
