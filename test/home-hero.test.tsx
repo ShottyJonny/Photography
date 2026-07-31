@@ -276,3 +276,92 @@ describe('HomeHero — keyboard', () => {
     expect(selected(container)?.textContent).toContain('Photo 1')
   })
 })
+
+describe('HomeHero — auto-advance', () => {
+  afterEach(() => { vi.useRealTimers() })
+
+  const grid = (c: HTMLElement) => c.querySelector('.home-grid')!
+
+  it('advances to the next photograph after 6s', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('keeps advancing, and wraps at the end', () => {
+    vi.useFakeTimers()
+    const { container } = mount({ initialIndex: 4 })
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(selected(container)?.textContent).toContain('Photo 6')
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+  })
+
+  it('stops for good once a title is clicked', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.click(tabs(container)[3])
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 4')
+  })
+
+  it('stops for good once a key is used — the touch and keyboard stop mechanism', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.keyDown(container.querySelector('[role="tablist"]')!, { key: 'ArrowDown' })
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('pauses while hovered and resumes on leave', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.mouseOver(grid(container))
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+    fireEvent.mouseOut(grid(container))
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  // focusIn/focusOut, NOT focus/blur. React maps onFocus/onBlur to the native
+  // focusin/focusout events; a non-bubbling `focus` event never reaches the
+  // handler on .home-grid. Same delegation trap as mouseEnter — see Global
+  // Constraints. Do not "simplify" these to fireEvent.focus/blur.
+  it('pauses while focus is inside, and resumes on blur', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    fireEvent.focusIn(grid(container))
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+    fireEvent.focusOut(grid(container))
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(selected(container)?.textContent).toContain('Photo 2')
+  })
+
+  it('never advances under prefers-reduced-motion', () => {
+    stubMatchMedia(true)
+    vi.useFakeTimers()
+    const { container } = mount()
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+  })
+
+  it('never advances a single-photograph collection', () => {
+    vi.useFakeTimers()
+    const { container } = mount({ photos: [photo(1)] })
+    act(() => { vi.advanceTimersByTime(60000) })
+    expect(selected(container)?.textContent).toContain('Photo 1')
+    expect(tabs(container)).toHaveLength(1)
+  })
+
+  it('silences the panel live region while rotating, and opens it once stopped', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    const panel = () => container.querySelector('[role="tabpanel"]')
+    expect(panel()?.getAttribute('aria-live')).toBe('off')
+    fireEvent.click(tabs(container)[3])
+    expect(panel()?.getAttribute('aria-live')).toBe('polite')
+  })
+})

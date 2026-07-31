@@ -589,6 +589,7 @@ Centered: mono order id, Playfair 76px "Thank you.", Newsreader note (hand-made,
 - **Radius:** cards 5px; imagery and chips are square. Sharp, print-like.
 - **Elevation:** one soft shadow per card/drawer; depth otherwise via hairlines + the blurred hero bleed. No shadow stacks.
 - **Motion:** hovers `.18–.2s` (index-row slide, image brighten, nav ink); theme flip is instant (asset + tokens swap). Keep any auto-advancing carousel **pausable** and gate motion behind `prefers-reduced-motion` — the current site fails both (§8, §9).
+  **Home hero carousel — decided 2026-07-30.** 6s advance, 600ms cross-fade. It pauses on hover and on focus, and **stops permanently on any selection**. Reduced motion disables auto-advance and makes the swap instant. Stop-on-select is the load-bearing one: hover is no mechanism for keyboard or touch, and it is what makes the surface pass WCAG 2.2.2 without putting a pause button in the rail §12.5-A describes.
 
 ### 12.7 Do / Don't (storefront)
 

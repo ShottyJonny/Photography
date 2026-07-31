@@ -16,6 +16,7 @@ export interface HomeHeroProps {
 
 const pad = (n: number) => String(n).padStart(2, '0')
 const FADE_MS = 600
+const ADVANCE_MS = 6000
 
 export function HomeHero({
   photos,
@@ -27,12 +28,18 @@ export function HomeHero({
   const [active, setActive] = useState(initialIndex)
   const [outgoing, setOutgoing] = useState<number | null>(null)
   const [reduced, setReduced] = useState(false)
+  const [playing, setPlaying] = useState(photos.length > 1)
+  const [hovered, setHovered] = useState(false)
+  const [focusWithin, setFocusWithin] = useState(false)
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([])
 
   useEffect(() => {
     if (typeof window === 'undefined' || typeof window.matchMedia !== 'function') return
     const mq = window.matchMedia('(prefers-reduced-motion: reduce)')
-    const apply = () => setReduced(mq.matches)
+    const apply = () => {
+      setReduced(mq.matches)
+      if (mq.matches) setPlaying(false)
+    }
     apply()
     mq.addEventListener('change', apply)
     return () => mq.removeEventListener('change', apply)
@@ -40,6 +47,7 @@ export function HomeHero({
 
   const select = useCallback(
     (next: number) => {
+      setPlaying(false)
       if (next === active) return
       if (!reduced) setOutgoing(active)
       setActive(next)
@@ -77,6 +85,16 @@ export function HomeHero({
     img.src = derivativeSrc(next.slug, 'colour', 1200, 'webp')
   }, [active, photos])
 
+  useEffect(() => {
+    if (!playing || reduced || hovered || focusWithin) return
+    if (photos.length < 2) return
+    const id = setTimeout(() => {
+      setOutgoing(active)
+      setActive((active + 1) % photos.length)
+    }, ADVANCE_MS)
+    return () => clearTimeout(id)
+  }, [playing, reduced, hovered, focusWithin, active, photos.length])
+
   const current = photos[active]
 
   return (
@@ -98,7 +116,17 @@ export function HomeHero({
         src={derivativeSrc(current.slug, 'colour', 160, 'webp')}
       />
 
-      <div className="home-grid">
+      <div
+        className="home-grid"
+        onMouseOver={() => setHovered(true)}
+        onMouseOut={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setHovered(false)
+        }}
+        onFocus={() => setFocusWithin(true)}
+        onBlur={(e) => {
+          if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setFocusWithin(false)
+        }}
+      >
         <aside className="home-rail">
           <p className="home-rail-kicker">
             Featured work
@@ -143,6 +171,7 @@ export function HomeHero({
           role="tabpanel"
           id="home-hero-panel"
           aria-labelledby={`home-hero-tab-${current.slug}`}
+          aria-live={playing ? 'off' : 'polite'}
           tabIndex={0}
         >
           <div className="home-hero-plate">
