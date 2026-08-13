@@ -13,16 +13,20 @@ Jon Hoffman Photography — a **Next.js + TypeScript** print portfolio and store
 | Framework | **Next.js 16 (App Router, Turbopack), TypeScript strict, React 19** |
 | Hosting | **Vercel** — live at `www.jonhoffmanphotography.com` (apex 308s to `www`) |
 | Data | **Supabase** (Postgres + Auth + Storage; `supabase/schema.sql` is applied and live) |
-| Payments | **Stripe Checkout** (**test mode** — not live) |
+| Payments | **Stripe Checkout** (**live mode** since 2026-07-29 — one real transaction still unverified) |
 | Tests | **Vitest** |
 
-**The site is deployed and now discoverable, but takes no money yet.** `main` ships to production on
-push; Stripe is still in **test mode**, so no real card can be charged. The pre-launch `noindex` was
-lifted 2026-08-12, **ahead of the Stripe cutover** — the cutover checklist below put it last, after
-live-money verification, and it was done early deliberately. Until Stripe goes live the storefront is
-crawlable while its checkout cannot complete a real purchase; **closing that gap is the priority.**
-Build and push freely on feature branches — but from the Stripe live cutover onward, `main` is real
-money and this paragraph is the thing to change first.
+**The site is deployed, discoverable, and wired for real money.** `main` ships to production on push.
+**Stripe is live**, not test: the account is activated with no outstanding tasks, a live webhook is
+registered at `https://www.jonhoffmanphotography.com/api/stripe-webhook`, and Vercel's production
+`STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` were set to their live values on 2026-07-29. The
+pre-launch `noindex` was lifted 2026-08-12. **Treat `main` as real money.**
+
+**The one thing still unproven is the live path itself.** The webhook has recorded **zero deliveries,
+ever**, and the live secret key has not been used since 2026-07-29 — so live mode is verified as
+*configuration* and unverified as *behaviour*. Until one real order has gone `pending → paid` and been
+refunded, nobody has seen this work with a real card. That is the last gate, and it is the only one
+left. Build and push freely on feature branches; be deliberate about `main`.
 
 **The rebuild is happening in slices.** Slice 1 (Foundation + Money path) is built and on `develop`. Later slices are specced/planned under `docs/superpowers/`. See [Roadmap](#roadmap).
 
@@ -155,9 +159,12 @@ fixed. The mismatch branch was forced with a correctly-signed synthetic `checkou
 since real Stripe never produces a mismatch naturally (the server computes both amounts).
 
 **The remaining gate is live mode, and it has NOT run.** Live is a different secret key, a different
-webhook signing secret, and a different endpoint URL — the test-mode pass proves none of it. After the
-live cutover, place one real low-value order and refund it, and observe the same four things. Until
-that has happened, treat the live money path as unverified no matter how green CI is.
+webhook signing secret, and a different endpoint URL — the test-mode pass proves none of it. The
+cutover itself is **done** (2026-07-29: account activated, live keys in Vercel, webhook registered),
+but nothing has travelled the path since: Stripe reports **0 webhook deliveries, ever**, and the live
+secret key unused since the day it was installed. So place one real low-value order and refund it, and
+observe the same four things. Until that has happened, treat the live money path as unverified no
+matter how green CI is — configuration being right is not the same as the path having run.
 
 ## Environment
 
@@ -169,7 +176,7 @@ that has happened, treat the live money path as unverified no matter how green C
 | `NEXT_PUBLIC_SUPABASE_URL` | browser client (same value as `SUPABASE_URL`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon — published-catalog reads only |
 | `SUPABASE_SERVICE_ROLE_KEY` | **server-only**, bypasses RLS |
-| `STRIPE_SECRET_KEY` | **test mode** for now |
+| `STRIPE_SECRET_KEY` | **live** in Vercel Production since 2026-07-29 (Sensitive — cannot be read back, only overwritten) |
 | `STRIPE_WEBHOOK_SECRET` | webhook signature (re-register the endpoint at the deploy URL) |
 | `SITE_URL` | canonical origin for Stripe redirect URLs |
 
@@ -179,17 +186,21 @@ that has happened, treat the live money path as unverified no matter how green C
 
 `supabase/schema.sql` is applied and live on a new Supabase project: five tables (`photos`, `collections`, `collection_photos`, `orders`, `order_items`), RLS on all five, `orders`/`order_items` closed to anon (reads go through the service key). Buckets: `originals` private, `derivatives` public. Public signups disabled. Three honest-function invariants are enforced by Postgres: can't publish a photo without alt text; can't publish without `derivatives_ready`; can't store a tracking number without a shipment. The SQL is authoritative over prose in `product.md`.
 
-**Cutover checklist (`product.md §1.5`) — state as of 2026-07-29:**
+**Cutover checklist (`product.md §1.5`) — verified against Stripe and Vercel on 2026-08-12:**
+
+This table was wrong for two weeks. It carried three Stripe rows as `TODO` that had in fact been done
+on 2026-07-29, and that staleness actively misled work on 2026-08-12. **Verify against the dashboards
+before trusting a row here** — the timestamps below say where the evidence came from.
 
 | Step | Status |
 |---|---|
 | Upgrade Supabase off the free tier (the free-tier pause is how the last database died) | **DONE** — org on Pro, 2026-07-29 |
 | Point env at the right project | **DONE** — `vfjixurevanpzmbiywxm`, verified live |
-| `SITE_URL` set to the canonical origin | **DONE** — `https://www.jonhoffmanphotography.com` (Production) |
-| Re-register the Stripe webhook at the deploy URL | **TODO** — live endpoint does not exist yet |
-| Swap Stripe to live mode | **TODO — do this last** |
-| Verify the live money path with one real order + refund | **TODO** |
-| Lift `noindex` | **DONE** — 2026-08-12. Done **out of order**: this row sat below the three above it, and they are still open. `app/robots.ts` now allows `/` and disallows `/admin`; the `robots` key is gone from `app/layout.tsx`; `test/noindex.test.ts` is replaced by `test/robots.test.ts`, which guards the launched state instead. |
+| `SITE_URL` set to the canonical origin | **DONE** — `https://www.jonhoffmanphotography.com`; Vercel shows Production, Sensitive, updated 2026-07-28 |
+| Re-register the Stripe webhook at the deploy URL | **DONE** — `we_1TyYwj…`, Active, at the `www` production URL, subscribed to exactly `checkout.session.completed` + `checkout.session.expired`. (`payment_intent.payment_failed` is deliberately unsubscribed: the route treats it as a no-op that leaves the order `pending`.) The dead legacy Netlify endpoint was deleted 2026-08-12. |
+| Swap Stripe to live mode | **DONE — 2026-07-29.** Account activated, "no active tasks". Vercel `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` both updated 2026-07-29, and Stripe records the **live** secret key as last used that same day. |
+| Verify the live money path with one real order + refund | **TODO — the only gate left.** The webhook has **0 deliveries, ever**, and the live key is unused since 2026-07-29. Live mode is proven as configuration, not as behaviour. |
+| Lift `noindex` | **DONE** — 2026-08-12. `app/robots.ts` allows `/` and disallows `/admin`; the `robots` key is gone from `app/layout.tsx`; `test/noindex.test.ts` is replaced by `test/robots.test.ts`, which guards the launched state instead. |
 | Add a sitemap | **TODO** — there is still no `app/sitemap.ts`. Crawlers are now welcome with nothing to follow but the nav. |
 
 ## Git workflow
