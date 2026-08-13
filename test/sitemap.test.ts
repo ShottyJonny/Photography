@@ -64,7 +64,9 @@ describe('sitemap', () => {
 
   it('builds absolute URLs from SITE_URL, never relative paths', async () => {
     for (const url of await urls()) {
-      expect(url.startsWith('https://www.jonhoffmanphotography.com')).toBe(true)
+      const parsed = new URL(url)
+      expect(parsed.protocol).toBe('https:')
+      expect(parsed.hostname).toBe('www.jonhoffmanphotography.com')
     }
   })
 
