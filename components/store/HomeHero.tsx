@@ -551,9 +551,17 @@ export function HomeHero({
         }
 
         @media (max-width: 900px) {
+          /* padding-top: the base rule is 2.5rem, which under an opaque header
+             carrying its own 1.25rem left 61px between the nav and the kicker,
+             and the photograph clearing the fold by only 4px. Four pixels is a
+             coincidence, not a margin — a slightly shorter viewport clips the
+             photograph and undoes the dot row. 0.5rem takes the gap to 29px and
+             the headroom to 36px. */
           .home-grid {
             grid-template-columns: 1fr;
             grid-template-rows: auto auto auto;
+            gap: 1.5rem;
+            padding-top: 0.5rem;
           }
 
           .home-rail {
@@ -584,10 +592,6 @@ export function HomeHero({
              photograph to y581 on a 375x812 phone -- 231px of a 487px image
              above the fold. Collapsed to a dot row the photograph clears the
              fold whole, and the label above keeps the work named. */
-          .home-grid {
-            gap: 1.5rem;
-          }
-
           .home-rail-kicker {
             margin-bottom: 1rem;
           }

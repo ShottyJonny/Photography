@@ -6,13 +6,12 @@ const newsreader = Newsreader({ subsets: ['latin'], variable: '--font-newsreader
 const mono = IBM_Plex_Mono({ subsets: ['latin'], weight: ['400', '500'], variable: '--font-mono' })
 const hanken = Hanken_Grotesk({ subsets: ['latin'], variable: '--font-hanken' })
 
-// `robots` is TEMPORARY -- see app/robots.ts for why, and remove both together.
-// Declared here as well as in robots.txt because the two do different jobs: the
-// file asks crawlers not to fetch, this tells the ones that fetch anyway not to
-// index. app/admin/layout.tsx sets its own noindex and is unaffected either way.
+// The pre-launch crawler block is lifted -- see app/robots.ts for the why and
+// the conditions it was waiting on. Deliberately no `robots` key here now: its
+// absence is what makes the site indexable. app/admin/layout.tsx declares its
+// own restriction and is unaffected.
 export const metadata = {
   title: 'Jon Hoffman Photography',
-  robots: { index: false, follow: false },
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
