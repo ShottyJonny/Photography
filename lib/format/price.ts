@@ -13,7 +13,7 @@ export function priceRangeLabel(): string {
 /**
  * The storefront's money format, extracted. Was copy-pasted verbatim in four
  * files; the admin needed a fifth, which is where a duplicated helper stops
- * being harmless (design.md §11.7).
+ * being harmless (DESIGN.md §11.7).
  *
  * Cents are dropped when zero so "$5.50 · $65" reads as two different numbers
  * at a glance — which is the entire point of the quarantine line.

@@ -1,7 +1,7 @@
 # Slice 6b — Home feature picker (design spec)
 
 **Date:** 2026-07-22
-**Surface:** `design.md §11.4-G`, measurements from `design/Jon Hoffman Admin.dc.html` Surface G
+**Surface:** `DESIGN.md §11.4-G`, measurements from `design/Jon Hoffman Admin.dc.html` Surface G
 **Status:** approved (brainstorm), ready for writing-plans
 
 ## Goal

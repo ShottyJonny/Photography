@@ -1,7 +1,7 @@
 # Slice 7 — Orders queue + Nations lab export (design spec)
 
 **Date:** 2026-07-27
-**Surfaces:** `design.md §11.4-D` (the work queue) and `§11.4-E` (order detail + export)
+**Surfaces:** `DESIGN.md §11.4-D` (the work queue) and `§11.4-E` (order detail + export)
 **Product:** `product.md §6.1` (state machine), `§6.2` (the export), `§6.3` (reconciliation), `§6.4` (the list)
 **Status:** draft for build
 
@@ -28,7 +28,7 @@ Slice 7 builds the two surfaces that make the schema true:
 
 ### 1. Five tabs, not four — `submitted_to_lab` needs a home
 
-`design.md §11.4-D` specifies *Queue · Needs attention · Shipped · All*. That set strands a
+`DESIGN.md §11.4-D` specifies *Queue · Needs attention · Shipped · All*. That set strands a
 state: an order Jon has placed at the lab is no longer `paid` and not yet `shipped`, so under the
 handoff's four tabs it disappears from every view except All — the exact moment in fulfillment
 when he most needs to see it. The tabs become:

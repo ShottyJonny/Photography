@@ -2,7 +2,7 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build the `design.md §11.3` dark shell (242px sidebar + fluid main, inside a card) and the `§11.4-A` dashboard, wired to live counts from `orders`, `photos`, and `collections`, on top of slice 4a's auth spine.
+**Goal:** Build the `DESIGN.md §11.3` dark shell (242px sidebar + fluid main, inside a card) and the `§11.4-A` dashboard, wired to live counts from `orders`, `photos`, and `collections`, on top of slice 4a's auth spine.
 
 **Architecture:** The dashboard is a server component that calls one data function, `getDashboard()`, whose **first statement is `requireAdmin()`** — the authorization boundary established in 4a, because Next layouts do not re-render on client-side navigation. `getDashboard()` splits impure fetching from a pure `summarize()` that is unit-tested exhaustively. Every control belonging to slices 5–7 renders present-but-marked rather than omitted or wired.
 
@@ -21,7 +21,7 @@
 - **No `@testing-library/jest-dom`.** Assert with `container.textContent`, `container.querySelector(...)`, `el.getAttribute(...)`, `el.hasAttribute(...)`.
 - **Never construct a real Supabase client in a test.** Mock `@/lib/supabase/auth-server` and `@/lib/admin/require-admin`.
 - **`redirect()` must be mocked to throw**, never as a no-op.
-- **Apostrophes in user-visible strings use `’`** (`design.md §11.2`).
+- **Apostrophes in user-visible strings use `’`** (`DESIGN.md §11.2`).
 - **Do not modify `vitest.config.ts`, `eslint.config.mjs`, `tsconfig.json`, `next.config.ts`, or the CI workflow.** Add no dependencies at all — 4b needs none.
 - **Never run SQL against Supabase and never open the dashboard.** The manual verification in the spec's §9.2 is Jon's.
 - **Branch:** `slice-4`. Never commit to `main`/`develop`; never `--no-verify`.
@@ -50,7 +50,7 @@
 
 ## Extracted measurements — the source of truth for this slice
 
-Taken from `design/Jon Hoffman Admin.dc.html` on 2026-07-19. **Most of the admin's layout is inline-styled in that file, not in its `<style>` block, so these numbers appear nowhere in `design.md §11`'s prose.** Where §11's prose and this table disagree, §11 wins; where §11 is silent — which is most of it — this table is authoritative.
+Taken from `design/Jon Hoffman Admin.dc.html` on 2026-07-19. **Most of the admin's layout is inline-styled in that file, not in its `<style>` block, so these numbers appear nowhere in `DESIGN.md §11`'s prose.** Where §11's prose and this table disagree, §11 wins; where §11 is silent — which is most of it — this table is authoritative.
 
 | Element | Values |
 |---|---|
@@ -120,7 +120,7 @@ Taken from `design/Jon Hoffman Admin.dc.html` on 2026-07-19. **Most of the admin
 **Interfaces:**
 - Produces: `formatPrice(cents: number): string`
 
-**Why this is in scope despite touching storefront files:** `formatPrice` does not exist. `lib/format/price.ts` exports only `priceForSize`/`priceRangeLabel`, and `` `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}` `` is copy-pasted **verbatim in four files**. Adding a fifth copy for the admin, or adding a shared one and leaving four copies, both preserve exactly the decay pattern `design.md §11.7` warns about. Four one-line changes, under 1563 existing tests.
+**Why this is in scope despite touching storefront files:** `formatPrice` does not exist. `lib/format/price.ts` exports only `priceForSize`/`priceRangeLabel`, and `` `$${(cents / 100).toFixed(cents % 100 ? 2 : 0)}` `` is copy-pasted **verbatim in four files**. Adding a fifth copy for the admin, or adding a shared one and leaving four copies, both preserve exactly the decay pattern `DESIGN.md §11.7` warns about. Four one-line changes, under 1563 existing tests.
 
 - [ ] **Step 1: Write the failing test**
 
@@ -163,7 +163,7 @@ Append to `lib/format/price.ts`:
 /**
  * The storefront's money format, extracted. Was copy-pasted verbatim in four
  * files; the admin needed a fifth, which is where a duplicated helper stops
- * being harmless (design.md §11.7).
+ * being harmless (DESIGN.md §11.7).
  *
  * Cents are dropped when zero so "$5.50 · $65" reads as two different numbers
  * at a glance — which is the entire point of the quarantine line.
@@ -751,7 +751,7 @@ describe('the admin component classes', () => {
     }
   })
 
-  it('pins the sidebar to 242px (design.md §11.3)', () => {
+  it('pins the sidebar to 242px (DESIGN.md §11.3)', () => {
     expect(rule('.admin-sidebar')).toMatch(/width:\s*242px/)
   })
 
@@ -819,7 +819,7 @@ Append to the **end** of `app/globals.css`, after 4a's block. Change nothing abo
 
 ```css
 /* ===================================================================
-   Admin shell + dashboard (design.md §11.3, §11.4-A).
+   Admin shell + dashboard (DESIGN.md §11.3, §11.4-A).
    Measurements extracted from design/Jon Hoffman Admin.dc.html, where
    most of the admin is inline-styled rather than in its <style> block.
    =================================================================== */
@@ -1120,7 +1120,7 @@ Expected: FAIL — cannot resolve `@/components/admin/AdminNav`.
  *
  * product.md §1: "a control's label must match what it does." These say they
  * do nothing, and they do nothing — the marker is real text content, never a
- * title, tooltip, or colour (design.md §11.1: status is never carried by
+ * title, tooltip, or colour (DESIGN.md §11.1: status is never carried by
  * colour alone).
  *
  * NOT BUILT rather than SOON: "soon" claims a timeline nothing guarantees.
@@ -1163,7 +1163,7 @@ import { usePathname } from 'next/navigation'
 import { MarkedLink } from '@/components/admin/MarkedControl'
 
 /**
- * Order is the PROTOTYPE's sidebar order — design.md §11.3 specifies item
+ * Order is the PROTOTYPE's sidebar order — DESIGN.md §11.3 specifies item
  * styling but does not enumerate the items, and §11 says the prototype wins
  * where the section is silent.
  *
@@ -1339,7 +1339,7 @@ function CloudMark() {
 }
 
 /**
- * design.md §11.3 — 242px fixed sidebar + fluid main, inside one card.
+ * DESIGN.md §11.3 — 242px fixed sidebar + fluid main, inside one card.
  * Does no fetching: `email` is supplied by the caller, which has already
  * called requireAdmin().
  */
@@ -1563,7 +1563,7 @@ Expected: FAIL — cannot resolve `@/components/admin/StatTile`.
 
 ```tsx
 /**
- * design.md §11.4-A. Labels are written in sentence case and uppercased by CSS
+ * DESIGN.md §11.4-A. Labels are written in sentence case and uppercased by CSS
  * text-transform, so tests query sentence case.
  *
  * `alert` is conditional (D3): the prototype's alert variant carries a border,
@@ -2055,7 +2055,7 @@ Append to `.superpowers/sdd/progress.md` (create the file if it does not exist):
 ```markdown
 ## Slice 4 follow-ups (carried, not done)
 
-- **`design.md §11` write-back.** D1, D2, D6, D10, D11, D12, D13 and the §6.0 focus
+- **`DESIGN.md §11` write-back.** D1, D2, D6, D10, D11, D12, D13 and the §6.0 focus
   treatment are recorded only in the slice-4a/4b specs. Until they are written into §11,
   a later reader takes §11.1's `--faint: .42` as current and "corrects" the token —
   `test/admin-tokens.test.ts`'s contrast assertion is the only thing stopping them.
@@ -2073,7 +2073,7 @@ Append to `.superpowers/sdd/progress.md` (create the file if it does not exist):
 
 ```bash
 git add CLAUDE.md .superpowers/sdd/progress.md
-git commit -m "docs(slice-4b): update CLAUDE.md and record the carried follow-ups" -m "The design.md §11 write-back is the one worth watching: until D1/D2/D6/D10/D11/D12/D13 land in §11, a later reader takes §11.1's --faint .42 as current and the contrast assertion is the only thing stopping the revert." -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
+git commit -m "docs(slice-4b): update CLAUDE.md and record the carried follow-ups" -m "The DESIGN.md §11 write-back is the one worth watching: until D1/D2/D6/D10/D11/D12/D13 land in §11, a later reader takes §11.1's --faint .42 as current and the contrast assertion is the only thing stopping the revert." -m "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
 
 ---
@@ -2088,5 +2088,5 @@ Slice 4b is complete when the four gate commands are green.
 
 - **Ingest, collections editing, the orders surface, the lab export.** Slices 5–7. Every control for them renders marked.
 - **Derivative images.** No plate renders anywhere in 4b.
-- **The `design.md §11` write-back** — recorded as a follow-up in Step 3.
+- **The `DESIGN.md §11` write-back** — recorded as a follow-up in Step 3.
 - **Any SQL, and the spec's §9.2 manual verification.** Jon's.

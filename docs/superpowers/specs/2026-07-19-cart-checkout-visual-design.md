@@ -2,14 +2,14 @@
 
 > **STATUS: Brainstormed 2026-07-19, ready for a plan.** Slice 3 is the "cart + checkout
 > final visual": it dresses the money path in the storefront's voice across three surfaces —
-> the **cart drawer** (`design.md §12.5-F`), **checkout** (`§12.5-G`), and **confirmation**
+> the **cart drawer** (`DESIGN.md §12.5-F`), **checkout** (`§12.5-G`), and **confirmation**
 > (`§12.5-H`). It is the visual/UX half; **the money code is untouched**. `POST /api/checkout`,
 > its request body, `lib/pricing.ts`, `lib/checkout/*`, the webhook, and `lib/orders/reconcile.ts`
 > do not change. The server remains the sole price authority.
 >
 > Built on `develop` at slice 2 (`89032c1`). Branch: `slice-3`.
 
-Companion: `design.md §12.5-F/G/H` (the mocks), `§1`/`§8` (honest function, cross-cutting),
+Companion: `DESIGN.md §12.5-F/G/H` (the mocks), `§1`/`§8` (honest function, cross-cutting),
 `product.md §1` (the governing rule), `supabase/schema.sql` (`orders`, `order_items`).
 
 ---
@@ -258,7 +258,7 @@ right is the whole honesty story.
 
 ### 8.1 Deliberate deviations from the mocks
 
-| # | Mock (`design.md §12.5`) | This slice | Why (§1) |
+| # | Mock (`DESIGN.md §12.5`) | This slice | Why (§1) |
 |---|---|---|---|
 | **D1** | Drawer footer: subtotal / shipping / total | **Subtotal only** + "Shipping & tax calculated at checkout." | No address in the drawer ⇒ tax is unknowable (US-state / 12% intl / 0). A "total" without tax is a mislabeled total. Subtotal is the one number exactly true with no address. Shipping is *currently* flat $9.95, but hardcoding it would couple the drawer to a pricing internal and lie the day shipping becomes address-dependent. |
 | **D2** | Drawer hint "Tax calculated at payment." | "Shipping & tax calculated at **checkout**." | *Our server* computes shipping + tax; Stripe only collects the total we hand it. "at payment" wrongly implies Stripe computes it, and it omits shipping. |
@@ -374,7 +374,7 @@ Chunks 1–2 are the money-adjacent core and should land first. 3/4/5 are natura
 
 ## 13. Source docs
 
-- `design.md §12.5-F/G/H` (the mocks), `§8` (cross-cutting: focus, motion, pinch-zoom, the
+- `DESIGN.md §12.5-F/G/H` (the mocks), `§8` (cross-cutting: focus, motion, pinch-zoom, the
   photograph's dominant share), `§12.6` (shape/elevation/motion), `§12.7` (storefront do/don't).
 - `product.md §1` (honest function — the governing rule), `§4` (undesigned surfaces → slice 9).
 - `supabase/schema.sql` — `orders`, `order_items` (the snapshot/receipt invariant), RLS

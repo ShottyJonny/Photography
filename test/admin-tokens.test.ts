@@ -65,7 +65,7 @@ describe('the [data-admin] token scope', () => {
     expect(css).toContain('.admin-sr-only')
   })
 
-  // design.md §8 / §10 q2: "It does not get to fail twice." The admin relies on
+  // DESIGN.md §8 / §10 q2: "It does not get to fail twice." The admin relies on
   // the global rule rather than re-declaring it — so assert both that the rule
   // is intact and that nothing in the admin CSS opts out.
   it('keeps the global focus ring intact and never suppresses it in the admin', () => {

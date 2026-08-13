@@ -56,7 +56,7 @@ Created in this slice:
 | `test/fixtures/legacy-pricing.cjs` | Frozen copy of the legacy original (equivalence reference) |
 | `test/**/*.test.ts` | Unit tests |
 
-Preserved: `supabase/schema.sql`, `design/*.dc.html`, `CLAUDE.md`, `product.md`, `design.md`, `README.md`, `.github/`.
+Preserved: `supabase/schema.sql`, `design/*.dc.html`, `CLAUDE.md`, `product.md`, `DESIGN.md`, `README.md`, `.github/`.
 Removed (Task 1): `src/`, `netlify/`, `index.html`, `vite.config.ts`, old `eslint.config.js`, `tsconfig.node.json`, `netlify.toml`, `NETLIFY_ENV_SETUP.md`, `public/vite.svg`.
 
 ---
@@ -502,9 +502,9 @@ git commit -m "feat: supabase (admin/server/browser) and stripe clients" -m "Co-
 - Modify: `app/layout.tsx` (load fonts, import globals)
 
 **Interfaces:**
-- Produces: CSS custom properties for store light/dark tokens (`design.md §12.2`) and the four font CSS variables, consumed by later surfaces.
+- Produces: CSS custom properties for store light/dark tokens (`DESIGN.md §12.2`) and the four font CSS variables, consumed by later surfaces.
 
-- [ ] **Step 1: Write `app/globals.css`** with the `design.md §12.2` tokens
+- [ ] **Step 1: Write `app/globals.css`** with the `DESIGN.md §12.2` tokens
 
 ```css
 :root {
@@ -563,7 +563,7 @@ type Theme = 'dark' | 'light'
 const Ctx = createContext<{ theme: Theme; toggle: () => void }>({ theme: 'dark', toggle: () => {} })
 
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setTheme] = useState<Theme>('dark') // dark is the default (design.md §12.2)
+  const [theme, setTheme] = useState<Theme>('dark') // dark is the default (DESIGN.md §12.2)
   useEffect(() => { setTheme((localStorage.getItem('theme:v1') as Theme | null) ?? 'dark') }, [])
   useEffect(() => { document.documentElement.dataset.theme = theme; localStorage.setItem('theme:v1', theme) }, [theme])
   return (

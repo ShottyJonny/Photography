@@ -1,7 +1,7 @@
 # Slice 4b — Admin shell + dashboard (design spec)
 
 > **STATUS: Brainstormed + adversarially reviewed 2026-07-19, ready for a plan.** Slice 4b builds
-> the `design.md §11.3` dark shell (242px sidebar + fluid main) and the `§11.4-A` dashboard,
+> the `DESIGN.md §11.3` dark shell (242px sidebar + fluid main) and the `§11.4-A` dashboard,
 > wired to live counts, on top of slice 4a's auth spine.
 >
 > **Depends on 4a** (`2026-07-19-admin-auth-spine-design.md`): `requireAdmin()`, the
@@ -14,7 +14,7 @@
 >
 > Branch: `slice-4` (continues from 4a).
 
-Companion: `design.md §11.1` (tokens), `§11.2` (type roles), `§11.3` (shell), `§11.4-A`
+Companion: `DESIGN.md §11.1` (tokens), `§11.2` (type roles), `§11.3` (shell), `§11.4-A`
 (dashboard), `§11.5` (shape/elevation/motion), `§11.6` (do/don't), `§8`;
 `product.md §1`, `§6.1`, `§6.3`, `§6.4`; `supabase/schema.sql`;
 `design/Jon Hoffman Admin.dc.html` (pixel source — `§11` wins where they disagree, the prototype
@@ -94,7 +94,7 @@ component is unchanged, only its mount point.
 > `lib/format/price.ts` exports only `priceForSize`/`priceRangeLabel`, and
 > `` `$${(cents/100).toFixed(cents % 100 ? 2 : 0)}` `` is copy-pasted verbatim in four files.
 > Adding a fifth definition for the admin, or adding a shared one and leaving four copies, both
-> preserve exactly the decay pattern `design.md §11.7` warns about. The refactor is four one-line
+> preserve exactly the decay pattern `DESIGN.md §11.7` warns about. The refactor is four one-line
 > changes under 1563 existing tests.
 
 ---
@@ -454,7 +454,7 @@ number they did not receive.
 
 ---
 
-## 7. Deviations from `design.md §11`
+## 7. Deviations from `DESIGN.md §11`
 
 4a owns D1, D6, D10, D11. 4b owns:
 
@@ -468,11 +468,11 @@ number they did not receive.
 | **D8** | Orders' amber count pill deferred to slice 7 | A count pill on a marked item advertises a queue that cannot be opened |
 | **D9** | `< 900px` stacking fallback | `§11.4-H` out of scope; a fixed 242px sidebar on a phone is broken |
 | **D12** | MISMATCH chip: `--ink` text on a pulsing `--alert` ground, instead of `softpulse` on `--alert` text at `.5↔1` | The specified form computes to **1.99:1** at the trough and 4.44:1 on `--panel2` at full. The system's most safety-critical status cannot be its least legible |
-| **D13** | Nav item radius stays `7px` | `§11.3` says `radius 7px`; `§11.5` says "radius 0 everywhere except the outer card (6px), pills, and the avatar." **An internal `design.md` contradiction**, resolved toward the explicit measurement and flagged for reconciliation |
+| **D13** | Nav item radius stays `7px` | `§11.3` says `radius 7px`; `§11.5` says "radius 0 everywhere except the outer card (6px), pills, and the avatar." **An internal `DESIGN.md` contradiction**, resolved toward the explicit measurement and flagged for reconciliation |
 | **D14** | Order id renders as a uuid prefix | `JH-YYYYMMDD-NNNN` (`§11.4-E`, prototype) has no backing column. Fabricating one in the field Jon reconciles against Stripe is a §1 problem. Slice 7 needs a real decision |
 | **D15** | Mismatches render in a separate `Held out of the queue` group rather than inline | `§11.4-A` has no tabs, so an inline row contradicts the tile count directly above it. `§11.4-D` achieves the same separation with tabs |
 
-D2 and D13 are `design.md` **gaps/defects** and get written back into `§11` on merge, with 4a's
+D2 and D13 are `DESIGN.md` **gaps/defects** and get written back into `§11` on merge, with 4a's
 D1/D6/D10/D11 and its focus treatment.
 
 ---
@@ -519,7 +519,7 @@ tile permanently alarmed on fake data — precisely the state D3 exists to preve
 
 ## 10. Carried forward
 
-- `design.md §11` needs D2 and D13 written back in (with 4a's D1/D6/D10/D11 + focus).
+- `DESIGN.md §11` needs D2 and D13 written back in (with 4a's D1/D6/D10/D11 + focus).
 - **`JH-…` order ids** (D14) — slice 7's lab export needs a real decision, and `§11.4-E` prints
   one on a sheet a human pastes into Nations' order form.
 - `§11.4-H` mobile admin supersedes §6.3.
