@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+import { readFileSync } from 'node:fs'
+import { resolve } from 'node:path'
 import { render, cleanup, fireEvent, act } from '@testing-library/react'
 import { HomeHero } from '@/components/store/HomeHero'
 import type { PhotoInCollection } from '@/lib/data/collections'
@@ -516,5 +518,86 @@ describe('HomeHero — dwell progress', () => {
     vi.useFakeTimers()
     const { container } = mount()
     expect(running(container)?.getAttribute('style')).toContain('6000ms')
+  })
+})
+
+// DESIGN.md §12.5-E. At <=900px the six-title rail is 308px tall and pushes the
+// photograph to y581 on a 375x812 phone -- 231px of a 487px image above the
+// fold, against §8's "give the photograph the dominant share". The rail
+// collapses to a dot row plus the active work's name, which puts the whole
+// photograph on the first screen while keeping the work named.
+describe('HomeHero — the mobile selector', () => {
+  const label = (c: HTMLElement) => c.querySelector('.home-active-label')
+
+  it('names the active work beside its number', () => {
+    const { container } = mount({ initialIndex: 3 })
+    expect(label(container)?.textContent).toContain('04')
+    expect(label(container)?.textContent).toContain('Photo 4')
+  })
+
+  it('follows the selection', () => {
+    const { container } = mount()
+    expect(label(container)?.textContent).toContain('Photo 1')
+    fireEvent.click(tabs(container)[4])
+    expect(label(container)?.textContent).toContain('05')
+    expect(label(container)?.textContent).toContain('Photo 5')
+  })
+
+  it('follows an auto-advance too', () => {
+    vi.useFakeTimers()
+    const { container } = mount()
+    act(() => { vi.advanceTimersByTime(6000) })
+    expect(label(container)?.textContent).toContain('Photo 2')
+  })
+
+  // The tabs already carry every title, so an exposed label would make a screen
+  // reader announce the active work twice.
+  it('is hidden from assistive tech, which reads the tabs instead', () => {
+    const { container } = mount()
+    expect(label(container)?.getAttribute('aria-hidden')).toBe('true')
+  })
+
+  // The dots layout hides the titles with CSS. If it removed them from the DOM
+  // the tabs would lose their accessible names entirely.
+  it('leaves every tab its title text for its accessible name', () => {
+    const { container } = mount()
+    for (const [i, t] of tabs(container).entries()) {
+      expect(t.textContent).toContain(`Photo ${i + 1}`)
+    }
+  })
+})
+
+describe('HomeHero — the <=900px stylesheet', () => {
+  const source = readFileSync(resolve(process.cwd(), 'components/store/HomeHero.tsx'), 'utf8')
+  const mobile = (() => {
+    const i = source.indexOf('@media (max-width: 900px)')
+    if (i === -1) throw new Error('no <=900px block')
+    // The block's closing brace is the first one at its own indentation level.
+    const end = source.indexOf('\n        }', i)
+    return source.slice(i, end)
+  })()
+
+  it('lays the index out as a row of dots rather than a stack', () => {
+    expect(mobile).toMatch(/\.home-index\s*\{[^}]*display:\s*flex/)
+  })
+
+  it('keeps each dot at a 44px touch target, not the 7px it looks like', () => {
+    const link = mobile.match(/\.home-index-link\s*\{([^}]*)\}/)?.[1] ?? ''
+    expect(link).toMatch(/min-height:\s*44px/)
+    expect(link).toMatch(/min-width:\s*44px/)
+  })
+
+  // display:none would strip the tab's accessible name. The title has to stay
+  // in the accessibility tree while leaving the layout.
+  it('clips the titles out of sight without removing them from the a11y tree', () => {
+    const title = mobile.match(/\.home-index-title[^{]*\{([^}]*)\}/)?.[1] ?? ''
+    expect(title).not.toMatch(/display:\s*none/)
+    expect(title).toMatch(/clip-path|clip:/)
+  })
+
+  it('shows the active label, which is absent on desktop', () => {
+    expect(mobile).toMatch(/\.home-active-label\s*\{[^}]*display:\s*(flex|block)/)
+    const desktop = source.slice(0, source.indexOf('@media (max-width: 900px)'))
+    expect(desktop).toMatch(/\.home-active-label\s*\{[^}]*display:\s*none/)
   })
 })

@@ -194,6 +194,14 @@ export function HomeHero({
               {pad(active + 1)} / {pad(photos.length)}
             </span>
           </p>
+          {/* At <=900px the titles are clipped out of the dot row, so the active
+              work would lose its name. This restores it. aria-hidden because the
+              tabs still carry every title -- exposing it would announce the
+              active work twice. */}
+          <p className="home-active-label" aria-hidden="true">
+            <span className="home-active-num">{pad(active + 1)}</span>
+            <span className="home-active-title">{current.title}</span>
+          </p>
           <div
             role="tablist"
             aria-label="Featured works"
@@ -358,6 +366,29 @@ export function HomeHero({
         .home-index {
           margin: 0;
           padding: 0;
+        }
+
+        /* Desktop reads the full list, so the active work is already named. */
+        .home-active-label {
+          display: none;
+          align-items: baseline;
+          gap: 1rem;
+          margin: 0 0 0.75rem;
+        }
+
+        .home-active-num {
+          flex-shrink: 0;
+          width: 1.625rem;
+          font-family: var(--font-mono);
+          font-size: 0.6875rem;
+          color: var(--faint, var(--dim));
+        }
+
+        .home-active-title {
+          font-family: var(--font-playfair);
+          font-size: 1.375rem;
+          line-height: 1.2;
+          color: var(--ink);
         }
 
         .home-index-link {
@@ -547,6 +578,87 @@ export function HomeHero({
             grid-column: 1;
             grid-row: 3;
             max-width: none;
+          }
+
+          /* DESIGN.md §12.5-E. The six-title stack is 308px and pushes the
+             photograph to y581 on a 375x812 phone -- 231px of a 487px image
+             above the fold. Collapsed to a dot row the photograph clears the
+             fold whole, and the label above keeps the work named. */
+          .home-grid {
+            gap: 1.5rem;
+          }
+
+          .home-rail-kicker {
+            margin-bottom: 1rem;
+          }
+
+          .home-active-label {
+            display: flex;
+            margin-bottom: 0.625rem;
+          }
+
+          /* The negative margin buys back the touch target's padding without
+             shrinking it: the row reads as 24px, each target stays 44px. That
+             30px is what puts the photograph's last pixel above the fold. */
+          .home-index {
+            display: flex;
+            align-items: center;
+            gap: 0.25rem;
+            margin: -0.625rem 0;
+          }
+
+          /* 7px is the mark; 44px is the target. Never let the two be the same
+             number -- the desktop rows are 51px and this must not regress. */
+          .home-index-link {
+            min-width: 44px;
+            min-height: 44px;
+            width: auto;
+            padding: 0;
+            border-bottom: 0;
+            justify-content: center;
+          }
+
+          .home-index-link:hover {
+            padding-left: 0;
+          }
+
+          .home-index-link::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 999px;
+            background: var(--faint, var(--dim));
+            transition: width 0.3s ease;
+          }
+
+          /* The active mark widens into the track its dwell fills. */
+          .home-index-link.is-active::before {
+            width: 28px;
+            background: var(--hair);
+          }
+
+          /* display:none would strip the tab's accessible name; the title has
+             to leave the layout without leaving the accessibility tree. */
+          .home-index-num,
+          .home-index-title {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+            clip-path: inset(50%);
+            white-space: nowrap;
+          }
+
+          /* Rides the widened mark. transform stays free for the scaleX fill,
+             so the offset is done with margins. */
+          .home-index-progress {
+            top: 50%;
+            left: 50%;
+            bottom: auto;
+            width: 28px;
+            height: 7px;
+            margin: -3.5px 0 0 -14px;
+            border-radius: 999px;
           }
         }
 

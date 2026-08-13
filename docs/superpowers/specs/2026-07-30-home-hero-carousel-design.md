@@ -214,5 +214,27 @@ Verified in a real browser rather than only jsdom: selection without navigation,
 
 ### Still open
 
-- Mobile index dots (§12.5-E) remain unbuilt; the rail keeps its full title list at ≤900px and works as the selector there.
-- The Reliquary collection's `literature` is still the 184-character slice-6a placeholder, now sitting under six real photographs.
+- ~~Mobile index dots (§12.5-E) remain unbuilt~~ — **built 2026-08-12, see below.**
+- ~~The Reliquary collection's `literature` is still the 184-character slice-6a placeholder~~ — **resolved 2026-08-12.** The collection was renamed `reliquary` → `relics` (name *Relics*) and the real 2,733-character, 7-paragraph essay recovered from the legacy quarry (`Photography-main/src/data/collections.ts`), where it had been sitting under the collection's original name. The `dek` is still slice-6a placeholder copy, and because `pullQuote()` gives the dek priority it remains the home page's pull-quote.
+
+---
+
+## Mobile amendment (2026-08-12)
+
+The non-goal above was wrong, and the measurement is why.
+
+At 375×812 the ≤900px stack puts the rail first at its full 308px, landing the photograph at **y581–1068: 231px of a 487px image above the fold**, of which the top 80px is masked to transparent — roughly 150px of actual photograph on first paint, at the bottom edge. The six-title list took more of the first screen than the subject did, against §8's "give the photograph the dominant share". The carousel was also animating the wrong half: the dwell hairlines sat in view while the photograph they counted toward did not.
+
+**Rejected — reordering the grid rows.** Two CSS lines, and it produced the best geometry of the three (hero y192–680). But DOM order in `.home-grid` is rail → hero, so flipping the visual order leaves keyboard focus jumping from the bottom of the screen to the top: WCAG 2.4.3, Level A. This slice implemented the full ARIA tablist pattern precisely because §9 lists the fake one as a regression not to inherit; buying 250px with a Level A failure would contradict that.
+
+**Built — §12.5-E's dot row, plus the active work's name.** Photograph at **y321–808, all 487px above the fold.**
+
+- One tablist, unchanged. The dots are the existing tabs restyled at ≤900px, so the ARIA structure, roving tabIndex and keyboard pattern all carry over untouched.
+- `.home-index-num` / `.home-index-title` are clipped (`position:absolute; clip-path: inset(50%)`), **not** `display:none` — the latter would strip every tab of its accessible name.
+- A new `.home-active-label` re-names the active work above the dots. `aria-hidden`, because the tabs still carry all six titles and an exposed label would announce the active one twice.
+- Marks are 7px, targets are 44px, held apart by `margin: -0.625rem 0` on the row. Desktop rows are 51px; this must not regress. That negative margin is worth 30px and is the difference between the photograph clearing the fold and missing it by 30.
+- The active mark widens to 28px and becomes the track its dwell fills, so the countdown survives the collapse instead of vanishing at ≤900px.
+
+Eight tests added (`test/home-hero.test.tsx`): four on the label's content, tracking and `aria-hidden`, four asserting the ≤900px stylesheet — the dot row, the 44px target, clipped-not-hidden titles, and the label being desktop-absent. **79 files, 2068 tests, all green**; lint, typecheck and build clean.
+
+**Not verified:** how any of it looks in motion. The Browser pane stayed hidden throughout, so the page never composited and CSS transitions did not advance — the same gap the 2026-07-31 amendment recorded. Geometry, computed styles and touch targets are measured in a real browser; visual weight is not. The dot row's rhythm and the widened active mark deserve an eye.

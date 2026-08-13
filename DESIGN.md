@@ -584,6 +584,8 @@ Centered: mono order id, Playfair 76px "Thank you.", Newsreader note (hand-made,
 #### E / I · Mobile
 376×812 frames. **E**: Home (full-bleed plate, gradient, index dots, "View this print →") and Product (sticky header, 4:5 plate, size chips, price, Add to cart). **I**: cart, checkout, and confirmation — same catalog voice, one-thumb reach, Stripe handoff. Let people pinch-zoom the photograph (fixes the current `user-scalable=no`, §8). Hit targets ≥44px.
 
+**Built (slice 8).** The index dots are why: measured at 375×812, the desktop six-title rail is 308px and lands the photograph at y581, putting 231px of a 487px image above the fold — the title list taking more of the first screen than the photograph, against §8. Collapsed to a dot row the photograph sits at 321–808, whole, above the fold. The titles are clipped, not `display:none`, so each tab keeps its accessible name; the active work is re-named by a separate `aria-hidden` label above the dots, since the dots alone would strip six titles of editorial voice. The marks are 7px but the targets are 44px, held apart by a negative margin on the row — that 30px is what buys the last of the fold.
+
 ### 12.6 Shape, elevation, motion
 
 - **Radius:** cards 5px; imagery and chips are square. Sharp, print-like.
