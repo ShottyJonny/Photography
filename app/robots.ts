@@ -1,4 +1,5 @@
 import type { MetadataRoute } from 'next'
+import { env } from '@/lib/env'
 
 /**
  * The pre-launch blanket `Disallow: /` is gone. It was paired with a `robots`
@@ -13,5 +14,8 @@ import type { MetadataRoute } from 'next'
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: '*', allow: '/', disallow: '/admin' },
+    // Letting crawlers in without saying where the catalogue is leaves them to
+    // discover every print page by following links. app/sitemap.ts lists them.
+    sitemap: `${env().siteUrl.replace(/\/$/, '')}/sitemap.xml`,
   }
 }

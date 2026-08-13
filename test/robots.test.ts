@@ -1,7 +1,14 @@
-import { describe, it, expect } from 'vitest'
+import { describe, it, expect, vi } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import robots from '@/app/robots'
+
+// app/robots.ts reads env() for the sitemap URL; lib/env throws without a real
+// SITE_URL, which is deliberate (a misconfigured deploy should die loudly).
+vi.mock('@/lib/env', () => ({
+  env: () => ({ siteUrl: 'https://www.jonhoffmanphotography.com' }),
+}))
+
+const { default: robots } = await import('@/app/robots')
 
 /**
  * Replaces test/noindex.test.ts, which guarded the pre-launch blanket
@@ -31,6 +38,12 @@ describe('robots', () => {
     const { rules } = robots()
     const rule = Array.isArray(rules) ? rules[0] : rules
     expect(rule.disallow).toBe('/admin')
+  })
+
+  // Allowing crawlers in without telling them where the catalogue is leaves
+  // them to find 24 print pages by following links. app/sitemap.ts lists them.
+  it('points crawlers at the sitemap', () => {
+    expect(robots().sitemap).toMatch(/^https?:\/\/.+\/sitemap\.xml$/)
   })
 
   it('declares no crawler restriction in the root layout', () => {

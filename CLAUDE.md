@@ -209,7 +209,7 @@ the evidence it rests on.
 | Swap Stripe to live mode | **DONE — 2026-07-29.** Account activated, "no active tasks". Vercel `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` both updated 2026-07-29, and Stripe records the **live** secret key as last used that same day. |
 | Verify the live money path with one real order + refund | **DONE — 2026-07-29, PASSED.** Real card, $25.85, live Checkout. Stripe `pi_3TyZ5nPGMB8cagFz0WIpOPY5` charged 11:08 and refunded 11:10; Supabase order `2c3a7e1a` carries `total_cents` 2585 and `amount_paid_cents` 2585, so the live webhook delivered and `reconcile()` matched. Now `refunded`. |
 | Lift `noindex` | **DONE** — 2026-08-12. `app/robots.ts` allows `/` and disallows `/admin`; the `robots` key is gone from `app/layout.tsx`; `test/noindex.test.ts` is replaced by `test/robots.test.ts`, which guards the launched state instead. |
-| Add a sitemap | **TODO** — there is still no `app/sitemap.ts`. Crawlers are now welcome with nothing to follow but the nav. |
+| Add a sitemap | **DONE** — 2026-08-12. `app/sitemap.ts` lists the 9 public surfaces plus one entry per published photograph and per collection, built from `SITE_URL`; `robots.txt` points at it. Both catalogue reads are the existing visibility-gated ones, so a draft cannot reach it. `/admin`, `/checkout` and `/order/[id]` are excluded by design. |
 
 ## Git workflow
 
