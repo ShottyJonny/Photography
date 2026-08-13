@@ -16,10 +16,13 @@ Jon Hoffman Photography — a **Next.js + TypeScript** print portfolio and store
 | Payments | **Stripe Checkout** (**test mode** — not live) |
 | Tests | **Vitest** |
 
-**The site is deployed, but takes no money yet.** `main` ships to production on push; the storefront is
-`noindex` and Stripe is still in **test mode**, so no card can be charged. Build and push freely on
-feature branches — but from the Stripe live cutover onward, `main` is real money and this paragraph
-is the thing to change first.
+**The site is deployed and now discoverable, but takes no money yet.** `main` ships to production on
+push; Stripe is still in **test mode**, so no real card can be charged. The pre-launch `noindex` was
+lifted 2026-08-12, **ahead of the Stripe cutover** — the cutover checklist below put it last, after
+live-money verification, and it was done early deliberately. Until Stripe goes live the storefront is
+crawlable while its checkout cannot complete a real purchase; **closing that gap is the priority.**
+Build and push freely on feature branches — but from the Stripe live cutover onward, `main` is real
+money and this paragraph is the thing to change first.
 
 **The rebuild is happening in slices.** Slice 1 (Foundation + Money path) is built and on `develop`. Later slices are specced/planned under `docs/superpowers/`. See [Roadmap](#roadmap).
 
@@ -186,7 +189,8 @@ that has happened, treat the live money path as unverified no matter how green C
 | Re-register the Stripe webhook at the deploy URL | **TODO** — live endpoint does not exist yet |
 | Swap Stripe to live mode | **TODO — do this last** |
 | Verify the live money path with one real order + refund | **TODO** |
-| Lift `noindex` (delete `app/robots.ts` + the `robots` key in `app/layout.tsx`) and add a sitemap | **TODO — after the above** |
+| Lift `noindex` | **DONE** — 2026-08-12. Done **out of order**: this row sat below the three above it, and they are still open. `app/robots.ts` now allows `/` and disallows `/admin`; the `robots` key is gone from `app/layout.tsx`; `test/noindex.test.ts` is replaced by `test/robots.test.ts`, which guards the launched state instead. |
+| Add a sitemap | **TODO** — there is still no `app/sitemap.ts`. Crawlers are now welcome with nothing to follow but the nav. |
 
 ## Git workflow
 
