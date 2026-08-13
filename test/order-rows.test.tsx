@@ -83,7 +83,7 @@ describe('OrderRows', () => {
     expect(container.querySelector('.admin-ord-open')?.getAttribute('href')).toBe(`/admin/orders/${ORDER.id}`)
   })
 
-  // product.md §6.3 / design.md §11.4-D: quarantined, both amounts shown, and
+  // product.md §6.3 / DESIGN.md §11.4-D: quarantined, both amounts shown, and
   // the alert wash — the failure mode is shipping $65 of prints for $5.50.
   it('quarantines a mismatch with both amounts and a Review link', () => {
     const { container } = renderRows([{ ...ORDER, status: 'amount_mismatch', amount_paid_cents: 550 }])

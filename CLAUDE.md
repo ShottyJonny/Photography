@@ -13,13 +13,23 @@ Jon Hoffman Photography — a **Next.js + TypeScript** print portfolio and store
 | Framework | **Next.js 16 (App Router, Turbopack), TypeScript strict, React 19** |
 | Hosting | **Vercel** — live at `www.jonhoffmanphotography.com` (apex 308s to `www`) |
 | Data | **Supabase** (Postgres + Auth + Storage; `supabase/schema.sql` is applied and live) |
-| Payments | **Stripe Checkout** (**test mode** — not live) |
+| Payments | **Stripe Checkout** — **live**, and verified end to end with a real card on 2026-07-29 |
 | Tests | **Vitest** |
 
-**The site is deployed, but takes no money yet.** `main` ships to production on push; the storefront is
-`noindex` and Stripe is still in **test mode**, so no card can be charged. Build and push freely on
-feature branches — but from the Stripe live cutover onward, `main` is real money and this paragraph
-is the thing to change first.
+**The site is deployed, discoverable, and wired for real money.** `main` ships to production on push.
+**Stripe is live**, not test: the account is activated with no outstanding tasks, a live webhook is
+registered at `https://www.jonhoffmanphotography.com/api/stripe-webhook`, and Vercel's production
+`STRIPE_SECRET_KEY` / `STRIPE_WEBHOOK_SECRET` were set to their live values on 2026-07-29. The
+pre-launch `noindex` was lifted 2026-08-12. **Treat `main` as real money.**
+
+**The live money path has been verified end to end.** On 2026-07-29 a real card was charged $25.85
+through live Checkout, the live webhook delivered, `reconcile()` matched, and the order went
+`pending → paid`; it was refunded two minutes later and walked to `refunded` in the admin. The
+evidence is `pi_3TyZ5nPGMB8cagFz0WIpOPY5` in Stripe against order `2c3a7e1a` in Supabase —
+`total_cents` 2585, `amount_paid_cents` 2585, matching to the cent. (The account's −$1.05 balance is
+just Stripe keeping its fee on that refund: 2.9% + $0.30 of $25.85.)
+
+**Every cutover step is done.** Build and push freely on feature branches; `main` is real money.
 
 **The rebuild is happening in slices.** Slice 1 (Foundation + Money path) is built and on `develop`. Later slices are specced/planned under `docs/superpowers/`. See [Roadmap](#roadmap).
 
@@ -53,7 +63,7 @@ Four checks, each its own CI job (`.github/workflows/ci.yml`), on every push/PR 
 | lint | `npm run lint` | 0 errors/warnings |
 | typecheck | `npm run typecheck` | 0 errors |
 | build | `npm run build` | passes (needs no secrets — clients are lazy, `/prints` is `force-dynamic`) |
-| test | `npm test` | all green (**2006** tests as of slice 7) |
+| test | `npm test` | all green (**2068** tests as of slice 8) |
 
 Split jobs are deliberate: a failure names itself (lint vs typecheck vs build vs test) instead of collapsing into one red dot. **The job ids are the required-status-check contract** for branch protection — renaming one re-pins that rule.
 
@@ -68,8 +78,8 @@ Next.js App Router. Route groups separate the two halves.
 ```
 app/
   layout.tsx                   # root: next/font faces + globals.css
-  page.tsx                     # placeholder home (slice 2 rebuilds home under (store))
-  globals.css                  # design tokens (design.md §12.2), both themes
+  page.tsx                     # home — fetch + empty state; the surface is components/store/HomeHero (slice 8)
+  globals.css                  # design tokens (DESIGN.md §12.2), both themes
   (store)/                     # public storefront — light/dark
     layout.tsx                 # ThemeProvider + CartProvider
     prints/page.tsx            # minimal shop (slice 1) → §12.5-B (slice 2)
@@ -107,6 +117,7 @@ lib/
   format/price.ts              # priceForSize / priceRangeLabel / formatPrice (shared)
   stripe.ts                    # lazy, server-only Stripe client
 components/{cart,theme}/        # CartContext/AddToCart, ThemeProvider
+components/store/HomeHero.tsx   # the home carousel — tablist, cross-fade, timer, dwell bar (slice 8)
 components/admin/               # CollectionList, CollectionEditor, WorksList, LiteratureEditor, PhotoPicker (slice 6a); HomeFeaturePicker, HomeHeroPreview (slice 6b); OrderTabs, OrderRows, LabExport, FulfillmentRail, CopyButton (slice 7)
 test/                          # Vitest; test/fixtures/legacy-pricing.cjs is the pricing reference
 supabase/schema.sql            # the applied data model (5 tables, RLS)
@@ -150,10 +161,16 @@ complete and snake_case; `success_url` resolving from `SITE_URL` — the `proces
 fixed. The mismatch branch was forced with a correctly-signed synthetic `checkout.session.completed`,
 since real Stripe never produces a mismatch naturally (the server computes both amounts).
 
-**The remaining gate is live mode, and it has NOT run.** Live is a different secret key, a different
-webhook signing secret, and a different endpoint URL — the test-mode pass proves none of it. After the
-live cutover, place one real low-value order and refund it, and observe the same four things. Until
-that has happened, treat the live money path as unverified no matter how green CI is.
+**End-to-end money verification, LIVE mode: PASSED 2026-07-29.** Live is a different secret key, a
+different signing secret and a different endpoint, so the test-mode pass above proved none of it —
+this one did. A real card was charged **$25.85** through live Checkout; the live webhook delivered and
+`reconcile()` matched (`total_cents` 2585 = `amount_paid_cents` 2585 on order `2c3a7e1a`, against
+Stripe `pi_3TyZ5nPGMB8cagFz0WIpOPY5`); it was refunded two minutes later at 11:10 and walked to
+`refunded` in the admin.
+
+**Both gates are closed. The money path is proven in test mode and in live mode.** What is *not*
+proven by either run is the fulfillment tail beyond `paid` — `submitted_to_lab` and `shipped` have
+never been exercised against a real Nations order.
 
 ## Environment
 
@@ -165,7 +182,7 @@ that has happened, treat the live money path as unverified no matter how green C
 | `NEXT_PUBLIC_SUPABASE_URL` | browser client (same value as `SUPABASE_URL`) |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | anon — published-catalog reads only |
 | `SUPABASE_SERVICE_ROLE_KEY` | **server-only**, bypasses RLS |
-| `STRIPE_SECRET_KEY` | **test mode** for now |
+| `STRIPE_SECRET_KEY` | **live** in Vercel Production since 2026-07-29 (Sensitive — cannot be read back, only overwritten) |
 | `STRIPE_WEBHOOK_SECRET` | webhook signature (re-register the endpoint at the deploy URL) |
 | `SITE_URL` | canonical origin for Stripe redirect URLs |
 
@@ -175,17 +192,24 @@ that has happened, treat the live money path as unverified no matter how green C
 
 `supabase/schema.sql` is applied and live on a new Supabase project: five tables (`photos`, `collections`, `collection_photos`, `orders`, `order_items`), RLS on all five, `orders`/`order_items` closed to anon (reads go through the service key). Buckets: `originals` private, `derivatives` public. Public signups disabled. Three honest-function invariants are enforced by Postgres: can't publish a photo without alt text; can't publish without `derivatives_ready`; can't store a tracking number without a shipment. The SQL is authoritative over prose in `product.md`.
 
-**Cutover checklist (`product.md §1.5`) — state as of 2026-07-29:**
+**Cutover checklist (`product.md §1.5`) — verified against Stripe and Vercel on 2026-08-12:**
+
+This table was wrong for two weeks. It carried four rows as `TODO` that had in fact all been done on
+2026-07-29, and that staleness misled work on 2026-08-12 — twice in the same session, because the
+second correction still trusted a 7-day dashboard window instead of looking at the payments list.
+**Verify against the dashboards and the database before trusting a row here.** Every row below names
+the evidence it rests on.
 
 | Step | Status |
 |---|---|
 | Upgrade Supabase off the free tier (the free-tier pause is how the last database died) | **DONE** — org on Pro, 2026-07-29 |
 | Point env at the right project | **DONE** — `vfjixurevanpzmbiywxm`, verified live |
-| `SITE_URL` set to the canonical origin | **DONE** — `https://www.jonhoffmanphotography.com` (Production) |
-| Re-register the Stripe webhook at the deploy URL | **TODO** — live endpoint does not exist yet |
-| Swap Stripe to live mode | **TODO — do this last** |
-| Verify the live money path with one real order + refund | **TODO** |
-| Lift `noindex` (delete `app/robots.ts` + the `robots` key in `app/layout.tsx`) and add a sitemap | **TODO — after the above** |
+| `SITE_URL` set to the canonical origin | **DONE** — `https://www.jonhoffmanphotography.com`; Vercel shows Production, Sensitive, updated 2026-07-28 |
+| Re-register the Stripe webhook at the deploy URL | **DONE** — `we_1TyYwj…`, Active, at the `www` production URL, subscribed to exactly `checkout.session.completed` + `checkout.session.expired`. (`payment_intent.payment_failed` is deliberately unsubscribed: the route treats it as a no-op that leaves the order `pending`.) The dead legacy Netlify endpoint was deleted 2026-08-12. |
+| Swap Stripe to live mode | **DONE — 2026-07-29.** Account activated, "no active tasks". Vercel `STRIPE_SECRET_KEY` and `STRIPE_WEBHOOK_SECRET` both updated 2026-07-29, and Stripe records the **live** secret key as last used that same day. |
+| Verify the live money path with one real order + refund | **DONE — 2026-07-29, PASSED.** Real card, $25.85, live Checkout. Stripe `pi_3TyZ5nPGMB8cagFz0WIpOPY5` charged 11:08 and refunded 11:10; Supabase order `2c3a7e1a` carries `total_cents` 2585 and `amount_paid_cents` 2585, so the live webhook delivered and `reconcile()` matched. Now `refunded`. |
+| Lift `noindex` | **DONE** — 2026-08-12. `app/robots.ts` allows `/` and disallows `/admin`; the `robots` key is gone from `app/layout.tsx`; `test/noindex.test.ts` is replaced by `test/robots.test.ts`, which guards the launched state instead. |
+| Add a sitemap | **DONE** — 2026-08-12. `app/sitemap.ts` lists the 9 public surfaces plus one entry per published photograph and per collection, built from `SITE_URL`; `robots.txt` points at it. Both catalogue reads are the existing visibility-gated ones, so a draft cannot reach it. `/admin`, `/checkout` and `/order/[id]` are excluded by design. |
 
 ## Git workflow
 
@@ -212,7 +236,8 @@ The rebuild is sliced; each slice is a spec → plan → subagent-driven build u
 - **Slice 6b — Home feature: DONE.** Admin write surface for the home focal point — picker with live preview, clear-then-set of `featured_on_home`, shared `pullQuote` with the storefront home.
 - **About + legal surfaces: DONE.** Shared `Prose` layout, About / Shipping / Refunds / Privacy / Terms, the footer, and US-only checkout so the shipping policy is honest.
 - **Slice 7 — Orders + lab export: DONE.** `/admin/orders` (five tabs, search, expandable rows, mismatch quarantine) and `/admin/orders/[id]` (detail, signed originals, the Nations export block, the forward-only fulfillment rail). The storefront confirmation shows a real tracking number once an order is genuinely shipped.
-- **Slice 5b** (`§11.4-B` work-card grid for `/admin/photographs`) and **per-photo pricing** (`product.md §8 q3`) are the remaining feature slices. Neither blocks taking money.
+- **Slice 8 — Home hero carousel: DONE.** The `§12.5-A` rail became what it was specced as: an ARIA tablist selecting the hero instead of six links out. Cross-fade mounting two plates (never one per photograph — six full-size derivatives on the LCP element), the full keyboard pattern, 6s auto-advance that pauses on hover/focus and stops permanently on any selection, and a dwell bar running down each row's own hairline. Motion policy and its three post-build amendments are in `design.md` §12.6.
+- **Slice 5b** (`§11.4-B` work-card grid for `/admin/photographs`) and **per-photo pricing** (`product.md §8 q3`) are the remaining feature slices. Neither blocks taking money. Mobile index dots (`§12.5-E`) are the one unbuilt piece of the home surface.
 
 **Carried forward:** typed Supabase `Database` clients (codegen once a live project is at hand) — the admin reads still carry a local `no-explicit-any` disable because of it. The slice-1 theme-flash is **closed**: the pre-hydration script is in `app/layout.tsx`. Full list of follow-ups: `.superpowers/sdd/progress.md`.
 
@@ -221,7 +246,7 @@ The rebuild is sliced; each slice is a spec → plan → subagent-driven build u
 ## Source-of-truth docs
 
 - **`product.md`** — information architecture, per-surface behaviour, the honest-function rules, open questions, and the migration hazards (§1.5).
-- **`design.md`** — how it looks and moves. `§11` (admin) and `§12` (storefront) are the design target; `§8` cross-cutting rules are live. `§2–§7` are a legacy inventory of the deleted stylesheet and expire at cutover — do not read them as targets.
+- **`DESIGN.md`** — how it looks and moves. `§11` (admin) and `§12` (storefront) are the design target; `§8` cross-cutting rules are live. `§2–§7` are a legacy inventory of the deleted stylesheet and expire at cutover — do not read them as targets.
 - **`supabase/schema.sql`** — the applied data model (authoritative over prose).
 - **`docs/superpowers/specs/` + `plans/`** — the rebuild's design and TDD implementation docs, one per slice.
 - **`.superpowers/sdd/progress.md`** — the slice-1 execution ledger and follow-up findings (git-ignored scratch).
@@ -236,4 +261,4 @@ The deleted Vite app lives in the sibling folder `C:\Users\Shott\Photography-mai
 
 ## Design system
 
-`design.md` is the source of truth for how the site looks and moves. `§11` (admin) and `§12` (storefront) are the settled target; `§8` cross-cutting rules — visible focus, `prefers-reduced-motion`, pinch-zoom on the photograph, give the photograph the dominant share, `alt` text that describes the image — apply to every slice. Every price comes from `lib/pricing.ts`, never from the design mocks' hardcoded numbers.
+`DESIGN.md` is the source of truth for how the site looks and moves. `§11` (admin) and `§12` (storefront) are the settled target; `§8` cross-cutting rules — visible focus, `prefers-reduced-motion`, pinch-zoom on the photograph, give the photograph the dominant share, `alt` text that describes the image — apply to every slice. Every price comes from `lib/pricing.ts`, never from the design mocks' hardcoded numbers.

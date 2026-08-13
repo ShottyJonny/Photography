@@ -74,7 +74,7 @@ app/admin/(protected)/photographs/page.tsx       NEW  the landing
 app/admin/(protected)/photographs/new/page.tsx   NEW  Surface C
 app/globals.css                                  MODIFY  append .admin-ingest-* / .admin-photolist-*
 CLAUDE.md                                        MODIFY  baseline, lib/ingest layer
-design.md / product.md / supabase/schema.sql     MODIFY  writeback (Task 11)
+DESIGN.md / product.md / supabase/schema.sql     MODIFY  writeback (Task 11)
 
 test/ingest-schema.test.ts        NEW
 test/ingest-slug.test.ts          NEW
@@ -176,11 +176,11 @@ Replace it with:
 Then find the `aura` comment block that begins `-- \`aura\` is SPECULATIVE, not a feature` and append to the end of that block:
 
 ```sql
--- RESOLVED 2026-07-19 (design.md §10 q3, slice 5a): the column IS written at
+-- RESOLVED 2026-07-19 (DESIGN.md §10 q3, slice 5a): the column IS written at
 -- ingest, as the single {r,g,b} sharp's stats().dominant returns -- which is
 -- also the shape legacy averageColor() returned, so the mock's THREE swatches
 -- are reconciled by dropping them, not by inventing two more. Nothing reads it,
--- deliberately, and design.md §11.4-C's "Aura -- computed" tile is NOT built.
+-- deliberately, and DESIGN.md §11.4-C's "Aura -- computed" tile is NOT built.
 ```
 
 Then, immediately after the `create table if not exists photos (...)` statement and before the `aura` comment block, add:
@@ -284,7 +284,7 @@ sharp moves devDependencies -> dependencies: it runs inside a Server Action,
 where a devDependency is not installed. It had zero importers before now.
 
 Also closes product.md §8 q4 in the schema comments (the state is Draft, not
-unlisted) and records design.md §10 q3's resolution on the aura column.
+unlisted) and records DESIGN.md §10 q3's resolution on the aura column.
 
 Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 ```
@@ -883,7 +883,7 @@ describe('measure', () => {
   })
 
   it('returns the aura as a single {r,g,b}', async () => {
-    // design.md §10 q3: the shape legacy averageColor() returned. Nothing reads
+    // DESIGN.md §10 q3: the shape legacy averageColor() returned. Nothing reads
     // it; it is stored because the file is in hand.
     const m = await measure(source)
     expect(Object.keys(m.aura).sort()).toEqual(['b', 'g', 'r'])
@@ -1482,7 +1482,7 @@ describe('finishIngest', () => {
   })
 
   it('revalidates the storefront caches so publishing needs no redeploy (finish)', async () => {
-    // design.md §11.4-G prints "publishing needs no redeploy" as UI copy.
+    // DESIGN.md §11.4-G prints "publishing needs no redeploy" as UI copy.
     // product.md §8 q5. This assertion is what stops that copy becoming a lie.
     await draft(false)
     await generateRegister({ photoId: 'photo-1', register: 'colour' })
@@ -1985,7 +1985,7 @@ becomes a row and leaves no orphaned upload behind.
 finishIngest verifies against the BUCKET, not against what we think we
 uploaded, and refuses to publish when anything is missing. It revalidates
 'photos', 'photo:<slug>' and 'collections' -- which is what makes
-design.md §11.4-G's 'publishing needs no redeploy' copy true rather than a
+DESIGN.md §11.4-G's 'publishing needs no redeploy' copy true rather than a
 promise (product.md §8 q5).
 
 deletePhoto refuses a published or previously-ordered photograph and fails

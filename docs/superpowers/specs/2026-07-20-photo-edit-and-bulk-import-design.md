@@ -18,7 +18,7 @@
 >
 > Branch: Phase A off `develop`. Phase B is a local script, not part of the app build.
 
-Companion: `design.md §11.4-C` (the ingest form this reuses styling from), `§11.1`/`§11.2`;
+Companion: `DESIGN.md §11.4-C` (the ingest form this reuses styling from), `§11.1`/`§11.2`;
 `product.md §1` (honest function), `§5.2` (the four fields); `supabase/schema.sql`;
 slice 5a: `docs/superpowers/specs/2026-07-19-admin-ingest-design.md`, `lib/ingest/*`.
 

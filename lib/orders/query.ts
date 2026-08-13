@@ -1,5 +1,5 @@
 /**
- * Tab predicates and search for the orders queue (design.md §11.4-D).
+ * Tab predicates and search for the orders queue (DESIGN.md §11.4-D).
  *
  * Pure, and shared by the read and the surface deliberately: a tab's COUNT and
  * a tab's ROWS are derived from the same predicate here, so the number on a tab

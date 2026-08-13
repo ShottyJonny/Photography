@@ -257,7 +257,7 @@ no carrier or tracking-link text.
 
 - `CLAUDE.md`: roadmap — slice 3 and about/legal recorded as done, slice 7 as DONE, the admin nav's
   five live items, the test count refreshed. Architecture tree gains `orders/`.
-- `design.md §11.4-D/E`: a deviations table (the fifth tab, the real ids, the real `original_key`,
+- `DESIGN.md §11.4-D/E`: a deviations table (the fifth tab, the real ids, the real `original_key`,
   signed links out of the block, the resolution controls, free-text finish, dashboard links).
 - `product.md §6`: mark `§6.4` built; leave the Nations-vocabulary confirm-before-relying item open
   and point it at `lab_finish`.

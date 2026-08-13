@@ -117,7 +117,7 @@ body { margin: 0; background: var(--paper); color: var(--ink); font-family: var(
 .confirm-review { font-family: var(--font-mono); font-size: 0.75rem; color: var(--dim); line-height: 1.5; }
 
 /* ===================================================================
-   Admin (design.md §11) — dark only, and structurally unreachable by
+   Admin (DESIGN.md §11) — dark only, and structurally unreachable by
    the storefront theme toggle.
 
    Tokens are declared on the [data-admin] wrapper, never :root. Custom
@@ -194,7 +194,7 @@ html:has([data-admin]) body { background: #0b0b0b; }
 .admin-linkbtn { min-height: 44px; padding: 0; background: transparent; border: none; color: var(--ink); font-family: var(--font-mono); font-size: 0.625rem; font-weight: 500; letter-spacing: 0.16em; text-transform: uppercase; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
 
 /* ===================================================================
-   Admin shell + dashboard (design.md §11.3, §11.4-A).
+   Admin shell + dashboard (DESIGN.md §11.3, §11.4-A).
    Measurements extracted from design/Jon Hoffman Admin.dc.html, where
    most of the admin is inline-styled rather than in its <style> block.
    =================================================================== */
@@ -350,7 +350,7 @@ button.admin-marked, .admin-btn[aria-disabled='true'], .admin-ghost[aria-disable
 }
 
 /* --------------------------------------------------------------------------
-   Slice 5a — ingest (design.md §11.4-C) and the Photographs landing.
+   Slice 5a — ingest (DESIGN.md §11.4-C) and the Photographs landing.
    Measurements from design/Jon Hoffman Admin.dc.html, Surface C.
    -------------------------------------------------------------------------- */
 

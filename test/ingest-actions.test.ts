@@ -316,7 +316,7 @@ describe('finishIngest', () => {
   })
 
   it('revalidates the storefront caches so publishing needs no redeploy (finish)', async () => {
-    // design.md §11.4-G prints "publishing needs no redeploy" as UI copy.
+    // DESIGN.md §11.4-G prints "publishing needs no redeploy" as UI copy.
     // product.md §8 q5. This assertion is what stops that copy becoming a lie.
     await draft(false)
     await generateRegister({ photoId: 'photo-1', register: 'colour' })

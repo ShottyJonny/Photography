@@ -79,7 +79,7 @@ describe('SignInFields', () => {
     expect(container.querySelector('button[type="submit"]')?.hasAttribute('disabled')).toBe(true)
   })
 
-  // design.md §10 q2 — every control must be reachable and keep the global ring.
+  // DESIGN.md §10 q2 — every control must be reachable and keep the global ring.
   it('renders three focusable controls and takes none out of the tab order', () => {
     const { container } = render(<SignInFields state={INITIAL_SIGN_IN_STATE} pending={false} />)
     expect(container.querySelectorAll('input, button').length).toBe(3)

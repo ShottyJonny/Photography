@@ -1,10 +1,10 @@
-# design.md
+# DESIGN.md
 
 > **STATUS: Target specified 2026-07-16.** [§11](#11-admin-studio-admin) (admin) and [§12](#12-storefront-jon-hoffman-photography) (storefront) **are the design** — stated as settled fact, and between them they resolve every question §1 previously left open. [§1](#1-aesthetic-direction) records the posture and what was decided.
 >
 > **§2–§7 are a legacy inventory of `src/styles.css`** — the stylesheet the rebuild deletes. They describe the live site until cutover and they expire then. **Do not read them as targets.** §8 (cross-cutting rules) and §9 (regressions the rebuild must not inherit) are **live** and apply to the new stack.
 
-Companion to `CLAUDE.md` and `product.md`. **`design.md` = how it looks and moves. `product.md` = what each surface is and does. `CLAUDE.md` = how to work in the repo, and the money path.**
+Companion to `CLAUDE.md` and `product.md`. **`DESIGN.md` = how it looks and moves. `product.md` = what each surface is and does. `CLAUDE.md` = how to work in the repo, and the money path.**
 
 **Start here:** §1 for the posture and the decisions → §12 for the storefront → §11 for the admin.
 
@@ -584,11 +584,19 @@ Centered: mono order id, Playfair 76px "Thank you.", Newsreader note (hand-made,
 #### E / I · Mobile
 376×812 frames. **E**: Home (full-bleed plate, gradient, index dots, "View this print →") and Product (sticky header, 4:5 plate, size chips, price, Add to cart). **I**: cart, checkout, and confirmation — same catalog voice, one-thumb reach, Stripe handoff. Let people pinch-zoom the photograph (fixes the current `user-scalable=no`, §8). Hit targets ≥44px.
 
+**Built (slice 8).** The index dots are why: measured at 375×812, the desktop six-title rail is 308px and lands the photograph at y581, putting 231px of a 487px image above the fold — the title list taking more of the first screen than the photograph, against §8. Collapsed to a dot row the photograph sits at 321–808, whole, above the fold. The titles are clipped, not `display:none`, so each tab keeps its accessible name; the active work is re-named by a separate `aria-hidden` label above the dots, since the dots alone would strip six titles of editorial voice. The marks are 7px but the targets are 44px, held apart by a negative margin on the row — that 30px is what buys the last of the fold.
+
 ### 12.6 Shape, elevation, motion
 
 - **Radius:** cards 5px; imagery and chips are square. Sharp, print-like.
 - **Elevation:** one soft shadow per card/drawer; depth otherwise via hairlines + the blurred hero bleed. No shadow stacks.
 - **Motion:** hovers `.18–.2s` (index-row slide, image brighten, nav ink); theme flip is instant (asset + tokens swap). Keep any auto-advancing carousel **pausable** and gate motion behind `prefers-reduced-motion` — the current site fails both (§8, §9).
+  **Home hero carousel — decided 2026-07-30, amended 2026-07-31.** 6s advance, 600ms cross-fade. It pauses on hover and on focus, and **stops permanently on any selection**. Reduced motion disables auto-advance and makes the swap instant. Stop-on-select is the load-bearing one: hover is no mechanism for keyboard or touch, and it is what makes the surface pass WCAG 2.2.2 without putting a pause button in the rail §12.5-A describes.
+  - **The pause region is the rail and the hero plate, not the whole grid.** The grid is ~76% of a 1440×900 viewport and ~90% at 998px wide, so pausing on any hover inside it froze the carousel whenever the cursor was parked over the copy or merely crossing the page — indistinguishable from a bug. Scoped, it is 57% at 1440×900, and nearly all of that is the plate itself, which *should* pause. Hovering the copy, the CTAs, the gutters or the margins does nothing.
+  - **The countdown resumes; it does not restart.** Elapsed dwell is banked on pause and only the remainder is scheduled on resume. Restarting was the original behaviour and meant repeated hovering could stall an advance indefinitely.
+  - **The dwell runs down the row's own hairline (§12.5-A's index list).** No new chrome: the divider under each title *is* the track. Story-style — rows shown in the current pass hold a full line at 0.45 opacity, the active row fills over the dwell, upcoming rows stay empty. The pass boundary is **the pass's own starting photograph, not index 01**: the cover can sit anywhere in the list, so a pass beginning at 05 runs 05, 06, 01, 02, 03, 04 straight through the numeric wrap before starting clean.
+  - **No bar is drawn unless an advance is actually pending** (`product.md §1`). Once a selection has stopped auto-advance, or under reduced motion, the track is absent rather than frozen at some fraction — a stopped bar would imply a countdown that will never fire.
+  - **The blurred bleed cross-fades from a wrapper that owns `--bleedop`, never per-layer.** With the token on each layer the outgoing one holds at 0.5 while the incoming fades 0→0.5 over it; 0.5 never occludes, so the two composite and the backdrop swells to ~0.75 before snapping back on unmount. Measured: `0.500 → 0.631 → 0.710 → 0.745 →` hard cut to `0.500`. Dim the group once, cross-dissolve the layers inside it at full opacity.
 
 ### 12.7 Do / Don't (storefront)
 

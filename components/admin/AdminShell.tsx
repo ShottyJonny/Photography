@@ -15,7 +15,7 @@ function CloudMark() {
 }
 
 /**
- * design.md §11.3 — 242px fixed sidebar + fluid main, inside one card.
+ * DESIGN.md §11.3 — 242px fixed sidebar + fluid main, inside one card.
  * Does no fetching: `email` is supplied by the caller, which has already
  * called requireAdmin().
  */

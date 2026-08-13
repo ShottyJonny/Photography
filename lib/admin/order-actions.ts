@@ -8,7 +8,7 @@ import type { OrderStatus } from '@/lib/orders/query'
 export type Result = { ok: true } | { ok: false; message: string }
 
 /**
- * The fulfillment transitions (product.md §6.1, design.md §11.4-E).
+ * The fulfillment transitions (product.md §6.1, DESIGN.md §11.4-E).
  *
  * Every one of these is a human pressing a button. NOTHING here is called by a
  * timer, a webhook, or a cron: the legacy site set `shipped` on a 900ms

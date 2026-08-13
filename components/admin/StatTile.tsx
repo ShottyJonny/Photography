@@ -1,5 +1,5 @@
 /**
- * design.md §11.4-A. Labels are written in sentence case and uppercased by CSS
+ * DESIGN.md §11.4-A. Labels are written in sentence case and uppercased by CSS
  * text-transform, so tests query sentence case.
  *
  * `alert` is conditional (D3): the prototype's alert variant carries a border,

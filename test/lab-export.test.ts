@@ -28,7 +28,7 @@ describe('buildLabExport — the header', () => {
   it('prints the full uuid, not a fabricated order number', () => {
     const block = buildLabExport(ORDER)
     expect(block).toContain('ORDER  8f14e45f-ceea-467a-9b3a-2c4f7a5d1e02')
-    // design.md §11.4-E's JH-20260716-0042 is a design fiction (slice 4b D14).
+    // DESIGN.md §11.4-E's JH-20260716-0042 is a design fiction (slice 4b D14).
     expect(block).not.toMatch(/JH-\d/)
   })
 

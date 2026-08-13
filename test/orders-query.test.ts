@@ -25,7 +25,7 @@ describe('the tabs', () => {
     expect(statusesForTab('queue')).toEqual(['paid'])
   })
 
-  // design.md §11.4-D's four tabs strand this state: not paid, not shipped,
+  // DESIGN.md §11.4-D's four tabs strand this state: not paid, not shipped,
   // so it would show up nowhere but All.
   it('gives submitted_to_lab its own tab', () => {
     expect(statusesForTab('lab')).toEqual(['submitted_to_lab'])
