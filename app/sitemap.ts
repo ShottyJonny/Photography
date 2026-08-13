@@ -1,7 +1,16 @@
 import type { MetadataRoute } from 'next'
-import { env } from '@/lib/env'
+import { siteOrigin } from '@/lib/env'
 import { getPublishedPhotos } from '@/lib/data/photos'
 import { getCollections } from '@/lib/data/collections'
+
+/**
+ * This route reads the catalogue, so it cannot be prerendered without Supabase
+ * credentials -- and `npm run build` runs on a CI runner that has none. /prints
+ * solves the identical problem the identical way. Serving it per request also
+ * keeps it honest: a photograph published this morning is in it this morning.
+ * The underlying reads are `unstable_cache`d for an hour, so this is cheap.
+ */
+export const dynamic = 'force-dynamic'
 
 /**
  * Paired with app/robots.ts, which lifted the pre-launch crawler block.
@@ -29,7 +38,7 @@ const STATIC_PATHS = [
 ] as const
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const base = env().siteUrl.replace(/\/$/, '')
+  const base = siteOrigin()
   const [photos, collections] = await Promise.all([getPublishedPhotos(), getCollections()])
 
   return [

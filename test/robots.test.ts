@@ -1,12 +1,11 @@
-import { describe, it, expect, vi } from 'vitest'
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import { readFileSync } from 'node:fs'
 import { resolve } from 'node:path'
 
-// app/robots.ts reads env() for the sitemap URL; lib/env throws without a real
-// SITE_URL, which is deliberate (a misconfigured deploy should die loudly).
-vi.mock('@/lib/env', () => ({
-  env: () => ({ siteUrl: 'https://www.jonhoffmanphotography.com' }),
-}))
+vi.mock('@/lib/env', async (orig) => {
+  const actual = await orig<typeof import('@/lib/env')>()
+  return { ...actual, siteOrigin: () => 'https://www.jonhoffmanphotography.com' }
+})
 
 const { default: robots } = await import('@/app/robots')
 
@@ -56,5 +55,56 @@ describe('robots', () => {
     // proxy.ts also sets X-Robots-Tag. Lifting the site-wide block must not
     // reach the admin, which is noindex on its own terms.
     expect(source('app/admin/layout.tsx')).toMatch(/index:\s*false/)
+  })
+})
+
+// CLAUDE.md's gate table promises `npm run build` "needs no secrets". robots.txt
+// is a STATIC route, so Next prerenders it at build time -- anything it reads is
+// read on a CI runner with an empty environment. Calling env() there pulls in the
+// Supabase and Stripe validation and breaks the build. It did exactly that.
+describe('robots — buildable without secrets', () => {
+  const SECRETS = [
+    'SUPABASE_URL',
+    'SUPABASE_SERVICE_ROLE_KEY',
+    'NEXT_PUBLIC_SUPABASE_ANON_KEY',
+    'STRIPE_SECRET_KEY',
+    'STRIPE_WEBHOOK_SECRET',
+  ]
+  let saved: Record<string, string | undefined> = {}
+
+  beforeEach(() => {
+    saved = {}
+    for (const k of SECRETS) {
+      saved[k] = process.env[k]
+      delete process.env[k]
+    }
+  })
+  afterEach(() => {
+    for (const k of SECRETS) {
+      if (saved[k] === undefined) delete process.env[k]
+      else process.env[k] = saved[k]
+    }
+  })
+
+  it('renders with every secret absent, as a CI runner has them', async () => {
+    vi.resetModules()
+    process.env.SITE_URL = 'https://www.jonhoffmanphotography.com'
+    const mod = await import('@/app/robots')
+    expect(() => mod.default()).not.toThrow()
+    expect(mod.default().sitemap).toBe('https://www.jonhoffmanphotography.com/sitemap.xml')
+  })
+})
+
+// Neither route can be prerendered. robots.txt needs a site origin, and lib/env
+// rightly refuses to invent one in production rather than emit a localhost URL;
+// sitemap.xml additionally reads the catalogue. A CI runner has neither, so both
+// resolve per request. /prints solves the identical problem the identical way.
+describe('neither crawler route is prerendered', () => {
+  it.each([
+    ['robots', () => import('@/app/robots')],
+    ['sitemap', () => import('@/app/sitemap')],
+  ])('%s is force-dynamic, so the build never needs env', async (_name, load) => {
+    const mod = (await load()) as { dynamic?: string }
+    expect(mod.dynamic).toBe('force-dynamic')
   })
 })

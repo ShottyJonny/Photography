@@ -50,6 +50,19 @@ export function env(): Env {
 }
 
 /**
+ * Narrow accessor for the site origin alone, trailing slash stripped.
+ *
+ * Deliberately NOT env(): robots.txt is a STATIC route, so Next prerenders it
+ * at build time -- on a CI runner whose environment is empty. Reaching env()
+ * there drags in the Supabase and Stripe validation and fails the build, which
+ * CLAUDE.md's gate table promises "needs no secrets". That is not theoretical;
+ * it broke the release build on 2026-08-12.
+ */
+export function siteOrigin(source: Source = process.env): string {
+  return resolveSiteUrl(source).replace(/\/$/, '')
+}
+
+/**
  * Narrow accessor for the two values Supabase Auth needs.
  *
  * Deliberately NOT env(): that validates the Stripe keys too, and it runs on
