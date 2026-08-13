@@ -595,6 +595,17 @@ describe('HomeHero — the <=900px stylesheet', () => {
     expect(title).toMatch(/clip-path|clip:/)
   })
 
+  // The base rule is 2.5rem, which under an opaque header carrying its own
+  // 1.25rem left 61px of gap and the photograph clearing the fold by 4px. Four
+  // pixels is a coincidence, not a margin: a slightly shorter viewport clips the
+  // photograph and undoes the dot row. This must stay well under the base.
+  it('cuts the grid padding so the fold keeps a real margin', () => {
+    const grid = mobile.match(/\.home-grid\s*\{([^}]*)\}/)?.[1] ?? ''
+    const pad = grid.match(/padding-top:\s*([\d.]+)rem/)?.[1]
+    expect(pad, 'no mobile padding-top override').toBeDefined()
+    expect(Number(pad)).toBeLessThanOrEqual(1)
+  })
+
   it('shows the active label, which is absent on desktop', () => {
     expect(mobile).toMatch(/\.home-active-label\s*\{[^}]*display:\s*(flex|block)/)
     const desktop = source.slice(0, source.indexOf('@media (max-width: 900px)'))
