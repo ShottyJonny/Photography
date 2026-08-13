@@ -1,5 +1,5 @@
 import type { MetadataRoute } from 'next'
-import { env } from '@/lib/env'
+import { siteOrigin } from '@/lib/env'
 
 /**
  * The pre-launch blanket `Disallow: /` is gone. It was paired with a `robots`
@@ -11,11 +11,22 @@ import { env } from '@/lib/env'
  * X-Robots-Tag from proxy.ts), but there is no reason to spend crawl budget on
  * a surface that answers every request with a redirect to sign-in.
  */
+/**
+ * Not prerendered. The sitemap URL needs a site origin, and `lib/env` refuses
+ * to invent one in production rather than silently emitting a localhost URL --
+ * correct behaviour, but it means a CI runner with an empty environment cannot
+ * build this page. `npm run build` must need no secrets, so this is resolved
+ * per request instead, where SITE_URL genuinely exists.
+ */
+export const dynamic = 'force-dynamic'
+
 export default function robots(): MetadataRoute.Robots {
   return {
     rules: { userAgent: '*', allow: '/', disallow: '/admin' },
     // Letting crawlers in without saying where the catalogue is leaves them to
     // discover every print page by following links. app/sitemap.ts lists them.
-    sitemap: `${env().siteUrl.replace(/\/$/, '')}/sitemap.xml`,
+    // siteOrigin(), not env(): this route is prerendered at build time, where
+    // there are no secrets to validate. See lib/env.ts.
+    sitemap: `${siteOrigin()}/sitemap.xml`,
   }
 }

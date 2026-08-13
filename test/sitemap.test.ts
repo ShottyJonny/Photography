@@ -10,7 +10,7 @@ vi.mock('@/lib/data/collections', () => ({
   getCollections: async () => collections.current,
 }))
 vi.mock('@/lib/env', () => ({
-  env: () => ({ siteUrl: 'https://www.jonhoffmanphotography.com' }),
+  siteOrigin: () => 'https://www.jonhoffmanphotography.com',
 }))
 
 const load = async () => (await import('@/app/sitemap')).default()
